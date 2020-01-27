@@ -1,16 +1,27 @@
 #include "Gpu.h"
 
-Gpu::Gpu()
+void Gpu::LoadTileMap()
 {
-	gManager.init();
-}
+	std::vector<Tile> tiles;
+	
+	Address start = 0x3fff;
+	Address end = start + 0x4000;
 
-Gpu::~Gpu()
-{
-}
+	for (Address i = start; i < end; i++)
+	{
+		Byte bytes[16] = {};
 
-void Gpu::LoadTileMap(const std::vector<Tile>& tiles)
-{
+		for (int j = 0; j < 16; j++)
+		{
+			bytes[j] = pMemory->ReadValue(i);
+
+			if (j < 15) i++;
+		}
+
+		Tile tile = Tile(bytes);
+		tiles.push_back(tile);
+	}
+
 	int i = -1;
 	int j = 0;
 
@@ -24,7 +35,7 @@ void Gpu::LoadTileMap(const std::vector<Tile>& tiles)
 	}
 }
 
-void Gpu::Refresh()
+void Gpu::Draw()
 {
 	for (int i = 0; i < sizeX; i++)
 	{

@@ -1,19 +1,27 @@
 #pragma once
 #include <vector>
+#include "GlobalDefinitions.h"
 #include "GraphicsManager.h"
+#include "Memory.h"
 #include "Tile.h"
 
 class Gpu
 {
 private:
-	const static int sizeX = 32;
-	const static int sizeY = 32;
+	Memory* pMemory;
+	const static u16 sizeX = 32;
+	const static u16 sizeY = 32;
 	Tile tilemap[sizeX][sizeY];
 	GraphicsManager gManager;
+
 public:
-	Gpu();
-	~Gpu();
-	void LoadTileMap(const std::vector<Tile>& tiles);
-	void Refresh();
+	Gpu(Memory* pMemory) : pMemory(pMemory) 
+	{ 
+		gManager.init();
+	}
+
+	~Gpu() {}
+	void LoadTileMap();
+	void Draw();
 };
 

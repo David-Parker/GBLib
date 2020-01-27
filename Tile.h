@@ -1,5 +1,5 @@
 #pragma once
-#include "Byte.h"
+#include "GlobalDefinitions.h"
 
 class Tile
 {

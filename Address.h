@@ -1,11 +1,13 @@
 #pragma once
+#include "GlobalDefinitions.h"
+
 class Address
 {
 private:
-	unsigned short store;
+	u16 store;
 public:
 	static const int ADDRESSSPACE = 65536;
-	Address(unsigned short address) : store(address) {}
+	Address(u16 address) : store(address) {}
 	Address() : store(0x0) {}
 
 	operator unsigned short() const

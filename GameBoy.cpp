@@ -1,5 +1,10 @@
 #include "GameBoy.h"
+#include <chrono>
+#include <thread>
 
+using namespace std::chrono;
+
+// Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
 	// Clear memory
@@ -16,9 +21,9 @@ void GameBoy::LoadRom(std::string path)
 	else {
 		fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
 
-		for (int i = 0; i < ROM_SIZE; i++)
+		for (u32 i = 0; i <= ROM_SIZE; i++)
 		{
-			memory.LoadValue(i, buffer[i]);
+			memory.StoreValue(i, buffer[i]);
 		}
 
 		fclose(filepoint);
@@ -26,7 +31,32 @@ void GameBoy::LoadRom(std::string path)
 
 	RomLoaded = true;
 
-	memory.MemoryDump(0x0000, 0xFFFF);
+	memory.Dump(0x0000, 0xFFFF);
+}
+
+void GameBoy::Render()
+{
+	gpu.LoadTileMap();
+	gpu.Draw();
+}
+
+int GameBoy::TickCpu()
+{
+	return this->cpu.Tick();
+}
+
+void GameBoy::SimulateCycleDelay(int cycles)
+{
+	high_resolution_clock::time_point t1 = high_resolution_clock::now();
+	while (1)
+	{
+		high_resolution_clock::time_point t2 = high_resolution_clock::now();
+
+		if (duration_cast<nanoseconds>(t2 - t1).count() >= cycles * CLOCK_NS_PER_CYCLE)
+		{
+			return;
+		}
+	}
 }
 
 GameInfo GameBoy::GetGameInfo()

@@ -12,13 +12,13 @@ Memory::~Memory()
 
 void Memory::ClearMemory()
 {
-	for (int i = 0 ; i < Address::ADDRESSSPACE; ++i)
+	for (u32 i = 0 ; i < Address::ADDRESSSPACE; ++i)
 	{
-		memory[i] = Byte();
+		memory[i] = 0;
 	}
 }
 
-void Memory::LoadValue(Address address, Byte value)
+void Memory::StoreValue(Address address, Byte value)
 {
 	if (address >= Address::ADDRESSSPACE)
 	{
@@ -38,7 +38,7 @@ Byte Memory::ReadValue(Address address)
 	return memory[address];
 }
 
-void Memory::MemoryDump(Address start, Address end)
+void Memory::Dump(Address start, Address end)
 {
 	if (start >= Address::ADDRESSSPACE)
 	{
@@ -53,8 +53,8 @@ void Memory::MemoryDump(Address start, Address end)
 	std::ofstream myfile;
 	myfile.open("dump.txt");
 
-	for (Address i = start; i < end; i++)
+	for (u32 i = start; i <= end; i++)
 	{
-		myfile << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << ": " << ReadValue(i).ToString() << std::endl;
+		myfile << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << ": " << ReadValue((Address)i) << std::endl;
 	}
 }

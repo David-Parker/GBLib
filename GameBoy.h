@@ -14,9 +14,13 @@ private:
 	bool RomLoaded = false;
 	Gpu gpu;
 	Cpu cpu;
-public:
 	Memory memory;
-	GameBoy() : memory() {}
+
+public:
+	GameBoy() : memory(), cpu(&memory), gpu(&memory) {}
 	void LoadRom(std::string path);
+	void Render();
+	int TickCpu();
+	void SimulateCycleDelay(int cycles);
 	GameInfo GetGameInfo();
 };

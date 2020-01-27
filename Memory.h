@@ -2,8 +2,8 @@
 #include <stdexcept>
 #include <fstream>
 #include <iostream>
-#include "Byte.h"
 #include "Address.h"
+#include "GlobalDefinitions.h"
 
 class Memory
 {
@@ -13,8 +13,8 @@ public:
 	Memory();
 	~Memory();
 	void ClearMemory();
-	void LoadValue(Address address, Byte value);
+	void StoreValue(Address address, Byte value);
 	Byte ReadValue(Address address);
-	void MemoryDump(Address start, Address end);
+	void Dump(Address start, Address end);
 };
 

@@ -120,7 +120,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Address.cpp" />
-    <ClCompile Include="Byte.cpp" />
     <ClCompile Include="Cpu.cpp" />
     <ClCompile Include="GameBoy.cpp" />
     <ClCompile Include="GameInfo.cpp" />
@@ -132,13 +131,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Address.h" />
-    <ClInclude Include="Byte.h" />
     <ClInclude Include="Cpu.h" />
     <ClInclude Include="GameBoy.h" />
     <ClInclude Include="GameInfo.h" />
+    <ClInclude Include="GlobalDefinitions.h" />
     <ClInclude Include="Gpu.h" />
     <ClInclude Include="GraphicsManager.h" />
+    <ClInclude Include="Instructions.h" />
     <ClInclude Include="Memory.h" />
+    <ClInclude Include="RegisterU16.h" />
+    <ClInclude Include="RegisterU8.h" />
     <ClInclude Include="Tile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
