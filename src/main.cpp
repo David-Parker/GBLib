@@ -8,7 +8,7 @@
 int main()
 {
 	GameBoy boy;
-	boy.LoadRom("Tetris.gb");
+	boy.LoadRom("rom/Tetris.gb");
 	boy.GetGameInfo().PrintInfo();
 	boy.Render();
 
