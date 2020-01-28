@@ -11,5 +11,5 @@ GameInfo::~GameInfo()
 
 void GameInfo::PrintInfo()
 {
-	std::cout << "Title: " << title << std::endl;
+    std::cout << "Title: " << title << std::endl;
 }

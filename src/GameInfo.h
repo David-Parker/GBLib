@@ -3,11 +3,11 @@
 class GameInfo
 {
 public:
-	std::string title;
-	bool isGBColor;
+    std::string title;
+    bool isGBColor;
 
-	GameInfo();
-	~GameInfo();
-	void PrintInfo();
+    GameInfo();
+    ~GameInfo();
+    void PrintInfo();
 };
 

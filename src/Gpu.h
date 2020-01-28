@@ -8,20 +8,20 @@
 class Gpu
 {
 private:
-	Memory* pMemory;
-	const static u16 sizeX = 32;
-	const static u16 sizeY = 32;
-	Tile tilemap[sizeX][sizeY];
-	GraphicsManager gManager;
+    Memory* pMemory;
+    const static u16 sizeX = 32;
+    const static u16 sizeY = 32;
+    Tile tilemap[sizeX][sizeY];
+    GraphicsManager gManager;
 
 public:
-	Gpu(Memory* pMemory) : pMemory(pMemory) 
-	{ 
-		gManager.init();
-	}
+    Gpu(Memory* pMemory) : pMemory(pMemory) 
+    { 
+        gManager.init();
+    }
 
-	~Gpu() {}
-	void LoadTileMap();
-	void Draw();
+    ~Gpu() {}
+    void LoadTileMap();
+    void Draw();
 };
 

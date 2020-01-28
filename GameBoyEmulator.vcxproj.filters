@@ -36,9 +36,6 @@
     <ClInclude Include="src\GraphicsManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Instructions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
