@@ -19,8 +19,3 @@ Tile::Tile(Byte data[16])
         line++;
     }
 }
-
-Tile::~Tile()
-{
-
-}

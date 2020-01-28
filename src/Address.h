@@ -26,6 +26,6 @@ public:
         return operator+=(1);
     }
 
-    ~Address();
+    ~Address() {}
 };
 

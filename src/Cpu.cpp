@@ -110,6 +110,52 @@ int Cpu::LdnnA(u16 value)
     return 4;
 }
 
+int Cpu::LdAHLI()
+{
+    A = pMemory->ReadValue(HL);
+    HL++;
+
+    return 2;
+}
+
+int Cpu::LdAHLD()
+{
+    A = pMemory->ReadValue(HL);
+    HL--;
+
+    return 2;
+}
+
+int Cpu::LdBCA()
+{
+    pMemory->StoreValue(BC, A);
+
+    return 2;
+}
+
+int Cpu::LdDEA()
+{
+    pMemory->StoreValue(DE, A);
+
+    return 2;
+}
+
+int Cpu::LdHLIA()
+{
+    pMemory->StoreValue(HL, A);
+    HL++;
+
+    return 2;
+}
+
+int Cpu::LdHLDA()
+{
+    pMemory->StoreValue(HL, A);
+    HL--;
+
+    return 2;
+}
+
 int Cpu::AddCommon(u8 value, bool addCarry)
 {
     F.ClearAllFlags();

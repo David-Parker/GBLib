@@ -32,7 +32,6 @@
     <ClInclude Include="src\Tile.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Address.cpp" />
     <ClCompile Include="src\Cpu.cpp" />
     <ClCompile Include="src\GameBoy.cpp" />
     <ClCompile Include="src\GameInfo.cpp" />
