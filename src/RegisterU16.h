@@ -1,4 +1,5 @@
 #pragma once
+#include "Address.h"
 #include "GlobalDefinitions.h"
 
 class RegisterU16
@@ -12,6 +13,11 @@ public:
 	~RegisterU16() {}
 
 	operator u16() const
+	{
+		return value;
+	}
+
+	operator Address() const
 	{
 		return value;
 	}

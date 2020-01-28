@@ -4,7 +4,7 @@ void Gpu::LoadTileMap()
 {
 	std::vector<Tile> tiles;
 	
-	Address start = 0x3fff;
+	Address start = 0x3000;
 	Address end = start + 0x4000;
 
 	for (Address i = start; i < end; i++)
