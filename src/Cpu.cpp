@@ -19,6 +19,11 @@ u16 Cpu::Combine(u8 high, u8 low)
     return (high << 4) + low;
 }
 
+int Cpu::Nop()
+{
+    return 0;
+}
+
 int Cpu::Ld(RegisterU8& dest, RegisterU8& src)
 {
     dest = src;
@@ -154,6 +159,66 @@ int Cpu::LdHLDA()
     HL--;
 
     return 2;
+}
+
+int Cpu::Ldnn(RegisterU16& dest, u16 value)
+{
+    dest = value;
+
+    return 3;
+}
+
+int Cpu::LdSPHL()
+{
+    SP = HL;
+
+    return 2;
+}
+
+int Cpu::Push(RegisterU16& reg)
+{
+    pMemory->StoreValue(--SP, reg.GetHighByte());
+    pMemory->StoreValue(--SP, reg.GetLowByte());
+
+    return 4;
+}
+
+int Cpu::Pop(RegisterU16& reg)
+{
+    reg.SetLowByte(pMemory->ReadValue(SP++));
+    reg.SetHighByte(pMemory->ReadValue(SP++));
+
+    return 3;
+}
+
+int Cpu::LdHLSPe(s8 value)
+{
+    F.ClearAllFlags();
+
+    int flags = 0;
+    u8 spLow = SP.GetLowByte();
+
+    if (spLow + value > 0x00FF)
+    {
+        flags += RegisterU8::HCARRY_FLAG;
+    }
+
+    if (SP > UINT16_MAX - value)
+    {
+        flags += RegisterU8::CARRY_FLAG;
+    }
+
+    HL = SP + value;
+
+    return 3;
+}
+
+int Cpu::LdnnSP(u16 value)
+{
+    pMemory->StoreValue(value, SP.GetLowByte());
+    pMemory->StoreValue(value + 1, SP.GetHighByte());
+
+    return 5;
 }
 
 int Cpu::AddCommon(u8 value, bool addCarry)
@@ -416,7 +481,7 @@ int Cpu::Inc(RegisterU8& reg)
         flags += RegisterU8::HCARRY_FLAG;
     }
 
-    reg++;
+    ++reg;
 
     if (reg == 0)
     {
@@ -465,7 +530,7 @@ int Cpu::Dec(RegisterU8& reg)
         flags += RegisterU8::HCARRY_FLAG;
     }
 
-    reg--;
+    --reg;
 
     if (reg == 0)
     {

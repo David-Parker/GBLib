@@ -39,9 +39,19 @@ public:
         return *this;
     }
 
-    RegisterU16& operator++(int)
+    // postfix x++
+    RegisterU16 operator++(int)
     {
-        return operator+=(1);
+        RegisterU16 copy(*this);
+        operator++();
+        return copy;
+    }
+
+    // prefix ++x
+    RegisterU16& operator++()
+    {
+        value++;
+        return *this;
     }
 
     RegisterU16& operator-=(u16 num)
@@ -50,13 +60,50 @@ public:
         return *this;
     }
 
+    // postfix x--
     RegisterU16& operator--(int)
     {
-        return operator-=(1);
+        RegisterU16 copy(*this);
+        operator--();
+        return copy;
+    }
+
+    // prefix --x
+    RegisterU16& operator--()
+    {
+        value--;
+        return *this;
+    }
+
+    bool operator==(u16 num)
+    {
+        return value == num;
     }
 
     bool operator==(int num)
     {
         return value == num;
+    }
+
+    u8 GetHighByte()
+    {
+        return (u8)(value >> 8);
+    }
+
+    u8 GetLowByte()
+    {
+        return (u8)(value);
+    }
+
+    void SetHighByte(u8 num)
+    {
+        value &= 0x00FF;
+        value += (num << 8);
+    }
+
+    void SetLowByte(u8 num)
+    {
+        value &= 0xFF00;
+        value += num;
     }
 };

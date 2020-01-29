@@ -98,49 +98,87 @@ namespace GameBoyTests
         {
             Byte value = 0;
             RegisterU8 reg(&value);
+            RegisterU8 res(&value);
 
             Assert::IsTrue(reg == 0);
             Assert::IsTrue(*reg == 0);
 
-            reg++;
+            res = ++reg;
             Assert::IsTrue(reg == 1);
+            Assert::IsTrue(res == 1);
             Assert::IsTrue(*reg == 1);
 
-            reg += 2;
+            res = reg += 2;
             Assert::IsTrue(reg == 3);
+            Assert::IsTrue(res == 3);
             Assert::IsTrue(*reg == 3);
 
-            reg -= 2;
+            res = reg -= 2;
             Assert::IsTrue(reg == 1);
+            Assert::IsTrue(res == 1);
             Assert::IsTrue(*reg == 1);
 
-            reg--;
+            res = --reg;
             Assert::IsTrue(reg == 0);
+            Assert::IsTrue(res == 0);
             Assert::IsTrue(*reg == 0);
         }
 
         TEST_METHOD(RegisterU16_Operators)
         {
             RegisterU16 reg;
+            RegisterU16 res;
 
             Assert::IsTrue(reg == 0);
             Assert::IsTrue(*reg == 0);
 
-            reg++;
+            res = reg++;
             Assert::IsTrue(reg == 1);
+            Assert::IsTrue(res == 0);
             Assert::IsTrue(*reg == 1);
 
-            reg += 2;
+            res = reg += 2;
             Assert::IsTrue(reg == 3);
+            Assert::IsTrue(res == 3);
             Assert::IsTrue(*reg == 3);
 
-            reg -= 2;
+            res = reg -= 2;
             Assert::IsTrue(reg == 1);
+            Assert::IsTrue(res == 1);
             Assert::IsTrue(*reg == 1);
 
-            reg--;
+            res = reg--;
             Assert::IsTrue(reg == 0);
+            Assert::IsTrue(res == 1);
             Assert::IsTrue(*reg == 0);
+        }
+
+        TEST_METHOD(RegisterU16_GetHighByte)
+        {
+            RegisterU16 reg = 0b1001100100000000;
+            u8 high = reg.GetHighByte();
+            Assert::IsTrue(high == 0b10011001);
+        }
+
+        TEST_METHOD(RegisterU16_GetLowByte)
+        {
+            RegisterU16 reg = 0b0000000010011001;
+            u8 low = reg.GetLowByte();
+            Assert::IsTrue(low == 0b10011001);
+        }
+
+        TEST_METHOD(RegisterU16_SetHighByte)
+        {
+            RegisterU16 reg = 0b1111111110011001;
+            reg.SetHighByte(0b10011001);
+            Assert::IsTrue(reg == 0b1001100110011001);
+        }
+
+        TEST_METHOD(RegisterU16_SetLowByte)
+        {
+            RegisterU16 reg = 0b1001100111111111;
+            reg.SetLowByte(0b10011001);
+            Assert::IsTrue(reg == 0b1001100110011001);
         }
     };
 }

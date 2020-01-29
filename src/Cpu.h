@@ -38,6 +38,7 @@ private:
 
 #pragma region Instructions
     // 8-bit Transfer and I/O                       // opcode   operands   cycles
+    int Nop();                                      // 00000000 -> 0
     int Ld(RegisterU8& dest, RegisterU8& src);      // 01xxxyyy (r, r) -> 1
     int Ld(RegisterU8& dest, u8 value);             // 00xxx110 (r) + xxxxxxxx (n) -> 2
     int LdrHL(RegisterU8& src);                     // 01xxx110 (r) -> 2
@@ -57,6 +58,14 @@ private:
     int LdDEA();                                    // 00010010 -> 2
     int LdHLIA();                                   // 00100010 -> 2
     int LdHLDA();                                   // 00110010 -> 2
+
+    // 16-bit Transfer
+    int Ldnn(RegisterU16& dest, u16 value);         // 00xx0001 (dd) + xxxxxxxx (n) + xxxxxxxx (n) -> 3
+    int LdSPHL();                                   // 11111001 -> 2
+    int Push(RegisterU16& reg);                     // 11xx0101 (qq) -> 4
+    int Pop(RegisterU16& reg);                      // 11xx0001 (qq) -> 3
+    int LdHLSPe(s8 value);                          // 11111000 + xxxxxxxx (e) -> 3
+    int LdnnSP(u16 value);                          // 00001000 + xxxxxxxx (n) + xxxxxxxx (n) -> 5
 
     // 8-bit Arithmetic
     int Add(RegisterU8& reg);                       // 10000xxx (r) -> 1

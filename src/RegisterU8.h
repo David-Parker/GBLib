@@ -17,6 +17,7 @@ public:
     };
 
     RegisterU8(u8* pValue) : pValue(pValue) {}
+    RegisterU8(RegisterU8& rhs) : pValue(rhs.pValue) {}
     ~RegisterU8() {}
 
     operator u8() const
@@ -41,9 +42,11 @@ public:
         return *this;
     }
 
-    RegisterU8& operator++(int)
+    // prefix ++x
+    RegisterU8& operator++()
     {
-        return operator+=(1);
+        *pValue += 1;
+        return *this;
     }
 
     RegisterU8& operator-=(u8 num)
@@ -52,9 +55,11 @@ public:
         return *this;
     }
 
-    RegisterU8& operator--(int)
+    // prefix --x
+    RegisterU8& operator--()
     {
-        return operator-=(1);
+        *pValue -= 1;
+        return *this;
     }
 
     bool operator==(int num)
