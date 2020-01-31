@@ -1,4 +1,5 @@
 #include "CppUnitTest.h"
+#include "Cpu.h"
 #include "RegisterU16.h"
 #include "RegisterU8.h"
 
@@ -92,6 +93,49 @@ namespace GameBoyTests
 
             reg.ClearFlags(RegisterU8::SUB_FLAG);
             Assert::IsTrue(reg == 0);
+        }
+
+        TEST_METHOD(Register_FlagIsSet)
+        {
+            Byte value = 0;
+            RegisterU8 reg(&value);
+
+            Assert::IsTrue(reg == 0);
+
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.SetFlags(RegisterU8::ZERO_FLAG);
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.SetFlags(RegisterU8::CARRY_FLAG);
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.SetFlags(RegisterU8::HCARRY_FLAG);
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.SetFlags(RegisterU8::SUB_FLAG);
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.ClearAllFlags();
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
         }
 
         TEST_METHOD(RegisterU8_Operators)

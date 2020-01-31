@@ -19,6 +19,82 @@ u16 Cpu::Combine(u8 high, u8 low)
     return (high << 4) + low;
 }
 
+bool Cpu::CarryU8(u8 lhs, u8 rhs)
+{
+    if (lhs > UINT8_MAX - rhs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Cpu::HCarryU8(u8 lhs, u8 rhs)
+{
+    u8 mask = 0b00001111;
+    u8 lhsNibble = lhs & mask;
+    u8 rhsNibble = rhs & mask;
+
+    if (lhsNibble + rhsNibble > mask)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Cpu::CarryU16(u16 lhs, u16 rhs)
+{
+    if (lhs > UINT16_MAX - rhs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Cpu::HCarryU16(u16 lhs, u16 rhs)
+{
+    if (lhs + rhs > 0x00FF)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Cpu::CarryS8(u16 lhs, s8 rhs)
+{
+    if (lhs > UINT16_MAX - rhs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Cpu::HCarryS8(u16 lhs, s8 rhs)
+{
+    if (lhs + rhs > 0x00FF)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
 int Cpu::Nop()
 {
     return 0;
@@ -210,6 +286,8 @@ int Cpu::LdHLSPe(s8 value)
 
     HL = SP + value;
 
+    F.SetFlags(flags);
+
     return 3;
 }
 
@@ -221,24 +299,143 @@ int Cpu::LdnnSP(u16 value)
     return 5;
 }
 
+int Cpu::AddHL(RegisterU16& reg)
+{
+    F.ClearFlags(RegisterU8::CARRY_FLAG | RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
+
+    int flags = 0;
+    flags += HCarryU16(reg, HL) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += CarryU16(reg, HL) ? RegisterU8::CARRY_FLAG : 0;
+
+    HL += reg;
+
+    F.SetFlags(flags);
+
+    return 2;
+}
+
+int Cpu::AddSP(s8 value)
+{
+    F.ClearAllFlags();
+
+    int flags = 0;
+    flags += HCarryS8(value, HL) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += CarryS8(value, HL) ? RegisterU8::CARRY_FLAG : 0;
+
+    SP += value;
+
+    F.SetFlags(flags);
+
+    return 4;
+}
+
+int Cpu::Inc(RegisterU16& reg)
+{
+    reg++;
+
+    return 2;
+}
+
+int Cpu::Dec(RegisterU16& reg)
+{
+    reg--;
+
+    return 2;
+}
+
+int Cpu::RlcA()
+{
+    F.ClearAllFlags();
+
+    int bit7 = (A & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    A = (A << 1) | bit7;
+
+    return 1;
+}
+
+int Cpu::RlA()
+{
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+    F.ClearAllFlags();
+
+    int bit7 = (A & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    A = (A << 1) | cyBit;
+
+    return 1;
+}
+
+int Cpu::RrcA()
+{
+    F.ClearAllFlags();
+
+    int bit0 = A & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    A = (A >> 1) | (bit0 << 7);
+
+    return 1;
+}
+
+int Cpu::RrA()
+{
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+    F.ClearAllFlags();
+
+    int bit0 = A & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    A = (A >> 1) | (cyBit << 7);
+
+    return 1;
+}
+
+int Cpu::Rlc()
+{
+    return 0;
+}
+
+int Cpu::Rl()
+{
+    return 0;
+}
+
+int Cpu::Rrc()
+{
+    return 0;
+}
+
+int Cpu::Rr()
+{
+    return 0;
+}
+
 int Cpu::AddCommon(u8 value, bool addCarry)
 {
     F.ClearAllFlags();
 
     int flags = 0;
-    u8 mask = 0b00001111;
-    u8 valNibble = value & mask;
-    u8 ANibble = A & mask;
-
-    if (valNibble + ANibble > mask)
-    {
-        flags += RegisterU8::HCARRY_FLAG;
-    }
-
-    if (A > UINT8_MAX - value)
-    {
-        flags += RegisterU8::CARRY_FLAG;
-    }
+    flags += HCarryU8(A, value) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += CarryU8(A, value) ? RegisterU8::CARRY_FLAG : 0;
 
     A += value;
 

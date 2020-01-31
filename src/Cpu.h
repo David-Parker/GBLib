@@ -35,6 +35,12 @@ private:
     int AddCommon(u8 value, bool addCarry);
     int SubCommon(u8 value, bool subCarry);
     u16 Combine(u8 high, u8 low);
+    bool CarryU8(u8 lhs, u8 rhs);
+    bool HCarryU8(u8 lhs, u8 rhs);
+    bool CarryU16(u16 lhs, u16 rhs);
+    bool HCarryU16(u16 lhs, u16 rhs);
+    bool CarryS8(u16 lhs, s8 rhs);
+    bool HCarryS8(u16 lhs, s8 rhs);
 
 #pragma region Instructions
     // 8-bit Transfer and I/O                       // opcode   operands   cycles
@@ -66,6 +72,20 @@ private:
     int Pop(RegisterU16& reg);                      // 11xx0001 (qq) -> 3
     int LdHLSPe(s8 value);                          // 11111000 + xxxxxxxx (e) -> 3
     int LdnnSP(u16 value);                          // 00001000 + xxxxxxxx (n) + xxxxxxxx (n) -> 5
+
+    // 16-bit Arithmetic
+    int AddHL(RegisterU16& reg);                    // 00xx1001 (ss) -> 2
+    int AddSP(s8 value);                            // 11101000 + xxxxxxxx (e) -> 4
+    int Inc(RegisterU16& reg);                      // 00xx0011 (ss) -> 2
+    int Dec(RegisterU16& reg);                      // 00xx1011 (ss) -> 2
+    int RlcA();                                     // 00000111 -> 1
+    int RlA();                                      // 00010111-> 1
+    int RrcA();                                     // 00001111 -> 1
+    int RrA();                                      // 00011111 -> 1
+    int Rlc();                                      
+    int Rl();
+    int Rrc();
+    int Rr();
 
     // 8-bit Arithmetic
     int Add(RegisterU8& reg);                       // 10000xxx (r) -> 1

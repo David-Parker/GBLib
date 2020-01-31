@@ -77,6 +77,18 @@ public:
         *pValue = (*pValue & ~flags);
     }
 
+    bool FlagIsSet(u8 flags)
+    {
+        if ((flags & *pValue) > 0)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     void ClearAllFlags()
     {
         *pValue = 0;
