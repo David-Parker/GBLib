@@ -93,4 +93,41 @@ public:
     {
         *pValue = 0;
     }
+
+    u8 GetHighNibble()
+    {
+        return *pValue >> 4;
+    }
+
+    u8 GetLowNibble()
+    {
+        return *pValue & 0b00001111;
+    }
+
+    void SetHighNibble(u8 num)
+    {
+        *pValue &= 0x0F;
+        *pValue += (num << 4);
+    }
+
+    void SetLowNibble(u8 num)
+    {
+        *pValue &= 0xF0;
+        *pValue += (num & 0x0F);
+    }
+
+    int GetBit(int bit)
+    {
+        return (*pValue >> bit) & 0b00000001;
+    }
+
+    void SetBit(int bit)
+    {
+        *pValue |= (1 << bit);
+    }
+
+    void ResetBit(int bit)
+    {
+        *pValue &= ~(1 << bit);
+    }
 };

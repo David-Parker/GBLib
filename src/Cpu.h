@@ -82,10 +82,37 @@ private:
     int RlA();                                      // 00010111-> 1
     int RrcA();                                     // 00001111 -> 1
     int RrA();                                      // 00011111 -> 1
-    int Rlc();                                      
-    int Rl();
-    int Rrc();
-    int Rr();
+    int Rlc(RegisterU8& reg);                       // 
+    int RlcHL();
+    int Rl(RegisterU8& reg);
+    int RlHL();
+    int Rrc(RegisterU8& reg);
+    int RrcHL();
+    int Rr(RegisterU8& reg);
+    int RrHL();
+    int Sla(RegisterU8& reg);
+    int SlaHL();
+    int Sra(RegisterU8& reg);
+    int SraHL();
+    int Srl(RegisterU8& reg);
+    int SrlHL();
+    int Swap(RegisterU8& reg);
+    int SwapHL();
+
+    // Bit Operations
+    int Bit(RegisterU8& reg, u8 bit);
+    int BitHL(u8 bit);
+    int Set(RegisterU8& reg, u8 bit);
+    int SetHL(u8 bit);
+    int Res(RegisterU8& reg, u8 bit);
+    int ResHL(u8 bit);
+
+    // Jump instructions
+    int Jpnn(u16 value);
+    int Jpcc(u8 cc, u16 value);
+    int Jre(s8 value);
+    int Jrecc(u8 cc, s8 value);
+    int JpHL();
 
     // 8-bit Arithmetic
     int Add(RegisterU8& reg);                       // 10000xxx (r) -> 1

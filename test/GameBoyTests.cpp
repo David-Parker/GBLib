@@ -1,4 +1,4 @@
-#include "CppUnitTest.h"
+﻿#include "CppUnitTest.h"
 #include "Cpu.h"
 #include "RegisterU16.h"
 #include "RegisterU8.h"
@@ -223,6 +223,121 @@ namespace GameBoyTests
             RegisterU16 reg = 0b1001100111111111;
             reg.SetLowByte(0b10011001);
             Assert::IsTrue(reg == 0b1001100110011001);
+        }
+
+        TEST_METHOD(General_UnsignedRightShift)
+        {
+            u8 value = 0b10000000;
+            int bit7 = (value & 0b10000000) >> 7;
+            Assert::IsTrue(bit7 == 1);
+        }
+
+        TEST_METHOD(General_UnsignedLeftShift)
+        {
+            u8 value = 0b00000001;
+            int bit0 = value << 7;
+            Assert::IsTrue(bit0 == 0b10000000);
+        }
+
+        TEST_METHOD(RegisterU8_GetHighNibble)
+        {
+            Byte value = 0b11010000;
+            RegisterU8 reg(&value);
+            u8 high = reg.GetHighNibble();
+            Assert::IsTrue(high == 0b00001101);
+        }
+
+        TEST_METHOD(RegisterU8_GetLowNibble)
+        {
+            Byte value = 0b00001101;
+            RegisterU8 reg(&value);
+            u8 low = reg.GetLowNibble();
+            Assert::IsTrue(low == 0b00001101);
+        }
+
+        TEST_METHOD(RegisterU8_SetHighNibble)
+        {
+            Byte value = 0b00001011;
+            RegisterU8 reg(&value);
+            reg.SetHighNibble(0b00001101);
+            Assert::IsTrue(value == 0b11011011);
+        }
+
+        TEST_METHOD(RegisterU8_SetLowNibble)
+        {
+            Byte value = 0b10110000;
+            RegisterU8 reg(&value);
+            reg.SetLowNibble(0b00001101);
+            Assert::IsTrue(value == 0b10111101);
+        }
+
+        TEST_METHOD(RegisterU8_GetBit)
+        {
+            Byte value = 0b10101010;
+            RegisterU8 reg(&value);
+
+            Assert::IsTrue(reg.GetBit(0) == 0);
+            Assert::IsTrue(reg.GetBit(1) == 1);
+            Assert::IsTrue(reg.GetBit(2) == 0);
+            Assert::IsTrue(reg.GetBit(3) == 1);
+            Assert::IsTrue(reg.GetBit(4) == 0);
+            Assert::IsTrue(reg.GetBit(5) == 1);
+            Assert::IsTrue(reg.GetBit(6) == 0);
+            Assert::IsTrue(reg.GetBit(7) == 1);
+        }
+
+        TEST_METHOD(RegisterU8_SetBit)
+        {
+            Byte value = 0;
+            RegisterU8 reg(&value);
+
+            reg.SetBit(1);
+            reg.SetBit(3);
+            reg.SetBit(5);
+            reg.SetBit(7);
+
+            Assert::IsTrue(reg.GetBit(0) == 0);
+            Assert::IsTrue(reg.GetBit(1) == 1);
+            Assert::IsTrue(reg.GetBit(2) == 0);
+            Assert::IsTrue(reg.GetBit(3) == 1);
+            Assert::IsTrue(reg.GetBit(4) == 0);
+            Assert::IsTrue(reg.GetBit(5) == 1);
+            Assert::IsTrue(reg.GetBit(6) == 0);
+            Assert::IsTrue(reg.GetBit(7) == 1);
+        }
+
+        TEST_METHOD(RegisterU8_ResetBit)
+        {
+            Byte value = 0;
+            RegisterU8 reg(&value);
+
+            reg.SetBit(1);
+            reg.SetBit(3);
+            reg.SetBit(5);
+            reg.SetBit(7);
+
+            Assert::IsTrue(reg.GetBit(0) == 0);
+            Assert::IsTrue(reg.GetBit(1) == 1);
+            Assert::IsTrue(reg.GetBit(2) == 0);
+            Assert::IsTrue(reg.GetBit(3) == 1);
+            Assert::IsTrue(reg.GetBit(4) == 0);
+            Assert::IsTrue(reg.GetBit(5) == 1);
+            Assert::IsTrue(reg.GetBit(6) == 0);
+            Assert::IsTrue(reg.GetBit(7) == 1);
+
+            reg.ResetBit(1);
+            reg.ResetBit(3);
+            reg.ResetBit(5);
+            reg.ResetBit(7);
+
+            Assert::IsTrue(reg.GetBit(0) == 0);
+            Assert::IsTrue(reg.GetBit(1) == 0);
+            Assert::IsTrue(reg.GetBit(2) == 0);
+            Assert::IsTrue(reg.GetBit(3) == 0);
+            Assert::IsTrue(reg.GetBit(4) == 0);
+            Assert::IsTrue(reg.GetBit(5) == 0);
+            Assert::IsTrue(reg.GetBit(6) == 0);
+            Assert::IsTrue(reg.GetBit(7) == 0);
         }
     };
 }

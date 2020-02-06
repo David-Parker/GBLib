@@ -409,24 +409,415 @@ int Cpu::RrA()
     return 1;
 }
 
-int Cpu::Rlc()
+int Cpu::Rlc(RegisterU8& reg)
 {
-    return 0;
+    F.ClearAllFlags();
+
+    int bit7 = (reg & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = (reg << 1) | bit7;
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
 }
 
-int Cpu::Rl()
+int Cpu::RlcHL()
 {
-    return 0;
+    F.ClearAllFlags();
+
+    u8 value = pMemory->ReadValue(HL);
+
+    int bit7 = (value & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = (value << 1) | bit7;
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
 }
 
-int Cpu::Rrc()
+int Cpu::Rl(RegisterU8& reg)
 {
-    return 0;
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+
+    F.ClearAllFlags();
+
+    int bit7 = (reg & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = (reg << 1) | cyBit;
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
 }
 
-int Cpu::Rr()
+int Cpu::RlHL()
 {
-    return 0;
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+    u8 value = pMemory->ReadValue(HL);
+
+    F.ClearAllFlags();
+
+    int bit7 = (value & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = (value << 1) | cyBit;
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Rrc(RegisterU8& reg)
+{
+    F.ClearAllFlags();
+
+    int bit0 = reg & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = (reg >> 1) | (bit0 << 7);
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::RrcHL()
+{
+    F.ClearAllFlags();
+    u8 value = pMemory->ReadValue(HL);
+
+    int bit0 = value & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = (value >> 1) | (bit0 << 7);
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Rr(RegisterU8& reg)
+{
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+    F.ClearAllFlags();
+
+    int bit0 = reg & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = (reg >> 1) | (cyBit << 7);
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::RrHL()
+{
+    int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
+    u8 value = pMemory->ReadValue(HL);
+
+    F.ClearAllFlags();
+
+    int bit0 = value & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = (value >> 1) | (cyBit << 7);
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Sla(RegisterU8& reg)
+{
+    F.ClearAllFlags();
+
+    int bit7 = (reg & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = reg << 1;
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::SlaHL()
+{
+    F.ClearAllFlags();
+    u8 value = pMemory->ReadValue(HL);
+
+    int bit7 = (value & 0b10000000) >> 7;
+
+    if (bit7 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = value << 1;
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Sra(RegisterU8& reg)
+{
+    F.ClearAllFlags();
+
+    int bit0 = reg & 0b00000001;
+    int bit7 = (reg & 0b10000000) >> 7;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = reg >> 1;
+    reg = reg | bit7;
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::SraHL()
+{
+    F.ClearAllFlags();
+    u8 value = pMemory->ReadValue(HL);
+
+    int bit0 = value & 0b00000001;
+    int bit7 = (value & 0b10000000) >> 7;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = value >> 1;
+    value = value | bit7;
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Srl(RegisterU8& reg)
+{
+    F.ClearAllFlags();
+
+    int bit0 = reg & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    reg = reg >> 1;
+
+    reg = reg & 0b01111111;
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::SrlHL()
+{
+    F.ClearAllFlags();
+    u8 value = pMemory->ReadValue(HL);
+
+    int bit0 = value & 0b00000001;
+
+    if (bit0 == 1)
+    {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    value = value >> 1;
+
+    value = value & 0b01111111;
+
+    if (value == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, value);
+
+    return 4;
+}
+
+int Cpu::Swap(RegisterU8& reg)
+{
+    F.ClearAllFlags();
+
+    u8 low = reg.GetLowNibble();
+    u8 high = reg.GetHighNibble();
+
+    reg.SetLowNibble(high);
+    reg.SetHighNibble(low);
+
+    if (reg == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 2;
+}
+
+int Cpu::SwapHL()
+{
+    F.ClearAllFlags();
+
+    u8 value = pMemory->ReadValue(HL);
+    RegisterU8 val(&value);
+
+    u8 low = val.GetLowNibble();
+    u8 high = val.GetHighNibble();
+
+    val.SetLowNibble(high);
+    val.SetHighNibble(low);
+
+    if (val == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    pMemory->StoreValue(HL, val);
+
+    return 4;
+}
+
+int Cpu::Bit(RegisterU8& reg, u8 bit)
+{
+    F.ClearFlags(RegisterU8::SUB_FLAG | RegisterU8::ZERO_FLAG);
+    int flags = RegisterU8::HCARRY_FLAG;
+
+    int bVal = reg.GetBit(bit);
+    int bValCom = bVal == 0 ? 1 : 0;
+
+    if (bValCom == 1)
+    {
+        flags += RegisterU8::ZERO_FLAG;
+    }
+
+    F.SetFlags(flags);
+
+    return 2;
+}
+
+int Cpu::BitHL(u8 bit)
+{
+    F.ClearFlags(RegisterU8::SUB_FLAG | RegisterU8::ZERO_FLAG);
+    int flags = RegisterU8::HCARRY_FLAG;
+
+    u8 value = pMemory->ReadValue(HL);
+    RegisterU8 val(&value);
+
+    int bVal = val.GetBit(bit);
+    int bValCom = bVal == 0 ? 1 : 0;
+
+    if (bValCom == 1)
+    {
+        flags += RegisterU8::ZERO_FLAG;
+    }
+
+    F.SetFlags(flags);
+
+    return 3;
 }
 
 int Cpu::AddCommon(u8 value, bool addCarry)
@@ -452,6 +843,143 @@ int Cpu::AddCommon(u8 value, bool addCarry)
     F.SetFlags(flags);
 
     return 2;
+}
+
+int Cpu::Set(RegisterU8& reg, u8 bit)
+{
+    reg.SetBit(bit);
+
+    return 2;
+}
+
+int Cpu::SetHL(u8 bit)
+{
+    u8 value = pMemory->ReadValue(HL);
+    RegisterU8 val(&value);
+    val.SetBit(bit);
+    pMemory->StoreValue(HL, val);
+
+    return 4;
+}
+
+int Cpu::Res(RegisterU8& reg, u8 bit)
+{
+    reg.ResetBit(bit);
+
+    return 2;
+}
+
+int Cpu::ResHL(u8 bit)
+{
+    u8 value = pMemory->ReadValue(HL);
+    RegisterU8 val(&value);
+    val.ResetBit(bit);
+    pMemory->StoreValue(HL, val);
+
+    return 4;
+}
+
+int Cpu::Jpnn(u16 value)
+{
+    PC = value;
+
+    return 4;
+}
+
+int Cpu::Jpcc(u8 cc, u16 value)
+{
+    bool shouldJump = false;
+
+    switch (cc)
+    {
+        case 0:
+            if (!F.FlagIsSet(RegisterU8::ZERO_FLAG))
+            {
+                shouldJump = true;
+            }
+            break;
+        case 1:
+            if (F.FlagIsSet(RegisterU8::ZERO_FLAG))
+            {
+                shouldJump = true;
+            }
+            break;
+        case 2:
+            if (!F.FlagIsSet(RegisterU8::CARRY_FLAG))
+            {
+                shouldJump = true;
+            }
+            break;
+        case 3:
+            if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
+            {
+                shouldJump = true;
+            }
+            break;
+    }
+
+    if (shouldJump)
+    {
+        PC = value;
+        return 4;
+    }
+
+    return 3;
+}
+
+int Cpu::Jre(s8 value)
+{
+    PC += value;
+
+    return 3;
+}
+
+int Cpu::Jrecc(u8 cc, s8 value)
+{
+    bool shouldJump = false;
+
+    switch (cc)
+    {
+    case 0:
+        if (!F.FlagIsSet(RegisterU8::ZERO_FLAG))
+        {
+            shouldJump = true;
+        }
+        break;
+    case 1:
+        if (F.FlagIsSet(RegisterU8::ZERO_FLAG))
+        {
+            shouldJump = true;
+        }
+        break;
+    case 2:
+        if (!F.FlagIsSet(RegisterU8::CARRY_FLAG))
+        {
+            shouldJump = true;
+        }
+        break;
+    case 3:
+        if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
+        {
+            shouldJump = true;
+        }
+        break;
+    }
+
+    if (shouldJump)
+    {
+        PC += value;
+        return 3;
+    }
+
+    return 2;
+}
+
+int Cpu::JpHL()
+{
+    PC = pMemory->ReadValue(HL);
+
+    return 1;
 }
 
 int Cpu::Add(RegisterU8& reg)
