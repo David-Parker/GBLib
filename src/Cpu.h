@@ -82,37 +82,37 @@ private:
     int RlA();                                      // 00010111-> 1
     int RrcA();                                     // 00001111 -> 1
     int RrA();                                      // 00011111 -> 1
-    int Rlc(RegisterU8& reg);                       // 
-    int RlcHL();
-    int Rl(RegisterU8& reg);
-    int RlHL();
-    int Rrc(RegisterU8& reg);
-    int RrcHL();
-    int Rr(RegisterU8& reg);
-    int RrHL();
-    int Sla(RegisterU8& reg);
-    int SlaHL();
-    int Sra(RegisterU8& reg);
-    int SraHL();
-    int Srl(RegisterU8& reg);
-    int SrlHL();
-    int Swap(RegisterU8& reg);
-    int SwapHL();
+    int Rlc(RegisterU8& reg);                       // 11001011 + 00000xxx (r) -> 2
+    int RlcHL();                                    // 11001011 + 00000110 -> 4
+    int Rl(RegisterU8& reg);                        // 11001011 + 00010xxx (r) -> 2
+    int RlHL();                                     // 11001011 + 00010110 -> 4
+    int Rrc(RegisterU8& reg);                       // 11001011 + 00001xxx (r) -> 2
+    int RrcHL();                                    // 11001011 + 00001110 -> 4
+    int Rr(RegisterU8& reg);                        // 11001011 + 00011xxx (r) -> 2
+    int RrHL();                                     // 11011011 + 00011110 -> 4
+    int Sla(RegisterU8& reg);                       // 11001011 + 00100xxx (r) -> 2
+    int SlaHL();                                    // 11011011 + 00100110 -> 4
+    int Sra(RegisterU8& reg);                       // 11001011 + 00101xxx (r) -> 2
+    int SraHL();                                    // 11001011 + 00101110 -> 4
+    int Srl(RegisterU8& reg);                       // 11001011 + 00111xxx (r) -> 2
+    int SrlHL();                                    // 11001011 + 00111110 -> 4
+    int Swap(RegisterU8& reg);                      // 11001011 + 00110xxx (r) -> 2
+    int SwapHL();                                   // 11001011 + 00110110 -> 4
 
     // Bit Operations
-    int Bit(RegisterU8& reg, u8 bit);
-    int BitHL(u8 bit);
-    int Set(RegisterU8& reg, u8 bit);
-    int SetHL(u8 bit);
-    int Res(RegisterU8& reg, u8 bit);
-    int ResHL(u8 bit);
+    int Bit(RegisterU8& reg, u8 bit);               // 11001011 + 01xxxyyy (b, r) -> 2
+    int BitHL(u8 bit);                              // 11001011 + 01xxx110 (b) -> 3
+    int Set(RegisterU8& reg, u8 bit);               // 11001011 + 11xxxyyy (b, r) -> 2
+    int SetHL(u8 bit);                              // 11001011 + 11xxx110 (b) -> 4
+    int Res(RegisterU8& reg, u8 bit);               // 11001011 + 10xxxyyy (b, r) -> 2
+    int ResHL(u8 bit);                              // 11001011 + 10xxx110 (b) -> 4
 
     // Jump instructions
-    int Jpnn(u16 value);
-    int Jpcc(u8 cc, u16 value);
-    int Jre(s8 value);
-    int Jrecc(u8 cc, s8 value);
-    int JpHL();
+    int Jpnn(u16 value);                            // 11000011 + xxxxxxxx (n) + xxxxxxxx (n) -> 4
+    int Jpcc(u8 cc, u16 value);                     // 110xx010 (cc) + xxxxxxxx (n) + xxxxxxxx (n) -> 4/3
+    int Jre(s8 value);                              // 00011000 + xxxxxxxx (e) -> 3
+    int Jrecc(u8 cc, s8 value);                     // 001xx000 (cc) + xxxxxxxx (e) -> 3/2
+    int JpHL();                                     // 11101001 -> 1
 
     // 8-bit Arithmetic
     int Add(RegisterU8& reg);                       // 10000xxx (r) -> 1
