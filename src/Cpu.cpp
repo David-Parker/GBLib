@@ -1,17 +1,64 @@
 #include "Cpu.h"
 
-
 Cpu::~Cpu()
 {
 }
 
 int Cpu::Tick()
 {
-    // Fetch
-    // Decode
-    // Execute
+#ifdef _DEBUG
+	char buf[256];
 
-    return 1;
+	// Debug "breakpoint"
+	if (PC == 0x100)
+	{
+		std::cout << "Breakpoint reached." << std::endl;
+	}
+
+	u8 opcode_debug = this->pMemory->ReadValue(PC);
+
+	if (opcode_debug == 0xCB)
+	{
+		opcode_debug = this->pMemory->ReadValue(PC+1);
+		snprintf(buf, 256, "PC: 0x%04X, Opcode: 0xCB%02X %s\n", PC, opcode_debug, opcode_strings_16[opcode_debug]);
+	}
+	else
+	{
+		snprintf(buf, 256, "PC: 0x%04X, Opcode: 0x%04X %s\n", PC, opcode_debug, opcode_strings[opcode_debug]);
+	}
+	
+	std::cout << buf;
+#endif
+
+	instruction_t instruction;
+	
+	// Fetch
+	u8 opcode = this->pMemory->ReadValue(PC++);
+
+	// Decode
+	if (opcode == 0xCB) // 16-bit OP code switch
+	{
+		opcode = this->pMemory->ReadValue(PC++);
+		instruction = this->opcodes_16[opcode];
+	}
+	else
+	{
+		instruction = this->opcodes[opcode];
+	}
+	
+    // Execute
+	int cycles = instruction();
+
+	if (cycles == -1)
+	{
+		// ERROR, unknown opcode.
+		char msg[256];
+		snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x02%X, PC: 0x04%X", opcode, PC);
+		throw std::exception(msg);
+	}
+
+	// Extra cycle for the opcode fetch
+    return cycles + 1;
 }
 
 u16 Cpu::Combine(u8 high, u8 low)
@@ -95,9 +142,31 @@ bool Cpu::HCarryS8(u16 lhs, s8 rhs)
     }
 }
 
+u8 Cpu::ReadByte()
+{
+	u8 byte = this->pMemory->ReadValue(PC++);
+
+	return byte;
+}
+
+u16 Cpu::ReadTwoBytes()
+{
+	u16 lsb = (u16)ReadByte();
+	u16 msb = (u16)ReadByte();
+
+	return (msb << 8) + lsb;
+}
+
 int Cpu::Nop()
 {
     return 0;
+}
+
+int Cpu::Stop()
+{
+	this->IME = 0;
+
+	return 1;
 }
 
 int Cpu::Ld(RegisterU8& dest, RegisterU8& src)
@@ -1108,7 +1177,7 @@ int Cpu::AndHL()
 
 int Cpu::Or(RegisterU8& reg)
 {
-    return Or(reg) / 2;
+    return Or(*reg) / 2;
 }
 
 int Cpu::Or(u8 value)
@@ -1132,7 +1201,7 @@ int Cpu::OrHL()
 
 int Cpu::Xor(RegisterU8& reg)
 {
-    return Xor(reg) / 2;
+    return Xor(*reg) / 2;
 }
 
 int Cpu::Xor(u8 value)

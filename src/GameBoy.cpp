@@ -4,24 +4,54 @@
 
 using namespace std::chrono;
 
+// Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
+void GameBoy::LoadBootRom()
+{
+	// Clear memory
+	memory.ClearMemory();
+
+	unsigned currentAddress = 0x0;
+	unsigned char buffer[256];
+	FILE *filepoint;
+	errno_t err;
+	std::string path = "rom/boot.bin";
+
+	if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
+	{
+		throw std::exception("Could not open boot ROM file.");
+	}
+	else
+	{
+		fread(buffer, sizeof(unsigned char), 256, filepoint);
+
+		for (u32 i = 0; i < 256; i++)
+		{
+			memory.StoreValue(i, buffer[i]);
+		}
+
+		fclose(filepoint);
+	}
+}
+
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
-    // Clear memory
-    memory.ClearMemory();
+	LoadBootRom();
 
-    unsigned currentAddress = 0x0; // Game Code starts at address 100, load scrolling graphic at 104
+    unsigned currentAddress = 0x100; // Game Code starts at address 100, load scrolling graphic at 104
     unsigned char buffer[ROM_SIZE];
     FILE *filepoint;
     errno_t err;
 
-    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0) {
+    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0) 
+	{
         throw std::exception("Could not open ROM file.");
     }
-    else {
-        fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
+    else 
+	{
+        size_t bytes = fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
 
-        for (u32 i = 0; i <= ROM_SIZE; i++)
+        for (u32 i = currentAddress; i < bytes; i++)
         {
             memory.StoreValue(i, buffer[i]);
         }
@@ -40,17 +70,37 @@ void GameBoy::Render()
     gpu.Draw();
 }
 
-int GameBoy::TickCpu()
+void GameBoy::Start()
 {
-    return this->cpu.Tick();
+	try
+	{
+		this->Render();
+
+		while (1)
+		{
+			int cycles = this->cpu.Tick();
+			this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
+			//std::this_thread::sleep_for(10ms);
+		}
+	}
+	catch (std::exception& ex)
+	{
+		std::cout << "Exception encountered: " << ex.what() << std::endl;
+	}
+}
+
+void GameBoy::Stop()
+{
+
 }
 
 void GameBoy::SimulateCycleDelay(int cycles)
 {
-    high_resolution_clock::time_point t1 = high_resolution_clock::now();
+    auto t1 = high_resolution_clock::now();
+
     while (1)
     {
-        high_resolution_clock::time_point t2 = high_resolution_clock::now();
+		auto t2 = high_resolution_clock::now();
 
         if (duration_cast<nanoseconds>(t2 - t1).count() >= cycles * CLOCK_NS_PER_CYCLE)
         {
@@ -69,6 +119,7 @@ GameInfo GameBoy::GetGameInfo()
     // Get the title
     char title[16] = {};
     int loc = 0;
+
     for (int i = 0x134; i <= 0x142; ++i)
     {
         Byte b = memory.ReadValue(i);
