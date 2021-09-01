@@ -13,8 +13,8 @@ public:
     Memory();
     ~Memory();
     void ClearMemory();
-    void StoreValue(Address address, Byte value);
-    Byte ReadValue(Address address);
+    void Write(Address address, Byte value);
+    Byte Read(Address address);
     void Dump(Address start, Address end);
 };
 

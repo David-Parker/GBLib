@@ -7,9 +7,6 @@ using namespace std::chrono;
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {
-	// Clear memory
-	memory.ClearMemory();
-
 	unsigned currentAddress = 0x0;
 	unsigned char buffer[256];
 	FILE *filepoint;
@@ -22,11 +19,11 @@ void GameBoy::LoadBootRom()
 	}
 	else
 	{
-		fread(buffer, sizeof(unsigned char), 256, filepoint);
+		size_t bytes = fread(buffer, sizeof(unsigned char), 256, filepoint);
 
-		for (u32 i = 0; i < 256; i++)
+		for (u32 i = 0; i < bytes; i++)
 		{
-			memory.StoreValue(i, buffer[i]);
+			memory.Write(i, buffer[i]);
 		}
 
 		fclose(filepoint);
@@ -36,6 +33,9 @@ void GameBoy::LoadBootRom()
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
+	// Clear memory
+	memory.ClearMemory();
+
 	LoadBootRom();
 
     unsigned currentAddress = 0x100; // Game Code starts at address 100, load scrolling graphic at 104
@@ -53,7 +53,7 @@ void GameBoy::LoadRom(std::string path)
 
         for (u32 i = currentAddress; i < bytes; i++)
         {
-            memory.StoreValue(i, buffer[i]);
+            memory.Write(i, buffer[i]);
         }
 
         fclose(filepoint);
@@ -79,7 +79,7 @@ void GameBoy::Start()
 		while (1)
 		{
 			int cycles = this->cpu.Tick();
-			this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
+			//this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
 			//std::this_thread::sleep_for(10ms);
 		}
 	}
@@ -122,8 +122,8 @@ GameInfo GameBoy::GetGameInfo()
 
     for (int i = 0x134; i <= 0x142; ++i)
     {
-        Byte b = memory.ReadValue(i);
-        title[loc++] = memory.ReadValue(i);
+        Byte b = memory.Read(i);
+        title[loc++] = memory.Read(i);
     }
 
     std::string titleName(title);

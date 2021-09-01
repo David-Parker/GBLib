@@ -10,16 +10,17 @@ int Cpu::Tick()
 	char buf[256];
 
 	// Debug "breakpoint"
-	if (PC == 0x100)
+	if (PC == 0x0015)
 	{
+		pMemory->Dump(0x8000, 0x9FFF);
 		std::cout << "Breakpoint reached." << std::endl;
 	}
 
-	u8 opcode_debug = this->pMemory->ReadValue(PC);
+	u8 opcode_debug = this->pMemory->Read(PC);
 
 	if (opcode_debug == 0xCB)
 	{
-		opcode_debug = this->pMemory->ReadValue(PC+1);
+		opcode_debug = this->pMemory->Read(PC+1);
 		snprintf(buf, 256, "PC: 0x%04X, Opcode: 0xCB%02X %s\n", PC, opcode_debug, opcode_strings_16[opcode_debug]);
 	}
 	else
@@ -33,12 +34,12 @@ int Cpu::Tick()
 	instruction_t instruction;
 	
 	// Fetch
-	u8 opcode = this->pMemory->ReadValue(PC++);
+	u8 opcode = this->pMemory->Read(PC++);
 
 	// Decode
 	if (opcode == 0xCB) // 16-bit OP code switch
 	{
-		opcode = this->pMemory->ReadValue(PC++);
+		opcode = this->pMemory->Read(PC++);
 		instruction = this->opcodes_16[opcode];
 	}
 	else
@@ -142,9 +143,46 @@ bool Cpu::HCarryS8(u16 lhs, s8 rhs)
     }
 }
 
+bool Cpu::FlagMatchesCC(u8 cc)
+{
+	bool matches = false;
+
+	switch (cc)
+	{
+	case 0:
+		if (!F.FlagIsSet(RegisterU8::ZERO_FLAG))
+		{
+			matches = true;
+		}
+		break;
+	case 1:
+		if (F.FlagIsSet(RegisterU8::ZERO_FLAG))
+		{
+			matches = true;
+		}
+		break;
+	case 2:
+		if (!F.FlagIsSet(RegisterU8::CARRY_FLAG))
+		{
+			matches = true;
+		}
+		break;
+	case 3:
+		if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
+		{
+			matches = true;
+		}
+		break;
+	default:
+		throw new std::exception("Invalid conditional.");
+	}
+
+	return matches;
+}
+
 u8 Cpu::ReadByte()
 {
-	u8 byte = this->pMemory->ReadValue(PC++);
+	u8 byte = this->pMemory->Read(PC++);
 
 	return byte;
 }
@@ -159,14 +197,17 @@ u16 Cpu::ReadTwoBytes()
 
 int Cpu::Nop()
 {
-    return 0;
+    return 1;
 }
 
 int Cpu::Stop()
 {
-	this->IME = 0;
+	return -1;
+}
 
-	return 1;
+int Cpu::Halt()
+{
+	return -1;
 }
 
 int Cpu::Ld(RegisterU8& dest, RegisterU8& src)
@@ -185,84 +226,84 @@ int Cpu::Ld(RegisterU8& dest, u8 value)
 
 int Cpu::LdrHL(RegisterU8& src)
 {
-    src = pMemory->ReadValue(HL);
+    src = pMemory->Read(HL);
 
     return 2;
 }
 
 int Cpu::LdHLr(RegisterU8& src)
 {
-    pMemory->StoreValue(HL, src);
+    pMemory->Write(HL, src);
 
     return 2;
 }
 
 int Cpu::LdHLr(u8 value)
 {
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 3;
 }
 
 int Cpu::LdABC()
 {
-    A = pMemory->ReadValue(BC);
+    A = pMemory->Read(BC);
 
     return 2;
 }
 
 int Cpu::LdADE()
 {
-    A = pMemory->ReadValue(DE);
+    A = pMemory->Read(DE);
 
     return 2;
 }
 
 int Cpu::LdAC()
 {
-    A = pMemory->ReadValue(0xFF00 + C);
+    A = pMemory->Read(0xFF00 + C);
 
     return 2;
 }
 
 int Cpu::LdCA()
 {
-    pMemory->StoreValue(0xFF00 + C, A);
+    pMemory->Write(0xFF00 + C, A);
 
     return 2;
 }
 
 int Cpu::LdAn(u8 value)
 {
-    A = pMemory->ReadValue(0xFF00 + value);
+    A = pMemory->Read(0xFF00 + value);
 
     return 3;
 }
 
 int Cpu::LdnA(u8 value)
 {
-    pMemory->StoreValue(0xFF00 + value, A);
+    pMemory->Write(0xFF00 + value, A);
 
     return 3;
 }
 
 int Cpu::LdAnn(u16 value)
 {
-    A = pMemory->ReadValue(value);
+    A = pMemory->Read(value);
 
     return 4;
 }
 
 int Cpu::LdnnA(u16 value)
 {
-    pMemory->StoreValue(value, A);
+    pMemory->Write(value, A);
 
     return 4;
 }
 
 int Cpu::LdAHLI()
 {
-    A = pMemory->ReadValue(HL);
+    A = pMemory->Read(HL);
     HL++;
 
     return 2;
@@ -270,7 +311,7 @@ int Cpu::LdAHLI()
 
 int Cpu::LdAHLD()
 {
-    A = pMemory->ReadValue(HL);
+    A = pMemory->Read(HL);
     HL--;
 
     return 2;
@@ -278,21 +319,21 @@ int Cpu::LdAHLD()
 
 int Cpu::LdBCA()
 {
-    pMemory->StoreValue(BC, A);
+    pMemory->Write(BC, A);
 
     return 2;
 }
 
 int Cpu::LdDEA()
 {
-    pMemory->StoreValue(DE, A);
+    pMemory->Write(DE, A);
 
     return 2;
 }
 
 int Cpu::LdHLIA()
 {
-    pMemory->StoreValue(HL, A);
+    pMemory->Write(HL, A);
     HL++;
 
     return 2;
@@ -300,7 +341,7 @@ int Cpu::LdHLIA()
 
 int Cpu::LdHLDA()
 {
-    pMemory->StoreValue(HL, A);
+    pMemory->Write(HL, A);
     HL--;
 
     return 2;
@@ -322,16 +363,16 @@ int Cpu::LdSPHL()
 
 int Cpu::Push(RegisterU16& reg)
 {
-    pMemory->StoreValue(--SP, reg.GetHighByte());
-    pMemory->StoreValue(--SP, reg.GetLowByte());
+    pMemory->Write(--SP, reg.GetHighByte());
+    pMemory->Write(--SP, reg.GetLowByte());
 
     return 4;
 }
 
 int Cpu::Pop(RegisterU16& reg)
 {
-    reg.SetLowByte(pMemory->ReadValue(SP++));
-    reg.SetHighByte(pMemory->ReadValue(SP++));
+    reg.SetLowByte(pMemory->Read(SP++));
+    reg.SetHighByte(pMemory->Read(SP++));
 
     return 3;
 }
@@ -362,8 +403,8 @@ int Cpu::LdHLSPe(s8 value)
 
 int Cpu::LdnnSP(u16 value)
 {
-    pMemory->StoreValue(value, SP.GetLowByte());
-    pMemory->StoreValue(value + 1, SP.GetHighByte());
+    pMemory->Write(value, SP.GetLowByte());
+    pMemory->Write(value + 1, SP.GetHighByte());
 
     return 5;
 }
@@ -503,7 +544,7 @@ int Cpu::RlcHL()
 {
     F.ClearAllFlags();
 
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     int bit7 = (value & 0b10000000) >> 7;
 
@@ -519,7 +560,7 @@ int Cpu::RlcHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -550,7 +591,7 @@ int Cpu::Rl(RegisterU8& reg)
 int Cpu::RlHL()
 {
     int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     F.ClearAllFlags();
 
@@ -568,7 +609,7 @@ int Cpu::RlHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -597,7 +638,7 @@ int Cpu::Rrc(RegisterU8& reg)
 int Cpu::RrcHL()
 {
     F.ClearAllFlags();
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     int bit0 = value & 0b00000001;
 
@@ -613,7 +654,7 @@ int Cpu::RrcHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -643,7 +684,7 @@ int Cpu::Rr(RegisterU8& reg)
 int Cpu::RrHL()
 {
     int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     F.ClearAllFlags();
 
@@ -661,7 +702,7 @@ int Cpu::RrHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -690,7 +731,7 @@ int Cpu::Sla(RegisterU8& reg)
 int Cpu::SlaHL()
 {
     F.ClearAllFlags();
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     int bit7 = (value & 0b10000000) >> 7;
 
@@ -706,7 +747,7 @@ int Cpu::SlaHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -737,7 +778,7 @@ int Cpu::Sra(RegisterU8& reg)
 int Cpu::SraHL()
 {
     F.ClearAllFlags();
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     int bit0 = value & 0b00000001;
     int bit7 = (value & 0b10000000) >> 7;
@@ -755,7 +796,7 @@ int Cpu::SraHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -786,7 +827,7 @@ int Cpu::Srl(RegisterU8& reg)
 int Cpu::SrlHL()
 {
     F.ClearAllFlags();
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     int bit0 = value & 0b00000001;
 
@@ -804,7 +845,7 @@ int Cpu::SrlHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 4;
 }
@@ -831,7 +872,7 @@ int Cpu::SwapHL()
 {
     F.ClearAllFlags();
 
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
     RegisterU8 val(&value);
 
     u8 low = val.GetLowNibble();
@@ -845,7 +886,7 @@ int Cpu::SwapHL()
         F.SetFlags(RegisterU8::ZERO_FLAG);
     }
 
-    pMemory->StoreValue(HL, val);
+    pMemory->Write(HL, val);
 
     return 4;
 }
@@ -873,7 +914,7 @@ int Cpu::BitHL(u8 bit)
     F.ClearFlags(RegisterU8::SUB_FLAG | RegisterU8::ZERO_FLAG);
     int flags = RegisterU8::HCARRY_FLAG;
 
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
     RegisterU8 val(&value);
 
     int bVal = val.GetBit(bit);
@@ -923,10 +964,10 @@ int Cpu::Set(RegisterU8& reg, u8 bit)
 
 int Cpu::SetHL(u8 bit)
 {
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
     RegisterU8 val(&value);
     val.SetBit(bit);
-    pMemory->StoreValue(HL, val);
+    pMemory->Write(HL, val);
 
     return 4;
 }
@@ -940,10 +981,10 @@ int Cpu::Res(RegisterU8& reg, u8 bit)
 
 int Cpu::ResHL(u8 bit)
 {
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
     RegisterU8 val(&value);
     val.ResetBit(bit);
-    pMemory->StoreValue(HL, val);
+    pMemory->Write(HL, val);
 
     return 4;
 }
@@ -957,35 +998,7 @@ int Cpu::Jpnn(u16 value)
 
 int Cpu::Jpcc(u8 cc, u16 value)
 {
-    bool shouldJump = false;
-
-    switch (cc)
-    {
-        case 0:
-            if (!F.FlagIsSet(RegisterU8::ZERO_FLAG))
-            {
-                shouldJump = true;
-            }
-            break;
-        case 1:
-            if (F.FlagIsSet(RegisterU8::ZERO_FLAG))
-            {
-                shouldJump = true;
-            }
-            break;
-        case 2:
-            if (!F.FlagIsSet(RegisterU8::CARRY_FLAG))
-            {
-                shouldJump = true;
-            }
-            break;
-        case 3:
-            if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
-            {
-                shouldJump = true;
-            }
-            break;
-    }
+	bool shouldJump = FlagMatchesCC(cc);
 
     if (shouldJump)
     {
@@ -1005,40 +1018,11 @@ int Cpu::Jre(s8 value)
 
 int Cpu::Jrecc(u8 cc, s8 value)
 {
-    bool shouldJump = false;
-
-    switch (cc)
-    {
-    case 0:
-        if (!F.FlagIsSet(RegisterU8::ZERO_FLAG))
-        {
-            shouldJump = true;
-        }
-        break;
-    case 1:
-        if (F.FlagIsSet(RegisterU8::ZERO_FLAG))
-        {
-            shouldJump = true;
-        }
-        break;
-    case 2:
-        if (!F.FlagIsSet(RegisterU8::CARRY_FLAG))
-        {
-            shouldJump = true;
-        }
-        break;
-    case 3:
-        if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
-        {
-            shouldJump = true;
-        }
-        break;
-    }
+	bool shouldJump = FlagMatchesCC(cc);
 
     if (shouldJump)
     {
-        PC += value;
-        return 3;
+		return Jre(value);
     }
 
     return 2;
@@ -1046,7 +1030,7 @@ int Cpu::Jrecc(u8 cc, s8 value)
 
 int Cpu::JpHL()
 {
-    PC = pMemory->ReadValue(HL);
+    PC = pMemory->Read(HL);
 
     return 1;
 }
@@ -1063,7 +1047,7 @@ int Cpu::Add(u8 value)
 
 int Cpu::AddHL()
 {
-    return AddCommon(pMemory->ReadValue(HL), false);
+    return AddCommon(pMemory->Read(HL), false);
 }
 
 int Cpu::Adc(RegisterU8& reg)
@@ -1078,7 +1062,7 @@ int Cpu::Adc(u8 value)
 
 int Cpu::AdcHL()
 {
-    return AddCommon(pMemory->ReadValue(HL), true);
+    return AddCommon(pMemory->Read(HL), true);
 }
 
 int Cpu::SubCommon(u8 value, bool subCarry)
@@ -1129,7 +1113,7 @@ int Cpu::Sub(u8 value)
 
 int Cpu::SubHL()
 {
-    return SubCommon(pMemory->ReadValue(HL), false);
+    return SubCommon(pMemory->Read(HL), false);
 }
 
 int Cpu::Sbc(RegisterU8& reg)
@@ -1144,7 +1128,7 @@ int Cpu::Sbc(u8 value)
 
 int Cpu::SbcHL()
 {
-    return SubCommon(pMemory->ReadValue(HL), true);
+    return SubCommon(pMemory->Read(HL), true);
 }
 
 int Cpu::And(RegisterU8& reg)
@@ -1172,7 +1156,7 @@ int Cpu::And(u8 value)
 
 int Cpu::AndHL()
 {
-    return And(pMemory->ReadValue(HL));
+    return And(pMemory->Read(HL));
 }
 
 int Cpu::Or(RegisterU8& reg)
@@ -1196,7 +1180,7 @@ int Cpu::Or(u8 value)
 
 int Cpu::OrHL()
 {
-    return Or(pMemory->ReadValue(HL));
+    return Or(pMemory->Read(HL));
 }
 
 int Cpu::Xor(RegisterU8& reg)
@@ -1220,7 +1204,7 @@ int Cpu::Xor(u8 value)
 
 int Cpu::XorHL()
 {
-    return Xor(pMemory->ReadValue(HL));
+    return Xor(pMemory->Read(HL));
 }
 
 int Cpu::Cmp(RegisterU8& reg)
@@ -1261,7 +1245,7 @@ int Cpu::Cmp(u8 value)
 
 int Cpu::CmpHL()
 {
-    return Cmp(pMemory->ReadValue(HL));
+    return Cmp(pMemory->Read(HL));
 }
 
 int Cpu::Inc(RegisterU8& reg)
@@ -1292,7 +1276,7 @@ int Cpu::IncHL()
     F.ClearFlags(RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG | RegisterU8::ZERO_FLAG);
 
     int flags = 0;
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     if (value == 0b00001111)
     {
@@ -1308,7 +1292,7 @@ int Cpu::IncHL()
 
     F.SetFlags(flags);
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 3;
 }
@@ -1341,7 +1325,7 @@ int Cpu::DecHL()
     F.ClearFlags(RegisterU8::HCARRY_FLAG | RegisterU8::ZERO_FLAG);
 
     int flags = RegisterU8::SUB_FLAG;
-    u8 value = pMemory->ReadValue(HL);
+    u8 value = pMemory->Read(HL);
 
     if (value == 0)
     {
@@ -1357,7 +1341,99 @@ int Cpu::DecHL()
 
     F.SetFlags(flags);
 
-    pMemory->StoreValue(HL, value);
+    pMemory->Write(HL, value);
 
     return 3;
+}
+
+int Cpu::Callnn(u16 value)
+{
+	pMemory->Write(--SP, PC.GetHighByte());
+	pMemory->Write(--SP, PC.GetLowByte());
+	PC = value;
+
+	return 6;
+}
+
+int Cpu::Callcc(u8 cc, u16 value)
+{
+	bool shouldJump = FlagMatchesCC(cc);
+
+	if (shouldJump)
+	{
+		return Callnn(value);
+	}
+
+	return 3;
+}
+
+int Cpu::Ret()
+{
+	PC.SetLowByte(pMemory->Read(SP++));
+	PC.SetHighByte(pMemory->Read(SP++));
+
+	return 4;
+}
+
+int Cpu::RetI()
+{
+	IME = 1;
+
+	return Ret();
+}
+
+int Cpu::Retcc(u8 cc)
+{
+	bool matches = FlagMatchesCC(cc);
+
+	if (matches)
+	{
+		return Ret() + 1;
+	}
+
+	return 2;
+}
+
+int Cpu::Rst(u8 t)
+{
+	pMemory->Write(--SP, PC.GetHighByte());
+	pMemory->Write(--SP, PC.GetLowByte());
+
+	PC.SetHighByte(0);
+
+	u8 address = 0;
+
+	switch (t)
+	{
+	case 0:
+		address = 0x00;
+		break;
+	case 1:
+		address = 0x08;
+		break;
+	case 2:
+		address = 0x10;
+		break;
+	case 3:
+		address = 0x18;
+		break;
+	case 4:
+		address = 0x20;
+		break;
+	case 5:
+		address = 0x28;
+		break;
+	case 6:
+		address = 0x30;
+		break;
+	case 7:
+		address = 0x38;
+		break;
+	default:
+		throw new std::exception("Invalid memory location for operand t in Rst().");
+	}
+
+	PC.SetLowByte(address);
+
+	return 4;
 }

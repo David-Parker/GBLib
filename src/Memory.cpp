@@ -18,7 +18,7 @@ void Memory::ClearMemory()
     }
 }
 
-void Memory::StoreValue(Address address, Byte value)
+void Memory::Write(Address address, Byte value)
 {
     if (address >= Address::ADDRESSSPACE)
     {
@@ -28,7 +28,7 @@ void Memory::StoreValue(Address address, Byte value)
     memory[address] = value;
 }
 
-Byte Memory::ReadValue(Address address)
+Byte Memory::Read(Address address)
 {
     if (address >= Address::ADDRESSSPACE)
     {
@@ -50,11 +50,20 @@ void Memory::Dump(Address start, Address end)
         throw std::invalid_argument("The provided address exceeds the size of addressable memory.");
     }
 
-    std::ofstream myfile;
-    myfile.open("dump.txt");
+	FILE *file;
+	errno_t err;
 
-    for (u32 i = start; i <= end; i++)
-    {
-        myfile << "0x" << std::setfill('0') << std::setw(4) << std::hex << i << ": " << ReadValue((Address)i) << std::endl;
-    }
+	if ((err = fopen_s(&file, "dump.txt", "wb")) != 0)
+	{
+		throw std::exception("Could not open ROM file.");
+	}
+	else
+	{
+		for (u32 i = start; i <= end; i++)
+		{
+			fprintf(file, "[0x%04X]: 0x%04X\n", i, Read((Address)i));
+		}
+
+		fclose(file);
+	}
 }

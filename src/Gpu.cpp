@@ -13,7 +13,7 @@ void Gpu::LoadTileMap()
 
         for (int j = 0; j < 16; j++)
         {
-            bytes[j] = pMemory->ReadValue(i);
+            bytes[j] = pMemory->Read(i);
 
             if (j < 15) i++;
         }

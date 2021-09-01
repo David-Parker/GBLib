@@ -11,7 +11,7 @@
 #define CLOCK_NS_PER_CYCLE 238
 #define CLOCK_CYCLES_PER_MACHINE_CYCLE 4
 
-// Instruction set reference https://gekkio.fi/files/gb-docs/gbctr.pdf and https://meganesulli.com/generate-gb-opcodes/ and https://gbdev.io/pandocs/Specifications.html
+// Official GameBoy Programming Manual v1.1 by Nintendo: https://www.manualslib.com/manual/1627081/Nintendo-Game-Boy.html?page=7#manual
 class Cpu
 {
 private:
@@ -58,13 +58,17 @@ private:
     bool HCarryU16(u16 lhs, u16 rhs);
     bool CarryS8(u16 lhs, s8 rhs);
     bool HCarryS8(u16 lhs, s8 rhs);
+	bool FlagMatchesCC(u8 cc);
 	u8 ReadByte();
 	u16 ReadTwoBytes();
 
 #pragma region Instructions
-    // 8-bit Transfer and I/O                       // opcode   (operands) -> cycles
-    int Nop();                                      // 00000000 -> 0
-	int Stop();										// 00000001 -> 1
+	// Cpu Control									// opcode   (operands) -> M cycles
+	int Nop();                                      // 00000000 -> 0
+	int Stop(); // TODO this is not implemented 	// 00010000 -> 1
+	int Halt(); // TODO this is not implemented		// 01110110 -> 1
+
+    // 8-bit Transfer and I/O                       
     int Ld(RegisterU8& dest, RegisterU8& src);      // 01xxxyyy (r, r') -> 1
     int Ld(RegisterU8& dest, u8 value);             // 00xxx110 (r) + xxxxxxxx (n) -> 2
     int LdrHL(RegisterU8& src);                     // 01xxx110 (r) -> 2
@@ -165,6 +169,15 @@ private:
     int IncHL();                                    // 00110100 -> 3
     int Dec(RegisterU8& reg);                       // 00xxx101 (r) -> 1
     int DecHL();                                    // 00110101 -> 3
+
+	// Call and Return
+	int Callnn(u16 value);							// 11001101 + xxxxxxxx (n) + xxxxxxxx (n) -> 6
+	int Callcc(u8 cc, u16 value);					// 110xx100 (cc) + xxxxxxxx (n) + xxxxxxxx (n) -> 6/3
+	int Ret();										// 11001001 -> 4
+	int RetI();										// 11011001 -> 4
+	int Retcc(u8 cc);								// 110xx000 (cc) -> 5/2
+	int Rst(u8 t);										// 11xxx111 (t) -> 4
+
 #pragma endregion Instructions
 
 public:
@@ -197,6 +210,17 @@ public:
 
 		// 8-bit Opcodes
 		opcodes[0x00] = [this]() { return Nop(); };
+		opcodes[0x10] = [this]() { return Stop(); };
+		opcodes[0x20] = [this]() { return Jrecc(0x00, ReadByte()); };
+		opcodes[0x30] = [this]() { return Jrecc(0x02, ReadByte()); };
+
+		opcodes[0x28] = [this]() { return Jrecc(0x01, ReadByte()); };
+		opcodes[0x38] = [this]() { return Jrecc(0x03, ReadByte()); };
+
+		opcodes[0x0C] = [this]() { return Inc(C); };
+		opcodes[0x1C] = [this]() { return Inc(E); };
+		opcodes[0x2C] = [this]() { return Inc(L); };
+		opcodes[0x3C] = [this]() { return Inc(A); };
 
 		opcodes[0x0E] = [this]() { return Ld(C, ReadByte()); };
 		opcodes[0x1E] = [this]() { return Ld(E, ReadByte()); };
@@ -234,8 +258,69 @@ public:
 		opcodes[0x43] = [this]() { return Ld(B, E); };
 		opcodes[0x44] = [this]() { return Ld(B, H); };
 		opcodes[0x45] = [this]() { return Ld(B, L); };
+		opcodes[0x46] = [this]() { return LdrHL(B); };
+		opcodes[0x47] = [this]() { return Ld(B, A); };
+		opcodes[0x48] = [this]() { return Ld(C, B); };
+		opcodes[0x49] = [this]() { return Ld(C, C); };
+		opcodes[0x4A] = [this]() { return Ld(C, D); };
+		opcodes[0x4B] = [this]() { return Ld(C, E); };
+		opcodes[0x4C] = [this]() { return Ld(C, H); };
+		opcodes[0x4D] = [this]() { return Ld(C, L); };
+		opcodes[0x4E] = [this]() { return LdrHL(C); };
+		opcodes[0x4F] = [this]() { return Ld(C, A); };
+		opcodes[0x50] = [this]() { return Ld(D, B); };
+		opcodes[0x51] = [this]() { return Ld(D, C); };
+		opcodes[0x52] = [this]() { return Ld(D, D); };
+		opcodes[0x53] = [this]() { return Ld(D, E); };
+		opcodes[0x54] = [this]() { return Ld(D, H); };
+		opcodes[0x55] = [this]() { return Ld(D, L); };
+		opcodes[0x56] = [this]() { return LdrHL(D); };
+		opcodes[0x57] = [this]() { return Ld(D, A); };
+		opcodes[0x58] = [this]() { return Ld(E, B); };
+		opcodes[0x59] = [this]() { return Ld(E, C); };
+		opcodes[0x5A] = [this]() { return Ld(E, D); };
+		opcodes[0x5B] = [this]() { return Ld(E, E); };
+		opcodes[0x5C] = [this]() { return Ld(E, H); };
+		opcodes[0x5D] = [this]() { return Ld(E, L); };
+		opcodes[0x5E] = [this]() { return LdrHL(E); };
+		opcodes[0x5F] = [this]() { return Ld(E, A); };
+		opcodes[0x60] = [this]() { return Ld(H, B); };
+		opcodes[0x61] = [this]() { return Ld(H, C); };
+		opcodes[0x62] = [this]() { return Ld(H, D); };
+		opcodes[0x63] = [this]() { return Ld(H, E); };
+		opcodes[0x64] = [this]() { return Ld(H, H); };
+		opcodes[0x65] = [this]() { return Ld(H, L); };
+		opcodes[0x66] = [this]() { return LdrHL(H); };
+		opcodes[0x67] = [this]() { return Ld(H, A); };
+		opcodes[0x68] = [this]() { return Ld(L, B); };
+		opcodes[0x69] = [this]() { return Ld(L, C); };
+		opcodes[0x6A] = [this]() { return Ld(L, D); };
+		opcodes[0x6B] = [this]() { return Ld(L, E); };
+		opcodes[0x6C] = [this]() { return Ld(L, H); };
+		opcodes[0x6D] = [this]() { return Ld(L, L); };
+		opcodes[0x6E] = [this]() { return LdrHL(L); };
+		opcodes[0x6F] = [this]() { return Ld(L, A); };
+		opcodes[0x70] = [this]() { return LdHLr(B); };
+		opcodes[0x71] = [this]() { return LdHLr(C); };
+		opcodes[0x72] = [this]() { return LdHLr(D); };
+		opcodes[0x73] = [this]() { return LdHLr(E); };
+		opcodes[0x74] = [this]() { return LdHLr(H); };
+		opcodes[0x75] = [this]() { return LdHLr(L); };
+		// 0x76 HALT
+		opcodes[0x77] = [this]() { return LdHLr(A); };
+		opcodes[0x78] = [this]() { return Ld(A, B); };
+		opcodes[0x79] = [this]() { return Ld(A, C); };
+		opcodes[0x7A] = [this]() { return Ld(A, D); };
+		opcodes[0x7B] = [this]() { return Ld(A, E); };
+		opcodes[0x7C] = [this]() { return Ld(A, H); };
+		opcodes[0x7D] = [this]() { return Ld(A, L); };
+		opcodes[0x7E] = [this]() { return LdrHL(A); };
+		opcodes[0x7F] = [this]() { return Ld(A, A); };
+
+		opcodes[0x47] = [this]() { return Ld(B, L); };
 
 		opcodes[0xE0] = [this]() { return LdnA(ReadByte()); };
+		opcodes[0xE2] = [this]() { return LdCA(); };
 
 		// 16-bit Opcodes
 		opcodes_16[0x40] = [this]() { return Bit(B, 0); };
@@ -305,27 +390,27 @@ public:
 
 		// 8-Bit Opcode Strings
 		opcode_strings[0x00] = "[this]() { return Nop(); };";
-
+		opcode_strings[0x0C] = "[this]() { return Inc(C); };";
+		opcode_strings[0x1C] = "[this]() { return Inc(E); };";
+		opcode_strings[0x2C] = "[this]() { return Inc(L); };";
+		opcode_strings[0x3C] = "[this]() { return Inc(A); };";
+		opcode_strings[0x20] = "[this]() { return Jrecc(0x00, ReadByte()); };";
 		opcode_strings[0x0E] = "[this]() { return Ld(C, ReadByte()); };";
 		opcode_strings[0x1E] = "[this]() { return Ld(E, ReadByte()); };";
 		opcode_strings[0x2E] = "[this]() { return Ld(L, ReadByte()); };";
 		opcode_strings[0x3E] = "[this]() { return Ld(A, ReadByte()); };";
-
 		opcode_strings[0x4E] = "[this]() { return LdrHL(C); };";
 		opcode_strings[0x5E] = "[this]() { return LdrHL(E); };";
 		opcode_strings[0x6E] = "[this]() { return LdrHL(L); };";
 		opcode_strings[0x7E] = "[this]() { return LdrHL(A); };";
-
 		opcode_strings[0x01] = "[this]() { return Ldnn(BC, ReadTwoBytes()); };";
 		opcode_strings[0x11] = "[this]() { return Ldnn(DE, ReadTwoBytes()); };";
 		opcode_strings[0x21] = "[this]() { return Ldnn(HL, ReadTwoBytes()); };";
 		opcode_strings[0x31] = "[this]() { return Ldnn(SP, ReadTwoBytes()); };";
-
 		opcode_strings[0x02] = "[this]() { return LdBCA(); };";
 		opcode_strings[0x12] = "[this]() { return LdDEA(); };";
 		opcode_strings[0x22] = "[this]() { return LdHLIA(); };";
 		opcode_strings[0x32] = "[this]() { return LdHLDA(); };";
-
 		opcode_strings[0xA8] = "[this]() { return Xor(B); };";
 		opcode_strings[0xA9] = "[this]() { return Xor(C); };";
 		opcode_strings[0xAA] = "[this]() { return Xor(D); };";
@@ -334,17 +419,73 @@ public:
 		opcode_strings[0xAD] = "[this]() { return Xor(L); };";
 		opcode_strings[0xAE] = "[this]() { return XorHL(); };";
 		opcode_strings[0xAF] = "[this]() { return Xor(A); };";
-
 		opcode_strings[0xC3] = "[this]() { return Jpnn(ReadTwoBytes()); };";
-
-		opcode_strings[0x40] = "[this]() { return Ld(B,B); };";
-		opcode_strings[0x41] = "[this]() { return Ld(B,C); };";
-		opcode_strings[0x42] = "[this]() { return Ld(B,D); };";
-		opcode_strings[0x43] = "[this]() { return Ld(B,E); };";
-		opcode_strings[0x44] = "[this]() { return Ld(B,H); };";
-		opcode_strings[0x45] = "[this]() { return Ld(B,L); };";
-
+		opcode_strings[0x40] = "[this]() { return Ld(B, B); };";
+		opcode_strings[0x41] = "[this]() { return Ld(B, C); };";
+		opcode_strings[0x42] = "[this]() { return Ld(B, D); };";
+		opcode_strings[0x43] = "[this]() { return Ld(B, E); };";
+		opcode_strings[0x44] = "[this]() { return Ld(B, H); };";
+		opcode_strings[0x45] = "[this]() { return Ld(B, L); };";
+		opcode_strings[0x46] = "[this]() { return LdrHL(B); };";
+		opcode_strings[0x47] = "[this]() { return Ld(B, A); };";
+		opcode_strings[0x48] = "[this]() { return Ld(C, B); };";
+		opcode_strings[0x49] = "[this]() { return Ld(C, C); };";
+		opcode_strings[0x4A] = "[this]() { return Ld(C, D); };";
+		opcode_strings[0x4B] = "[this]() { return Ld(C, E); };";
+		opcode_strings[0x4C] = "[this]() { return Ld(C, H); };";
+		opcode_strings[0x4D] = "[this]() { return Ld(C, L); };";
+		opcode_strings[0x4E] = "[this]() { return LdrHL(C); };";
+		opcode_strings[0x4F] = "[this]() { return Ld(C, A); };";
+		opcode_strings[0x50] = "[this]() { return Ld(D, B); };";
+		opcode_strings[0x51] = "[this]() { return Ld(D, C); };";
+		opcode_strings[0x52] = "[this]() { return Ld(D, D); };";
+		opcode_strings[0x53] = "[this]() { return Ld(D, E); };";
+		opcode_strings[0x54] = "[this]() { return Ld(D, H); };";
+		opcode_strings[0x55] = "[this]() { return Ld(D, L); };";
+		opcode_strings[0x56] = "[this]() { return LdrHL(D); };";
+		opcode_strings[0x57] = "[this]() { return Ld(D, A); };";
+		opcode_strings[0x58] = "[this]() { return Ld(E, B); };";
+		opcode_strings[0x59] = "[this]() { return Ld(E, C); };";
+		opcode_strings[0x5A] = "[this]() { return Ld(E, D); };";
+		opcode_strings[0x5B] = "[this]() { return Ld(E, E); };";
+		opcode_strings[0x5C] = "[this]() { return Ld(E, H); };";
+		opcode_strings[0x5D] = "[this]() { return Ld(E, L); };";
+		opcode_strings[0x5E] = "[this]() { return LdrHL(E); };";
+		opcode_strings[0x5F] = "[this]() { return Ld(E, A); };";
+		opcode_strings[0x60] = "[this]() { return Ld(H, B); };";
+		opcode_strings[0x61] = "[this]() { return Ld(H, C); };";
+		opcode_strings[0x62] = "[this]() { return Ld(H, D); };";
+		opcode_strings[0x63] = "[this]() { return Ld(H, E); };";
+		opcode_strings[0x64] = "[this]() { return Ld(H, H); };";
+		opcode_strings[0x65] = "[this]() { return Ld(H, L); };";
+		opcode_strings[0x66] = "[this]() { return LdrHL(H); };";
+		opcode_strings[0x67] = "[this]() { return Ld(H, A); };";
+		opcode_strings[0x68] = "[this]() { return Ld(L, B); };";
+		opcode_strings[0x69] = "[this]() { return Ld(L, C); };";
+		opcode_strings[0x6A] = "[this]() { return Ld(L, D); };";
+		opcode_strings[0x6B] = "[this]() { return Ld(L, E); };";
+		opcode_strings[0x6C] = "[this]() { return Ld(L, H); };";
+		opcode_strings[0x6D] = "[this]() { return Ld(L, L); };";
+		opcode_strings[0x6E] = "[this]() { return LdrHL(L); };";
+		opcode_strings[0x6F] = "[this]() { return Ld(L, A); };";
+		opcode_strings[0x70] = "[this]() { return LdHLr(B); };";
+		opcode_strings[0x71] = "[this]() { return LdHLr(C); };";
+		opcode_strings[0x72] = "[this]() { return LdHLr(D); };";
+		opcode_strings[0x73] = "[this]() { return LdHLr(E); };";
+		opcode_strings[0x74] = "[this]() { return LdHLr(H); };";
+		opcode_strings[0x75] = "[this]() { return LdHLr(L); };";
+		opcode_strings[0x77] = "[this]() { return LdHLr(A); };";
+		opcode_strings[0x78] = "[this]() { return Ld(A, B); };";
+		opcode_strings[0x79] = "[this]() { return Ld(A, C); };";
+		opcode_strings[0x7A] = "[this]() { return Ld(A, D); };";
+		opcode_strings[0x7B] = "[this]() { return Ld(A, E); };";
+		opcode_strings[0x7C] = "[this]() { return Ld(A, H); };";
+		opcode_strings[0x7D] = "[this]() { return Ld(A, L); };";
+		opcode_strings[0x7E] = "[this]() { return LdrHL(A); };";
+		opcode_strings[0x7F] = "[this]() { return Ld(A, A); };";
+		opcode_strings[0x47] = "[this]() { return Ld(B, L); };";
 		opcode_strings[0xE0] = "[this]() { return LdnA(ReadByte()); };";
+		opcode_strings[0xE2] = "[this]() { return LdCA(); };";
 
 		// 16-bit Opcode Strings
 		opcode_strings_16[0x40] = "[this]() { return Bit(B, 0); };";
