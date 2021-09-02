@@ -944,7 +944,7 @@ int Cpu::SwapHL()
     return 4;
 }
 
-int Cpu::Bit(RegisterU8& reg, u8 bit)
+int Cpu::Bit(u8 bit, RegisterU8& reg)
 {
     F.ClearFlags(RegisterU8::SUB_FLAG | RegisterU8::ZERO_FLAG);
     int flags = RegisterU8::HCARRY_FLAG;
@@ -1008,7 +1008,7 @@ int Cpu::AddCommon(u8 value, bool addCarry)
     return 2;
 }
 
-int Cpu::Set(RegisterU8& reg, u8 bit)
+int Cpu::Set(u8 bit, RegisterU8& reg)
 {
     reg.SetBit(bit);
 
@@ -1025,7 +1025,7 @@ int Cpu::SetHL(u8 bit)
     return 4;
 }
 
-int Cpu::Res(RegisterU8& reg, u8 bit)
+int Cpu::Res(u8 bit, RegisterU8& reg)
 {
     reg.ResetBit(bit);
 
