@@ -11,7 +11,14 @@
 #define CLOCK_NS_PER_CYCLE 238
 #define CLOCK_CYCLES_PER_MACHINE_CYCLE 4
 
+#define F_NZ 0x00
+#define F_Z  0x01
+#define F_NC 0x02
+#define F_C  0x03
+
 // Official GameBoy Programming Manual v1.1 by Nintendo: https://www.manualslib.com/manual/1627081/Nintendo-Game-Boy.html?page=7#manual
+// Opcode table: https://meganesulli.com/generate-gb-opcodes/
+// Incomplete but useful docs: https://gekkio.fi/files/gb-docs/gbctr.pdf
 class Cpu
 {
 private:
@@ -64,16 +71,22 @@ private:
 
 #pragma region Instructions
 	// Cpu Control									// opcode   (operands) -> M cycles
-	int Nop();                                      // 00000000 -> 0
-	int Stop(); // TODO this is not implemented 	// 00010000 -> 1
+	int Daa();										// 00100111 -> 1
+	int Cpl();										// 00101111 -> 1
+	int Nop();                                      // 00000000 -> 1
+	int Ccf();										// 00111111 -> 1
+	int Scf();										// 00110111 -> 1
+	int Di();										// 11110011 -> 1
+	int Ei();										// 11111011 -> 1
 	int Halt(); // TODO this is not implemented		// 01110110 -> 1
+	int Stop(); // TODO this is not implemented 	// 00010000 -> 1
 
     // 8-bit Transfer and I/O                       
     int Ld(RegisterU8& dest, RegisterU8& src);      // 01xxxyyy (r, r') -> 1
     int Ld(RegisterU8& dest, u8 value);             // 00xxx110 (r) + xxxxxxxx (n) -> 2
     int LdrHL(RegisterU8& src);                     // 01xxx110 (r) -> 2
     int LdHLr(RegisterU8& src);                     // 01110xxx (r) -> 2
-    int LdHLr(u8 value);                            // 00110110 + xxxxxxxx (n) -> 3
+    int LdHLn(u8 value);                            // 00110110 + xxxxxxxx (n) -> 3
     int LdABC();                                    // 00001010 -> 2
     int LdADE();                                    // 00011010 -> 2
     int LdAC();                                     // 11110010 -> 2
@@ -176,7 +189,7 @@ private:
 	int Ret();										// 11001001 -> 4
 	int RetI();										// 11011001 -> 4
 	int Retcc(u8 cc);								// 110xx000 (cc) -> 5/2
-	int Rst(u8 t);										// 11xxx111 (t) -> 4
+	int Rst(u8 t);									// 11xxx111 (t) -> 4
 
 #pragma endregion Instructions
 
@@ -211,25 +224,8 @@ public:
 		// 8-bit Opcodes
 		opcodes[0x00] = [this]() { return Nop(); };
 		opcodes[0x10] = [this]() { return Stop(); };
-		opcodes[0x20] = [this]() { return Jrecc(0x00, ReadByte()); };
-		opcodes[0x30] = [this]() { return Jrecc(0x02, ReadByte()); };
-
-		opcodes[0x28] = [this]() { return Jrecc(0x01, ReadByte()); };
-		opcodes[0x38] = [this]() { return Jrecc(0x03, ReadByte()); };
-
-		opcodes[0x0C] = [this]() { return Inc(C); };
-		opcodes[0x1C] = [this]() { return Inc(E); };
-		opcodes[0x2C] = [this]() { return Inc(L); };
-		opcodes[0x3C] = [this]() { return Inc(A); };
-
-		opcodes[0x0E] = [this]() { return Ld(C, ReadByte()); };
-		opcodes[0x1E] = [this]() { return Ld(E, ReadByte()); };
-		opcodes[0x2E] = [this]() { return Ld(L, ReadByte()); };
-		opcodes[0x3E] = [this]() { return Ld(A, ReadByte()); };
-		opcodes[0x4E] = [this]() { return LdrHL(C); };
-		opcodes[0x5E] = [this]() { return LdrHL(E); };
-		opcodes[0x6E] = [this]() { return LdrHL(L); };
-		opcodes[0x7E] = [this]() { return LdrHL(A); };
+		opcodes[0x20] = [this]() { return Jrecc(F_NZ, ReadByte()); };
+		opcodes[0x30] = [this]() { return Jrecc(F_NC, ReadByte()); };
 
 		opcodes[0x01] = [this]() { return Ldnn(BC, ReadTwoBytes()); };
 		opcodes[0x11] = [this]() { return Ldnn(DE, ReadTwoBytes()); };
@@ -241,16 +237,70 @@ public:
 		opcodes[0x22] = [this]() { return LdHLIA(); };
 		opcodes[0x32] = [this]() { return LdHLDA(); };
 
-		opcodes[0xA8] = [this]() { return Xor(B); };
-		opcodes[0xA9] = [this]() { return Xor(C); };
-		opcodes[0xAA] = [this]() { return Xor(D); };
-		opcodes[0xAB] = [this]() { return Xor(E); };
-		opcodes[0xAC] = [this]() { return Xor(H); };
-		opcodes[0xAD] = [this]() { return Xor(L); };
-		opcodes[0xAE] = [this]() { return XorHL(); };
-		opcodes[0xAF] = [this]() { return Xor(A); };
+		opcodes[0x03] = [this]() { return Inc(BC); };
+		opcodes[0x13] = [this]() { return Inc(DE); };
+		opcodes[0x23] = [this]() { return Inc(HL); };
+		opcodes[0x33] = [this]() { return Inc(SP); };
 
-		opcodes[0xC3] = [this]() { return Jpnn(ReadTwoBytes()); };
+		opcodes[0x04] = [this]() { return Inc(B); };
+		opcodes[0x14] = [this]() { return Inc(D); };
+		opcodes[0x24] = [this]() { return Inc(H); };
+		opcodes[0x34] = [this]() { return IncHL(); };
+
+		opcodes[0x05] = [this]() { return Dec(B); };
+		opcodes[0x15] = [this]() { return Dec(D); };
+		opcodes[0x25] = [this]() { return Dec(H); };
+		opcodes[0x35] = [this]() { return DecHL(); };
+
+		opcodes[0x06] = [this]() { return Ld(B, ReadByte()); };
+		opcodes[0x16] = [this]() { return Ld(D, ReadByte()); };
+		opcodes[0x26] = [this]() { return Ld(H, ReadByte()); };
+		opcodes[0x36] = [this]() { return LdHLn(ReadByte()); };
+
+		opcodes[0x07] = [this]() { return RlcA(); };
+		opcodes[0x17] = [this]() { return RlA(); };
+		opcodes[0x27] = [this]() { return Daa(); };
+		opcodes[0x37] = [this]() { return Scf(); };
+
+		opcodes[0x08] = [this]() { return LdnnSP(ReadTwoBytes()); };
+		opcodes[0x18] = [this]() { return Jre(ReadByte()); };
+		opcodes[0x28] = [this]() { return Jrecc(F_Z, ReadByte()); };
+		opcodes[0x38] = [this]() { return Jrecc(F_C, ReadByte()); };
+
+		opcodes[0x09] = [this]() { return AddHL(BC); };
+		opcodes[0x19] = [this]() { return AddHL(DE); };
+		opcodes[0x29] = [this]() { return AddHL(HL); };
+		opcodes[0x39] = [this]() { return AddHL(SP); };
+
+		opcodes[0x0A] = [this]() { return LdABC(); };
+		opcodes[0x1A] = [this]() { return LdADE(); };
+		opcodes[0x2A] = [this]() { return LdAHLI(); };
+		opcodes[0x3A] = [this]() { return LdAHLD(); };
+
+		opcodes[0x0B] = [this]() { return Dec(BC); };
+		opcodes[0x1B] = [this]() { return Dec(DE); };
+		opcodes[0x2B] = [this]() { return Dec(HL); };
+		opcodes[0x3B] = [this]() { return Dec(SP); };
+
+		opcodes[0x0C] = [this]() { return Inc(C); };
+		opcodes[0x1C] = [this]() { return Inc(E); };
+		opcodes[0x2C] = [this]() { return Inc(L); };
+		opcodes[0x3C] = [this]() { return Inc(A); };
+
+		opcodes[0x0D] = [this]() { return Dec(C); };
+		opcodes[0x1D] = [this]() { return Dec(E); };
+		opcodes[0x2D] = [this]() { return Dec(L); };
+		opcodes[0x3D] = [this]() { return Dec(A); };
+
+		opcodes[0x0E] = [this]() { return Ld(C, ReadByte()); };
+		opcodes[0x1E] = [this]() { return Ld(E, ReadByte()); };
+		opcodes[0x2E] = [this]() { return Ld(L, ReadByte()); };
+		opcodes[0x3E] = [this]() { return Ld(A, ReadByte()); };
+
+		opcodes[0x0F] = [this]() { return RrcA(); };
+		opcodes[0x1F] = [this]() { return RrA(); };
+		opcodes[0x2F] = [this]() { return Cpl(); };
+		opcodes[0x3F] = [this]() { return Ccf(); };
 
 		opcodes[0x40] = [this]() { return Ld(B, B); };
 		opcodes[0x41] = [this]() { return Ld(B, C); };
@@ -306,7 +356,7 @@ public:
 		opcodes[0x73] = [this]() { return LdHLr(E); };
 		opcodes[0x74] = [this]() { return LdHLr(H); };
 		opcodes[0x75] = [this]() { return LdHLr(L); };
-		// 0x76 HALT
+		opcodes[0x76] = [this]() { return Halt(); };
 		opcodes[0x77] = [this]() { return LdHLr(A); };
 		opcodes[0x78] = [this]() { return Ld(A, B); };
 		opcodes[0x79] = [this]() { return Ld(A, C); };
@@ -317,10 +367,141 @@ public:
 		opcodes[0x7E] = [this]() { return LdrHL(A); };
 		opcodes[0x7F] = [this]() { return Ld(A, A); };
 
-		opcodes[0x47] = [this]() { return Ld(B, L); };
+		opcodes[0x80] = [this]() { return Add(B); };
+		opcodes[0x81] = [this]() { return Add(C); };
+		opcodes[0x82] = [this]() { return Add(D); };
+		opcodes[0x83] = [this]() { return Add(E); };
+		opcodes[0x84] = [this]() { return Add(H); };
+		opcodes[0x85] = [this]() { return Add(L); };
+		opcodes[0x86] = [this]() { return AddHL(); };
+		opcodes[0x87] = [this]() { return Add(A); };
+		opcodes[0x88] = [this]() { return Adc(B); };
+		opcodes[0x89] = [this]() { return Adc(C); };
+		opcodes[0x8A] = [this]() { return Adc(D); };
+		opcodes[0x8B] = [this]() { return Adc(E); };
+		opcodes[0x8C] = [this]() { return Adc(H); };
+		opcodes[0x8D] = [this]() { return Adc(L); };
+		opcodes[0x8E] = [this]() { return AdcHL(); };
+		opcodes[0x8F] = [this]() { return Adc(A); };
+		opcodes[0x90] = [this]() { return Sub(B); };
+		opcodes[0x91] = [this]() { return Sub(C); };
+		opcodes[0x92] = [this]() { return Sub(D); };
+		opcodes[0x93] = [this]() { return Sub(E); };
+		opcodes[0x94] = [this]() { return Sub(H); };
+		opcodes[0x95] = [this]() { return Sub(L); };
+		opcodes[0x96] = [this]() { return SubHL(); };
+		opcodes[0x97] = [this]() { return Sub(A); };
+		opcodes[0x98] = [this]() { return Sbc(B); };
+		opcodes[0x99] = [this]() { return Sbc(C); };
+		opcodes[0x9A] = [this]() { return Sbc(D); };
+		opcodes[0x9B] = [this]() { return Sbc(E); };
+		opcodes[0x9C] = [this]() { return Sbc(H); };
+		opcodes[0x9D] = [this]() { return Sbc(L); };
+		opcodes[0x9E] = [this]() { return SbcHL(); };
+		opcodes[0x9F] = [this]() { return Sbc(A); };
+		opcodes[0xA0] = [this]() { return And(B); };
+		opcodes[0xA1] = [this]() { return And(C); };
+		opcodes[0xA2] = [this]() { return And(D); };
+		opcodes[0xA3] = [this]() { return And(E); };
+		opcodes[0xA4] = [this]() { return And(H); };
+		opcodes[0xA5] = [this]() { return And(L); };
+		opcodes[0xA6] = [this]() { return AndHL(); };
+		opcodes[0xA7] = [this]() { return And(A); };
+		opcodes[0xA8] = [this]() { return Xor(B); };
+		opcodes[0xA9] = [this]() { return Xor(C); };
+		opcodes[0xAA] = [this]() { return Xor(D); };
+		opcodes[0xAB] = [this]() { return Xor(E); };
+		opcodes[0xAC] = [this]() { return Xor(H); };
+		opcodes[0xAD] = [this]() { return Xor(L); };
+		opcodes[0xAE] = [this]() { return XorHL(); };
+		opcodes[0xAF] = [this]() { return Xor(A); };
+		opcodes[0xB0] = [this]() { return Or(B); };
+		opcodes[0xB1] = [this]() { return Or(C); };
+		opcodes[0xB2] = [this]() { return Or(D); };
+		opcodes[0xB3] = [this]() { return Or(E); };
+		opcodes[0xB4] = [this]() { return Or(H); };
+		opcodes[0xB5] = [this]() { return Or(L); };
+		opcodes[0xB6] = [this]() { return OrHL(); };
+		opcodes[0xB7] = [this]() { return Or(A); };
+		opcodes[0xB8] = [this]() { return Cmp(B); };
+		opcodes[0xB9] = [this]() { return Cmp(C); };
+		opcodes[0xBA] = [this]() { return Cmp(D); };
+		opcodes[0xBB] = [this]() { return Cmp(E); };
+		opcodes[0xBC] = [this]() { return Cmp(H); };
+		opcodes[0xBD] = [this]() { return Cmp(L); };
+		opcodes[0xBE] = [this]() { return CmpHL(); };
+		opcodes[0xBF] = [this]() { return Cmp(A); };
+
+		opcodes[0xC0] = [this]() { return Retcc(F_NZ); };
+		opcodes[0xD0] = [this]() { return Retcc(F_NC); };
+		opcodes[0xE0] = [this]() { return LdnA(ReadByte()); };
+		opcodes[0xF0] = [this]() { return LdAn(ReadByte()); };
+
+		opcodes[0xC1] = [this]() { return Pop(BC); };
+		opcodes[0xD1] = [this]() { return Pop(DE); };
+		opcodes[0xE1] = [this]() { return Pop(HL); };
+		opcodes[0xF1] = [this]() { return Pop(SP); };
+
+		opcodes[0xC2] = [this]() { return Jpcc(F_NZ, ReadTwoBytes()); };
+		opcodes[0xD2] = [this]() { return Jpcc(F_NC, ReadTwoBytes()); };
+		opcodes[0xE2] = [this]() { return LdCA(); };
+		opcodes[0xF2] = [this]() { return LdAC(); };
+
+		opcodes[0xC3] = [this]() { return Jpnn(ReadTwoBytes()); };
+		opcodes[0xF3] = [this]() { return Di(); };
+
+		opcodes[0xC4] = [this]() { return Callcc(F_NZ, ReadTwoBytes()); };
+		opcodes[0xD4] = [this]() { return Callcc(F_NC, ReadTwoBytes()); };
 
 		opcodes[0xE0] = [this]() { return LdnA(ReadByte()); };
 		opcodes[0xE2] = [this]() { return LdCA(); };
+
+		opcodes[0xC5] = [this]() { return Push(BC); };
+		opcodes[0xD5] = [this]() { return Push(DE); };
+		opcodes[0xE5] = [this]() { return Push(HL); };
+		opcodes[0xF5] = [this]() { return Push(AF); };
+
+		opcodes[0xC6] = [this]() { return Add(ReadByte()); };
+		opcodes[0xD6] = [this]() { return Sub(ReadByte()); };
+		opcodes[0xE6] = [this]() { return And(ReadByte()); };
+		opcodes[0xF6] = [this]() { return Or(ReadByte()); };
+
+		opcodes[0xC7] = [this]() { return Rst(0x00); };
+		opcodes[0xD7] = [this]() { return Rst(0x02); };
+		opcodes[0xE7] = [this]() { return Rst(0x04); };
+		opcodes[0xF7] = [this]() { return Rst(0x06); };
+
+		opcodes[0xC8] = [this]() { return Retcc(F_Z); };
+		opcodes[0xD8] = [this]() { return Retcc(F_C); };
+		opcodes[0xE8] = [this]() { return AddSP(ReadByte()); };
+		opcodes[0xF8] = [this]() { return LdHLSPe(ReadByte()); };
+
+		opcodes[0xC9] = [this]() { return Ret(); };
+		opcodes[0xD9] = [this]() { return RetI(); };
+		opcodes[0xE9] = [this]() { return JpHL(); };
+		opcodes[0xF9] = [this]() { return LdSPHL(); };
+
+		opcodes[0xCA] = [this]() { return Jpcc(F_Z, ReadTwoBytes()); };
+		opcodes[0xDA] = [this]() { return Jpcc(F_C, ReadTwoBytes()); };
+		opcodes[0xEA] = [this]() { return LdnnA(ReadTwoBytes()); };
+		opcodes[0xFA] = [this]() { return LdAnn(ReadTwoBytes()); };
+
+		opcodes[0xFB] = [this]() { return Ei(); };
+
+		opcodes[0xCC] = [this]() { return Callcc(F_Z, ReadTwoBytes()); };
+		opcodes[0xDC] = [this]() { return Callcc(F_C, ReadTwoBytes()); };
+
+		opcodes[0xCD] = [this]() { return Callnn(ReadTwoBytes()); };
+
+		opcodes[0xCE] = [this]() { return Adc(ReadByte()); };
+		opcodes[0xDE] = [this]() { return Sbc(ReadByte()); };
+		opcodes[0xEE] = [this]() { return Xor(ReadByte()); };
+		opcodes[0xFE] = [this]() { return Cmp(ReadByte()); };
+
+		opcodes[0xCF] = [this]() { return Rst(0x01); };
+		opcodes[0xDF] = [this]() { return Rst(0x03); };
+		opcodes[0xEF] = [this]() { return Rst(0x05); };
+		opcodes[0xFF] = [this]() { return Rst(0x07); };
 
 		// 16-bit Opcodes
 		opcodes_16[0x40] = [this]() { return Bit(B, 0); };
@@ -390,19 +571,9 @@ public:
 
 		// 8-Bit Opcode Strings
 		opcode_strings[0x00] = "[this]() { return Nop(); };";
-		opcode_strings[0x0C] = "[this]() { return Inc(C); };";
-		opcode_strings[0x1C] = "[this]() { return Inc(E); };";
-		opcode_strings[0x2C] = "[this]() { return Inc(L); };";
-		opcode_strings[0x3C] = "[this]() { return Inc(A); };";
-		opcode_strings[0x20] = "[this]() { return Jrecc(0x00, ReadByte()); };";
-		opcode_strings[0x0E] = "[this]() { return Ld(C, ReadByte()); };";
-		opcode_strings[0x1E] = "[this]() { return Ld(E, ReadByte()); };";
-		opcode_strings[0x2E] = "[this]() { return Ld(L, ReadByte()); };";
-		opcode_strings[0x3E] = "[this]() { return Ld(A, ReadByte()); };";
-		opcode_strings[0x4E] = "[this]() { return LdrHL(C); };";
-		opcode_strings[0x5E] = "[this]() { return LdrHL(E); };";
-		opcode_strings[0x6E] = "[this]() { return LdrHL(L); };";
-		opcode_strings[0x7E] = "[this]() { return LdrHL(A); };";
+		opcode_strings[0x10] = "[this]() { return Stop(); };";
+		opcode_strings[0x20] = "[this]() { return Jrecc(F_NZ, ReadByte()); };";
+		opcode_strings[0x30] = "[this]() { return Jrecc(F_NC, ReadByte()); };";
 		opcode_strings[0x01] = "[this]() { return Ldnn(BC, ReadTwoBytes()); };";
 		opcode_strings[0x11] = "[this]() { return Ldnn(DE, ReadTwoBytes()); };";
 		opcode_strings[0x21] = "[this]() { return Ldnn(HL, ReadTwoBytes()); };";
@@ -411,15 +582,58 @@ public:
 		opcode_strings[0x12] = "[this]() { return LdDEA(); };";
 		opcode_strings[0x22] = "[this]() { return LdHLIA(); };";
 		opcode_strings[0x32] = "[this]() { return LdHLDA(); };";
-		opcode_strings[0xA8] = "[this]() { return Xor(B); };";
-		opcode_strings[0xA9] = "[this]() { return Xor(C); };";
-		opcode_strings[0xAA] = "[this]() { return Xor(D); };";
-		opcode_strings[0xAB] = "[this]() { return Xor(E); };";
-		opcode_strings[0xAC] = "[this]() { return Xor(H); };";
-		opcode_strings[0xAD] = "[this]() { return Xor(L); };";
-		opcode_strings[0xAE] = "[this]() { return XorHL(); };";
-		opcode_strings[0xAF] = "[this]() { return Xor(A); };";
-		opcode_strings[0xC3] = "[this]() { return Jpnn(ReadTwoBytes()); };";
+		opcode_strings[0x03] = "[this]() { return Inc(BC); };";
+		opcode_strings[0x13] = "[this]() { return Inc(DE); };";
+		opcode_strings[0x23] = "[this]() { return Inc(HL); };";
+		opcode_strings[0x33] = "[this]() { return Inc(SP); };";
+		opcode_strings[0x04] = "[this]() { return Inc(B); };";
+		opcode_strings[0x14] = "[this]() { return Inc(D); };";
+		opcode_strings[0x24] = "[this]() { return Inc(H); };";
+		opcode_strings[0x34] = "[this]() { return IncHL(); };";
+		opcode_strings[0x05] = "[this]() { return Dec(B); };";
+		opcode_strings[0x15] = "[this]() { return Dec(D); };";
+		opcode_strings[0x25] = "[this]() { return Dec(H); };";
+		opcode_strings[0x35] = "[this]() { return DecHL(); };";
+		opcode_strings[0x06] = "[this]() { return Ld(B, ReadByte()); };";
+		opcode_strings[0x16] = "[this]() { return Ld(D, ReadByte()); };";
+		opcode_strings[0x26] = "[this]() { return Ld(H, ReadByte()); };";
+		opcode_strings[0x36] = "[this]() { return LdHLn(ReadByte()); };";
+		opcode_strings[0x07] = "[this]() { return RlcA(); };";
+		opcode_strings[0x17] = "[this]() { return RlA(); };";
+		opcode_strings[0x27] = "[this]() { return Daa(); };";
+		opcode_strings[0x37] = "[this]() { return Scf(); };";
+		opcode_strings[0x08] = "[this]() { return LdnnSP(ReadTwoBytes()); };";
+		opcode_strings[0x18] = "[this]() { return Jre(ReadByte()); };";
+		opcode_strings[0x28] = "[this]() { return Jrecc(F_Z, ReadByte()); };";
+		opcode_strings[0x38] = "[this]() { return Jrecc(F_C, ReadByte()); };";
+		opcode_strings[0x09] = "[this]() { return AddHL(BC); };";
+		opcode_strings[0x19] = "[this]() { return AddHL(DE); };";
+		opcode_strings[0x29] = "[this]() { return AddHL(HL); };";
+		opcode_strings[0x39] = "[this]() { return AddHL(SP); };";
+		opcode_strings[0x0A] = "[this]() { return LdABC(); };";
+		opcode_strings[0x1A] = "[this]() { return LdADE(); };";
+		opcode_strings[0x2A] = "[this]() { return LdAHLI(); };";
+		opcode_strings[0x3A] = "[this]() { return LdAHLD(); };";
+		opcode_strings[0x0B] = "[this]() { return Dec(BC); };";
+		opcode_strings[0x1B] = "[this]() { return Dec(DE); };";
+		opcode_strings[0x2B] = "[this]() { return Dec(HL); };";
+		opcode_strings[0x3B] = "[this]() { return Dec(SP); };";
+		opcode_strings[0x0C] = "[this]() { return Inc(C); };";
+		opcode_strings[0x1C] = "[this]() { return Inc(E); };";
+		opcode_strings[0x2C] = "[this]() { return Inc(L); };";
+		opcode_strings[0x3C] = "[this]() { return Inc(A); };";
+		opcode_strings[0x0D] = "[this]() { return Dec(C); };";
+		opcode_strings[0x1D] = "[this]() { return Dec(E); };";
+		opcode_strings[0x2D] = "[this]() { return Dec(L); };";
+		opcode_strings[0x3D] = "[this]() { return Dec(A); };";
+		opcode_strings[0x0E] = "[this]() { return Ld(C, ReadByte()); };";
+		opcode_strings[0x1E] = "[this]() { return Ld(E, ReadByte()); };";
+		opcode_strings[0x2E] = "[this]() { return Ld(L, ReadByte()); };";
+		opcode_strings[0x3E] = "[this]() { return Ld(A, ReadByte()); };";
+		opcode_strings[0x0F] = "[this]() { return RrcA(); };";
+		opcode_strings[0x1F] = "[this]() { return RrA(); };";
+		opcode_strings[0x2F] = "[this]() { return Cpl(); };";
+		opcode_strings[0x3F] = "[this]() { return Ccf(); };";
 		opcode_strings[0x40] = "[this]() { return Ld(B, B); };";
 		opcode_strings[0x41] = "[this]() { return Ld(B, C); };";
 		opcode_strings[0x42] = "[this]() { return Ld(B, D); };";
@@ -474,6 +688,7 @@ public:
 		opcode_strings[0x73] = "[this]() { return LdHLr(E); };";
 		opcode_strings[0x74] = "[this]() { return LdHLr(H); };";
 		opcode_strings[0x75] = "[this]() { return LdHLr(L); };";
+		opcode_strings[0x76] = "[this]() { return Halt(); };";
 		opcode_strings[0x77] = "[this]() { return LdHLr(A); };";
 		opcode_strings[0x78] = "[this]() { return Ld(A, B); };";
 		opcode_strings[0x79] = "[this]() { return Ld(A, C); };";
@@ -483,9 +698,124 @@ public:
 		opcode_strings[0x7D] = "[this]() { return Ld(A, L); };";
 		opcode_strings[0x7E] = "[this]() { return LdrHL(A); };";
 		opcode_strings[0x7F] = "[this]() { return Ld(A, A); };";
-		opcode_strings[0x47] = "[this]() { return Ld(B, L); };";
+		opcode_strings[0x80] = "[this]() { return Add(B); };";
+		opcode_strings[0x81] = "[this]() { return Add(C); };";
+		opcode_strings[0x82] = "[this]() { return Add(D); };";
+		opcode_strings[0x83] = "[this]() { return Add(E); };";
+		opcode_strings[0x84] = "[this]() { return Add(H); };";
+		opcode_strings[0x85] = "[this]() { return Add(L); };";
+		opcode_strings[0x86] = "[this]() { return AddHL(); };";
+		opcode_strings[0x87] = "[this]() { return Add(A); };";
+		opcode_strings[0x88] = "[this]() { return Adc(B); };";
+		opcode_strings[0x89] = "[this]() { return Adc(C); };";
+		opcode_strings[0x8A] = "[this]() { return Adc(D); };";
+		opcode_strings[0x8B] = "[this]() { return Adc(E); };";
+		opcode_strings[0x8C] = "[this]() { return Adc(H); };";
+		opcode_strings[0x8D] = "[this]() { return Adc(L); };";
+		opcode_strings[0x8E] = "[this]() { return AdcHL(); };";
+		opcode_strings[0x8F] = "[this]() { return Adc(A); };";
+		opcode_strings[0x90] = "[this]() { return Sub(B); };";
+		opcode_strings[0x91] = "[this]() { return Sub(C); };";
+		opcode_strings[0x92] = "[this]() { return Sub(D); };";
+		opcode_strings[0x93] = "[this]() { return Sub(E); };";
+		opcode_strings[0x94] = "[this]() { return Sub(H); };";
+		opcode_strings[0x95] = "[this]() { return Sub(L); };";
+		opcode_strings[0x96] = "[this]() { return SubHL(); };";
+		opcode_strings[0x97] = "[this]() { return Sub(A); };";
+		opcode_strings[0x98] = "[this]() { return Sbc(B); };";
+		opcode_strings[0x99] = "[this]() { return Sbc(C); };";
+		opcode_strings[0x9A] = "[this]() { return Sbc(D); };";
+		opcode_strings[0x9B] = "[this]() { return Sbc(E); };";
+		opcode_strings[0x9C] = "[this]() { return Sbc(H); };";
+		opcode_strings[0x9D] = "[this]() { return Sbc(L); };";
+		opcode_strings[0x9E] = "[this]() { return SbcHL(); };";
+		opcode_strings[0x9F] = "[this]() { return Sbc(A); };";
+		opcode_strings[0xA0] = "[this]() { return And(B); };";
+		opcode_strings[0xA1] = "[this]() { return And(C); };";
+		opcode_strings[0xA2] = "[this]() { return And(D); };";
+		opcode_strings[0xA3] = "[this]() { return And(E); };";
+		opcode_strings[0xA4] = "[this]() { return And(H); };";
+		opcode_strings[0xA5] = "[this]() { return And(L); };";
+		opcode_strings[0xA6] = "[this]() { return AndHL(); };";
+		opcode_strings[0xA7] = "[this]() { return And(A); };";
+		opcode_strings[0xA8] = "[this]() { return Xor(B); };";
+		opcode_strings[0xA9] = "[this]() { return Xor(C); };";
+		opcode_strings[0xAA] = "[this]() { return Xor(D); };";
+		opcode_strings[0xAB] = "[this]() { return Xor(E); };";
+		opcode_strings[0xAC] = "[this]() { return Xor(H); };";
+		opcode_strings[0xAD] = "[this]() { return Xor(L); };";
+		opcode_strings[0xAE] = "[this]() { return XorHL(); };";
+		opcode_strings[0xAF] = "[this]() { return Xor(A); };";
+		opcode_strings[0xB0] = "[this]() { return Or(B); };";
+		opcode_strings[0xB1] = "[this]() { return Or(C); };";
+		opcode_strings[0xB2] = "[this]() { return Or(D); };";
+		opcode_strings[0xB3] = "[this]() { return Or(E); };";
+		opcode_strings[0xB4] = "[this]() { return Or(H); };";
+		opcode_strings[0xB5] = "[this]() { return Or(L); };";
+		opcode_strings[0xB6] = "[this]() { return OrHL(); };";
+		opcode_strings[0xB7] = "[this]() { return Or(A); };";
+		opcode_strings[0xB8] = "[this]() { return Cmp(B); };";
+		opcode_strings[0xB9] = "[this]() { return Cmp(C); };";
+		opcode_strings[0xBA] = "[this]() { return Cmp(D); };";
+		opcode_strings[0xBB] = "[this]() { return Cmp(E); };";
+		opcode_strings[0xBC] = "[this]() { return Cmp(H); };";
+		opcode_strings[0xBD] = "[this]() { return Cmp(L); };";
+		opcode_strings[0xBE] = "[this]() { return CmpHL(); };";
+		opcode_strings[0xBF] = "[this]() { return Cmp(A); };";
+		opcode_strings[0xC0] = "[this]() { return Retcc(F_NZ); };";
+		opcode_strings[0xD0] = "[this]() { return Retcc(F_NC); };";
+		opcode_strings[0xE0] = "[this]() { return LdnA(ReadByte()); };";
+		opcode_strings[0xF0] = "[this]() { return LdAn(ReadByte()); };";
+		opcode_strings[0xC1] = "[this]() { return Pop(BC); };";
+		opcode_strings[0xD1] = "[this]() { return Pop(DE); };";
+		opcode_strings[0xE1] = "[this]() { return Pop(HL); };";
+		opcode_strings[0xF1] = "[this]() { return Pop(SP); };";
+		opcode_strings[0xC2] = "[this]() { return Jpcc(F_NZ, ReadTwoBytes()); };";
+		opcode_strings[0xD2] = "[this]() { return Jpcc(F_NC, ReadTwoBytes()); };";
+		opcode_strings[0xE2] = "[this]() { return LdCA(); };";
+		opcode_strings[0xF2] = "[this]() { return LdAC(); };";
+		opcode_strings[0xC3] = "[this]() { return Jpnn(ReadTwoBytes()); };";
+		opcode_strings[0xF3] = "[this]() { return Di(); };";
+		opcode_strings[0xC4] = "[this]() { return Callcc(F_NZ, ReadTwoBytes()); };";
+		opcode_strings[0xD4] = "[this]() { return Callcc(F_NC, ReadTwoBytes()); };";
 		opcode_strings[0xE0] = "[this]() { return LdnA(ReadByte()); };";
 		opcode_strings[0xE2] = "[this]() { return LdCA(); };";
+		opcode_strings[0xC5] = "[this]() { return Push(BC); };";
+		opcode_strings[0xD5] = "[this]() { return Push(DE); };";
+		opcode_strings[0xE5] = "[this]() { return Push(HL); };";
+		opcode_strings[0xF5] = "[this]() { return Push(AF); };";
+		opcode_strings[0xC6] = "[this]() { return Add(ReadByte()); };";
+		opcode_strings[0xD6] = "[this]() { return Sub(ReadByte()); };";
+		opcode_strings[0xE6] = "[this]() { return And(ReadByte()); };";
+		opcode_strings[0xF6] = "[this]() { return Or(ReadByte()); };";
+		opcode_strings[0xC7] = "[this]() { return Rst(0x00); };";
+		opcode_strings[0xD7] = "[this]() { return Rst(0x02); };";
+		opcode_strings[0xE7] = "[this]() { return Rst(0x04); };";
+		opcode_strings[0xF7] = "[this]() { return Rst(0x06); };";
+		opcode_strings[0xC8] = "[this]() { return Retcc(F_Z); };";
+		opcode_strings[0xD8] = "[this]() { return Retcc(F_C); };";
+		opcode_strings[0xE8] = "[this]() { return AddSP(ReadByte()); };";
+		opcode_strings[0xF8] = "[this]() { return LdHLSPe(ReadByte()); };";
+		opcode_strings[0xC9] = "[this]() { return Ret(); };";
+		opcode_strings[0xD9] = "[this]() { return RetI(); };";
+		opcode_strings[0xE9] = "[this]() { return JpHL(); };";
+		opcode_strings[0xF9] = "[this]() { return LdSPHL(); };";
+		opcode_strings[0xCA] = "[this]() { return Jpcc(F_Z, ReadTwoBytes()); };";
+		opcode_strings[0xDA] = "[this]() { return Jpcc(F_C, ReadTwoBytes()); };";
+		opcode_strings[0xEA] = "[this]() { return LdnnA(ReadTwoBytes()); };";
+		opcode_strings[0xFA] = "[this]() { return LdAnn(ReadTwoBytes()); };";
+		opcode_strings[0xFB] = "[this]() { return Ei(); };";
+		opcode_strings[0xCC] = "[this]() { return Callcc(F_Z, ReadTwoBytes()); };";
+		opcode_strings[0xDC] = "[this]() { return Callcc(F_C, ReadTwoBytes()); };";
+		opcode_strings[0xCD] = "[this]() { return Callnn(ReadTwoBytes()); };";
+		opcode_strings[0xCE] = "[this]() { return Adc(ReadByte()); };";
+		opcode_strings[0xDE] = "[this]() { return Sbc(ReadByte()); };";
+		opcode_strings[0xEE] = "[this]() { return Xor(ReadByte()); };";
+		opcode_strings[0xFE] = "[this]() { return Cmp(ReadByte()); };";
+		opcode_strings[0xCF] = "[this]() { return Rst(0x01); };";
+		opcode_strings[0xDF] = "[this]() { return Rst(0x03); };";
+		opcode_strings[0xEF] = "[this]() { return Rst(0x05); };";
+		opcode_strings[0xFF] = "[this]() { return Rst(0x07); };";
 
 		// 16-bit Opcode Strings
 		opcode_strings_16[0x40] = "[this]() { return Bit(B, 0); };";

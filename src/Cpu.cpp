@@ -10,7 +10,7 @@ int Cpu::Tick()
 	char buf[256];
 
 	// Debug "breakpoint"
-	if (PC == 0x0015)
+	if (PC == 0x00fe)
 	{
 		pMemory->Dump(0x8000, 0x9FFF);
 		std::cout << "Breakpoint reached." << std::endl;
@@ -195,17 +195,70 @@ u16 Cpu::ReadTwoBytes()
 	return (msb << 8) + lsb;
 }
 
-int Cpu::Nop()
-{
-    return 1;
-}
-
-int Cpu::Stop()
+int Cpu::Daa()
 {
 	return -1;
 }
 
+int Cpu::Cpl()
+{
+	F.SetFlags(RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
+
+	A = ~A;
+
+	return 1;
+}
+
+int Cpu::Nop()
+{
+	return 1;
+}
+
+int Cpu::Ccf()
+{
+	F.ClearFlags(RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
+
+	if (F.FlagIsSet(RegisterU8::CARRY_FLAG))
+	{
+		F.ClearFlags(RegisterU8::CARRY_FLAG);
+	}
+	else
+	{
+		F.SetFlags(RegisterU8::CARRY_FLAG);
+	}
+
+	return 1;
+}
+
+int Cpu::Scf()
+{
+	F.ClearFlags(RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
+
+	F.SetFlags(RegisterU8::CARRY_FLAG);
+
+	return 1;
+}
+
+int Cpu::Di()
+{
+	IME = 0;
+
+	return 1;
+}
+
+int Cpu::Ei()
+{
+	IME = 1;
+
+	return 1;
+}
+
 int Cpu::Halt()
+{
+	return -1;
+}
+
+int Cpu::Stop()
 {
 	return -1;
 }
@@ -238,7 +291,7 @@ int Cpu::LdHLr(RegisterU8& src)
     return 2;
 }
 
-int Cpu::LdHLr(u8 value)
+int Cpu::LdHLn(u8 value)
 {
     pMemory->Write(HL, value);
 
@@ -414,8 +467,8 @@ int Cpu::AddHL(RegisterU16& reg)
     F.ClearFlags(RegisterU8::CARRY_FLAG | RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
 
     int flags = 0;
-    flags += HCarryU16(reg, HL) ? RegisterU8::HCARRY_FLAG : 0;
-    flags += CarryU16(reg, HL) ? RegisterU8::CARRY_FLAG : 0;
+    flags += HCarryU16(HL, reg) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += CarryU16(HL, reg) ? RegisterU8::CARRY_FLAG : 0;
 
     HL += reg;
 
@@ -429,8 +482,8 @@ int Cpu::AddSP(s8 value)
     F.ClearAllFlags();
 
     int flags = 0;
-    flags += HCarryS8(value, HL) ? RegisterU8::HCARRY_FLAG : 0;
-    flags += CarryS8(value, HL) ? RegisterU8::CARRY_FLAG : 0;
+    flags += HCarryS8(HL, value) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += CarryS8(HL, value) ? RegisterU8::CARRY_FLAG : 0;
 
     SP += value;
 
@@ -1133,7 +1186,7 @@ int Cpu::SbcHL()
 
 int Cpu::And(RegisterU8& reg)
 {
-    return And(reg) / 2;
+    return And(*reg) / 2;
 }
 
 int Cpu::And(u8 value)
@@ -1209,7 +1262,7 @@ int Cpu::XorHL()
 
 int Cpu::Cmp(RegisterU8& reg)
 {
-    return Cmp(reg) / 2;
+    return Cmp(*reg) / 2;
 }
 
 int Cpu::Cmp(u8 value)

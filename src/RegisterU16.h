@@ -61,7 +61,7 @@ public:
     }
 
     // postfix x--
-    RegisterU16& operator--(int)
+    RegisterU16 operator--(int)
     {
         RegisterU16 copy(*this);
         operator--();

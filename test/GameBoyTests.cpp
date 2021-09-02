@@ -37,7 +37,7 @@ namespace GameBoyTests
             Assert::IsTrue(regU16 == 0);
         }
 
-        TEST_METHOD(Register_U8MirrosU16)
+        TEST_METHOD(Register_U8MirrorsU16)
         {
             RegisterU16 regU16(42);
             RegisterU8 lower((Byte*)&regU16);
@@ -45,6 +45,26 @@ namespace GameBoyTests
             Assert::IsTrue(regU16 == 42);
             Assert::IsTrue(lower == 42);
         }
+
+		TEST_METHOD(Register_U8MirrorsU16AfterIncrement)
+		{
+			RegisterU16 regU16;
+			RegisterU8 upper((Byte*)&regU16 + 1);
+			RegisterU8 lower((Byte*)&regU16);
+
+			++regU16;
+
+			Assert::IsTrue(upper == 0);
+			Assert::IsTrue(lower == 1);
+			Assert::IsTrue(regU16 == 1);
+
+			RegisterU16 prev = regU16++;
+
+			Assert::IsTrue(upper == 0);
+			Assert::IsTrue(lower == 2);
+			Assert::IsTrue(regU16 == 2);
+			Assert::IsTrue(prev == 1);
+		}
 
         TEST_METHOD(Register_SetFlags)
         {
