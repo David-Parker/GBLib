@@ -64,6 +64,39 @@ void GameBoy::LoadRom(std::string path)
     memory.Dump(0x0000, 0xFFFF);
 }
 
+void GameBoy::LoadTestRom()
+{
+	// Clear memory
+	memory.ClearMemory();
+
+	LoadBootRom();
+
+	unsigned currentAddress = 0x00; // Game Code starts at address 100, load scrolling graphic at 104
+	unsigned char buffer[ROM_SIZE];
+	FILE *filepoint;
+	errno_t err;
+
+	if ((err = fopen_s(&filepoint, "rom/tests/cpu_instrs.gb", "rb")) != 0)
+	{
+		throw std::exception("Could not open ROM file.");
+	}
+	else
+	{
+		size_t bytes = fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
+
+		for (u32 i = currentAddress; i < bytes; i++)
+		{
+			memory.Write(i, buffer[i]);
+		}
+
+		fclose(filepoint);
+	}
+
+	RomLoaded = true;
+
+	memory.Dump(0x0000, 0xFFFF);
+}
+
 void GameBoy::Render()
 {
     gpu.LoadTileMap();
@@ -74,7 +107,7 @@ void GameBoy::Start()
 {
 	try
 	{
-		this->Render();
+		//this->Render();
 
 		while (1)
 		{

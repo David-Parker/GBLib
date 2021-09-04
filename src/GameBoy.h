@@ -23,6 +23,7 @@ private:
 public:
     GameBoy() : memory(), cpu(&memory), gpu(&memory) {}
     void LoadRom(std::string path);
+	void LoadTestRom();
 	void Start();
 	void Stop();
     GameInfo GetGameInfo();

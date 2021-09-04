@@ -1,4 +1,5 @@
-﻿#include "CppUnitTest.h"
+﻿#include "ALUHelpers.h"
+#include "CppUnitTest.h"
 #include "Cpu.h"
 #include "RegisterU16.h"
 #include "RegisterU8.h"
@@ -359,5 +360,42 @@ namespace GameBoyTests
             Assert::IsTrue(reg.GetBit(6) == 0);
             Assert::IsTrue(reg.GetBit(7) == 0);
         }
+
+		TEST_METHOD(ALUHelpers_Combine)
+		{
+			u8 one = 0;
+			u8 two = 0;
+
+			u16 result = ALUHelpers::Combine(one, two);
+
+			Assert::IsTrue(result == 0);
+
+			one = 1;
+			two = 1;
+
+			result = ALUHelpers::Combine(one, two);
+
+			Assert::IsTrue(result == 0x0101);
+		}
+
+		TEST_METHOD(ALUHelpers_CarryU8)
+		{
+			Assert::IsFalse(ALUHelpers::Carry7Add(0, 0, 0));
+			Assert::IsFalse(ALUHelpers::Carry7Add(1, 1, 0));
+			Assert::IsFalse(ALUHelpers::Carry7Add(127, 128, 0));
+			Assert::IsTrue(ALUHelpers::Carry7Add(128, 128, 0));
+			Assert::IsTrue(ALUHelpers::Carry7Add(255, 255, 0));
+		}
+
+		TEST_METHOD(ALUHelpers_HCarryU8)
+		{
+			Assert::IsFalse(ALUHelpers::Carry3Add(0, 0, 0));
+			Assert::IsFalse(ALUHelpers::Carry3Add(1, 1, 0));
+			Assert::IsFalse(ALUHelpers::Carry3Add(7, 8, 0));
+			Assert::IsTrue(ALUHelpers::Carry3Add(8, 8, 0));
+			Assert::IsTrue(ALUHelpers::Carry3Add(255, 1, 0));
+			Assert::IsTrue(ALUHelpers::Carry3Add(255, 127, 0));
+			Assert::IsFalse(ALUHelpers::Carry3Add(255, 128, 0));
+		}
     };
 }

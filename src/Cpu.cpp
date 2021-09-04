@@ -7,28 +7,49 @@ Cpu::~Cpu()
 int Cpu::Tick()
 {
 #ifdef _DEBUG
-	char buf[256];
+	static bool init = false;
+	static bool enterStep = false;
 
-	// Debug "breakpoint"
-	if (PC == 0x00fe)
+	if (!init)
 	{
-		pMemory->Dump(0x8000, 0x9FFF);
-		std::cout << "Breakpoint reached." << std::endl;
+		trace.open("trace.txt");
+		init = true;
 	}
+
+	char sZOpCode[256];
+	char sZRegisters[256];
+	char sZFlags[32];
+
+	enterStep = enterStep || (PC == 0x000c); // 0x00e6
 
 	u8 opcode_debug = this->pMemory->Read(PC);
 
 	if (opcode_debug == 0xCB)
 	{
 		opcode_debug = this->pMemory->Read(PC+1);
-		snprintf(buf, 256, "PC: 0x%04X, Opcode: 0xCB%02X %s\n", PC, opcode_debug, opcode_strings_16[opcode_debug]);
+		snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0xCB%02X %s\n\n", *PC, opcode_debug, opcode_strings_16[opcode_debug]);
 	}
 	else
 	{
-		snprintf(buf, 256, "PC: 0x%04X, Opcode: 0x%04X %s\n", PC, opcode_debug, opcode_strings[opcode_debug]);
+		snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
 	}
-	
-	std::cout << buf;
+
+	FormatFlagsString(sZFlags, 32);
+
+	snprintf(sZRegisters, 1024, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nIME:	0x%02X\nIE:	0x%02X\nIF:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME, IE, IF);
+
+	trace << sZRegisters;
+	trace << sZOpCode;
+
+	// Debug "breakpoint"
+	if (enterStep)
+	{
+		//pMemory->Dump(0x8000, 0x9FFF);
+		trace.flush();
+		std::cout << sZRegisters;
+		std::cout << sZOpCode;
+		int x = 2;
+	}
 #endif
 
 	instruction_t instruction;
@@ -54,93 +75,12 @@ int Cpu::Tick()
 	{
 		// ERROR, unknown opcode.
 		char msg[256];
-		snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x02%X, PC: 0x04%X", opcode, PC);
+		snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x02%X, PC: 0x04%X", opcode, *PC);
 		throw std::exception(msg);
 	}
 
 	// Extra cycle for the opcode fetch
     return cycles + 1;
-}
-
-u16 Cpu::Combine(u8 high, u8 low)
-{
-    return (high << 4) + low;
-}
-
-bool Cpu::CarryU8(u8 lhs, u8 rhs)
-{
-    if (lhs > UINT8_MAX - rhs)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool Cpu::HCarryU8(u8 lhs, u8 rhs)
-{
-    u8 mask = 0b00001111;
-    u8 lhsNibble = lhs & mask;
-    u8 rhsNibble = rhs & mask;
-
-    if (lhsNibble + rhsNibble > mask)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool Cpu::CarryU16(u16 lhs, u16 rhs)
-{
-    if (lhs > UINT16_MAX - rhs)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool Cpu::HCarryU16(u16 lhs, u16 rhs)
-{
-    if (lhs + rhs > 0x00FF)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool Cpu::CarryS8(u16 lhs, s8 rhs)
-{
-    if (lhs > UINT16_MAX - rhs)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-bool Cpu::HCarryS8(u16 lhs, s8 rhs)
-{
-    if (lhs + rhs > 0x00FF)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
 
 bool Cpu::FlagMatchesCC(u8 cc)
@@ -193,6 +133,16 @@ u16 Cpu::ReadTwoBytes()
 	u16 msb = (u16)ReadByte();
 
 	return (msb << 8) + lsb;
+}
+
+void Cpu::FormatFlagsString(char* buf, int size)
+{
+	char* c_Z = F.FlagIsSet(RegisterU8::ZERO_FLAG) ? "Z" : "-";
+	char* c_N = F.FlagIsSet(RegisterU8::SUB_FLAG) ? "N" : "-";
+	char* c_H = F.FlagIsSet(RegisterU8::HCARRY_FLAG) ? "H" : "-";
+	char* c_CY = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? "CY" : "-";
+
+	snprintf(buf, size, "%s %s %s %s", c_Z, c_N, c_H, c_CY);
 }
 
 int Cpu::Daa()
@@ -432,24 +382,17 @@ int Cpu::Pop(RegisterU16& reg)
 
 int Cpu::LdHLSPe(s8 value)
 {
-    F.ClearAllFlags();
+	F.ClearAllFlags();
 
-    int flags = 0;
-    u8 spLow = SP.GetLowByte();
+	int flags = 0;
+	u16 result = SP + value;
 
-    if (spLow + value > 0x00FF)
-    {
-        flags += RegisterU8::HCARRY_FLAG;
-    }
+	flags += ALUHelpers::Carry3Signed(SP, value) ? RegisterU8::HCARRY_FLAG : 0;
+	flags += ALUHelpers::Carry7Signed(SP, value) ? RegisterU8::CARRY_FLAG : 0;
 
-    if (SP > UINT16_MAX - value)
-    {
-        flags += RegisterU8::CARRY_FLAG;
-    }
+	HL = result;
 
-    HL = SP + value;
-
-    F.SetFlags(flags);
+	F.SetFlags(flags);
 
     return 3;
 }
@@ -467,8 +410,8 @@ int Cpu::AddHL(RegisterU16& reg)
     F.ClearFlags(RegisterU8::CARRY_FLAG | RegisterU8::HCARRY_FLAG | RegisterU8::SUB_FLAG);
 
     int flags = 0;
-    flags += HCarryU16(HL, reg) ? RegisterU8::HCARRY_FLAG : 0;
-    flags += CarryU16(HL, reg) ? RegisterU8::CARRY_FLAG : 0;
+    flags += ALUHelpers::Carry11Add(HL, reg) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += ALUHelpers::Carry15Add(HL, reg) ? RegisterU8::CARRY_FLAG : 0;
 
     HL += reg;
 
@@ -482,8 +425,8 @@ int Cpu::AddSP(s8 value)
     F.ClearAllFlags();
 
     int flags = 0;
-    flags += HCarryS8(HL, value) ? RegisterU8::HCARRY_FLAG : 0;
-    flags += CarryS8(HL, value) ? RegisterU8::CARRY_FLAG : 0;
+    flags += ALUHelpers::Carry3Signed(SP, value) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += ALUHelpers::Carry7Signed(SP, value) ? RegisterU8::CARRY_FLAG : 0;
 
     SP += value;
 
@@ -510,7 +453,7 @@ int Cpu::RlcA()
 {
     F.ClearAllFlags();
 
-    int bit7 = (A & 0b10000000) >> 7;
+	int bit7 = A.GetBit(7);
 
     if (bit7 == 1)
     {
@@ -527,7 +470,7 @@ int Cpu::RlA()
     int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
     F.ClearAllFlags();
 
-    int bit7 = (A & 0b10000000) >> 7;
+	int bit7 = A.GetBit(7);
 
     if (bit7 == 1)
     {
@@ -543,7 +486,7 @@ int Cpu::RrcA()
 {
     F.ClearAllFlags();
 
-    int bit0 = A & 0b00000001;
+	int bit0 = A.GetBit(0);
 
     if (bit0 == 1)
     {
@@ -560,7 +503,7 @@ int Cpu::RrA()
     int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
     F.ClearAllFlags();
 
-    int bit0 = A & 0b00000001;
+    int bit0 = A.GetBit(0);
 
     if (bit0 == 1)
     {
@@ -576,7 +519,7 @@ int Cpu::Rlc(RegisterU8& reg)
 {
     F.ClearAllFlags();
 
-    int bit7 = (reg & 0b10000000) >> 7;
+	int bit7 = reg.GetBit(7);
 
     if (bit7 == 1)
     {
@@ -599,7 +542,7 @@ int Cpu::RlcHL()
 
     u8 value = pMemory->Read(HL);
 
-    int bit7 = (value & 0b10000000) >> 7;
+    int bit7 = (value >> 7) & 0x1;
 
     if (bit7 == 1)
     {
@@ -624,7 +567,7 @@ int Cpu::Rl(RegisterU8& reg)
 
     F.ClearAllFlags();
 
-    int bit7 = (reg & 0b10000000) >> 7;
+	int bit7 = reg.GetBit(7);
 
     if (bit7 == 1)
     {
@@ -648,7 +591,7 @@ int Cpu::RlHL()
 
     F.ClearAllFlags();
 
-    int bit7 = (value & 0b10000000) >> 7;
+    int bit7 = (value >> 7) & 0x01;
 
     if (bit7 == 1)
     {
@@ -671,7 +614,7 @@ int Cpu::Rrc(RegisterU8& reg)
 {
     F.ClearAllFlags();
 
-    int bit0 = reg & 0b00000001;
+	int bit0 = reg.GetBit(0);
 
     if (bit0 == 1)
     {
@@ -693,7 +636,7 @@ int Cpu::RrcHL()
     F.ClearAllFlags();
     u8 value = pMemory->Read(HL);
 
-    int bit0 = value & 0b00000001;
+    int bit0 = value & 0x01;
 
     if (bit0 == 1)
     {
@@ -717,7 +660,7 @@ int Cpu::Rr(RegisterU8& reg)
     int cyBit = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 1 : 0;
     F.ClearAllFlags();
 
-    int bit0 = reg & 0b00000001;
+	int bit0 = reg.GetBit(0);
 
     if (bit0 == 1)
     {
@@ -741,7 +684,7 @@ int Cpu::RrHL()
 
     F.ClearAllFlags();
 
-    int bit0 = value & 0b00000001;
+    int bit0 = value & 0x01;
 
     if (bit0 == 1)
     {
@@ -764,7 +707,7 @@ int Cpu::Sla(RegisterU8& reg)
 {
     F.ClearAllFlags();
 
-    int bit7 = (reg & 0b10000000) >> 7;
+	int bit7 = reg.GetBit(7);
 
     if (bit7 == 1)
     {
@@ -786,7 +729,7 @@ int Cpu::SlaHL()
     F.ClearAllFlags();
     u8 value = pMemory->Read(HL);
 
-    int bit7 = (value & 0b10000000) >> 7;
+    int bit7 = (value >> 7) & 0x01;
 
     if (bit7 == 1)
     {
@@ -809,8 +752,8 @@ int Cpu::Sra(RegisterU8& reg)
 {
     F.ClearAllFlags();
 
-    int bit0 = reg & 0b00000001;
-    int bit7 = (reg & 0b10000000) >> 7;
+	int bit0 = reg.GetBit(0);
+    int bit7 = reg.GetBit(7);
 
     if (bit0 == 1)
     {
@@ -833,8 +776,8 @@ int Cpu::SraHL()
     F.ClearAllFlags();
     u8 value = pMemory->Read(HL);
 
-    int bit0 = value & 0b00000001;
-    int bit7 = (value & 0b10000000) >> 7;
+    int bit0 = value & 0x01;
+    int bit7 = (value >> 7) & 0x01;
 
     if (bit0 == 1)
     {
@@ -858,7 +801,7 @@ int Cpu::Srl(RegisterU8& reg)
 {
     F.ClearAllFlags();
 
-    int bit0 = reg & 0b00000001;
+	int bit0 = reg.GetBit(0);
 
     if (bit0 == 1)
     {
@@ -882,7 +825,7 @@ int Cpu::SrlHL()
     F.ClearAllFlags();
     u8 value = pMemory->Read(HL);
 
-    int bit0 = value & 0b00000001;
+    int bit0 = value & 0x01;
 
     if (bit0 == 1)
     {
@@ -985,23 +928,22 @@ int Cpu::BitHL(u8 bit)
 
 int Cpu::AddCommon(u8 value, bool addCarry)
 {
+	u8 carry = 0;
+	u8 flags = 0;
+
+	if (addCarry && F.FlagIsSet(RegisterU8::CARRY_FLAG))
+	{
+		carry = 1;
+	}
+
     F.ClearAllFlags();
+    
+    flags += ALUHelpers::Carry3Add(A, value, carry) ? RegisterU8::HCARRY_FLAG : 0;
+    flags += ALUHelpers::Carry7Add(A, value, carry) ? RegisterU8::CARRY_FLAG : 0;
 
-    int flags = 0;
-    flags += HCarryU8(A, value) ? RegisterU8::HCARRY_FLAG : 0;
-    flags += CarryU8(A, value) ? RegisterU8::CARRY_FLAG : 0;
+    A = A + value + carry;
 
-    A += value;
-
-    if (addCarry)
-    {
-        A += (flags & RegisterU8::CARRY_FLAG) >> 4;
-    }
-
-    if (A == 0)
-    {
-        flags += RegisterU8::ZERO_FLAG;
-    }
+	flags += A == 0 ? RegisterU8::ZERO_FLAG : 0;
 
     F.SetFlags(flags);
 
@@ -1120,38 +1062,26 @@ int Cpu::AdcHL()
 
 int Cpu::SubCommon(u8 value, bool subCarry)
 {
-    F.ClearAllFlags();
+	u8 carry = 0;
+	u8 flags = 0;
 
-    int flags = RegisterU8::SUB_FLAG;
-    u8 mask = 0b00001111;
-    u8 valNibble = value & mask;
-    u8 ANibble = A & mask;
+	if (subCarry && F.FlagIsSet(RegisterU8::CARRY_FLAG))
+	{
+		carry = 1;
+	}
 
-    if (valNibble > ANibble)
-    {
-        flags += RegisterU8::HCARRY_FLAG;
-    }
+	F.ClearAllFlags();
 
-    if (value > A)
-    {
-        flags += RegisterU8::CARRY_FLAG;
-    }
+	flags += ALUHelpers::Carry3Sub(A, value, carry) ? RegisterU8::HCARRY_FLAG : 0;
+	flags += ALUHelpers::Carry7Sub(A, value, carry) ? RegisterU8::CARRY_FLAG : 0;
 
-    A -= value;
+	A = A - value - carry;
 
-    if (subCarry)
-    {
-        A -= (flags & RegisterU8::CARRY_FLAG) >> 4;
-    }
+	flags += A == 0 ? RegisterU8::ZERO_FLAG : 0;
 
-    if (A == 0)
-    {
-        flags += RegisterU8::ZERO_FLAG;
-    }
+	F.SetFlags(flags);
 
-    F.SetFlags(flags);
-
-    return 2;
+	return 2;
 }
 
 int Cpu::Sub(RegisterU8& reg)
@@ -1269,27 +1199,12 @@ int Cpu::Cmp(u8 value)
 {
     F.ClearAllFlags();
 
-    int flags = RegisterU8::SUB_FLAG;
-    u8 mask = 0b00001111;
-    u8 valNibble = value & mask;
-    u8 ANibble = A & mask;
+	u8 flags = RegisterU8::SUB_FLAG;
+	u8 result = A - value;
 
-    if (valNibble > ANibble)
-    {
-        flags += RegisterU8::HCARRY_FLAG;
-    }
-
-    if (value > A)
-    {
-        flags += RegisterU8::CARRY_FLAG;
-    }
-
-    u8 result = A - value;
-
-    if (result == 0)
-    {
-        flags += RegisterU8::ZERO_FLAG;
-    }
+	flags += ALUHelpers::Carry3Sub(A, value, 0) ? RegisterU8::HCARRY_FLAG : 0;
+	flags += A < result ? RegisterU8::CARRY_FLAG : 0;
+	flags += result == 0 ? RegisterU8::ZERO_FLAG : 0;
 
     F.SetFlags(flags);
 
