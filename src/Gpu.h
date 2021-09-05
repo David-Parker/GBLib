@@ -17,11 +17,12 @@ private:
 public:
     Gpu(Memory* pMemory) : pMemory(pMemory) 
     { 
-        gManager.init();
+        gManager.Init();
     }
 
     ~Gpu() {}
-    void LoadTileMap();
+
+	void LoadTileMap(Address start, Address end);
     void Draw();
 };
 

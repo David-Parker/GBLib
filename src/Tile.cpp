@@ -16,6 +16,7 @@ Tile::Tile(Byte data[16])
 
             pixels[line][j] = ((upper & bitIndex) ? 1 : 0) + ((lower & bitIndex) ? 2 : 0);
         }
+
         line++;
     }
 }

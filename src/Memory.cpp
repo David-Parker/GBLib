@@ -18,38 +18,8 @@ void Memory::ClearMemory()
     }
 }
 
-void Memory::Write(Address address, Byte value)
-{
-    if (address >= Address::ADDRESSSPACE)
-    {
-        throw std::invalid_argument("The provided address exceeds the size of addressable memory.");
-    }
-
-    memory[address] = value;
-}
-
-Byte Memory::Read(Address address)
-{
-    if (address >= Address::ADDRESSSPACE)
-    {
-        throw std::invalid_argument("The provided address exceeds the size of addressable memory.");
-    }
-
-    return memory[address];
-}
-
 void Memory::Dump(Address start, Address end)
 {
-    if (start >= Address::ADDRESSSPACE)
-    {
-        throw std::invalid_argument("The provided address exceeds the size of addressable memory.");
-    }
-
-    if (end >= Address::ADDRESSSPACE)
-    {
-        throw std::invalid_argument("The provided address exceeds the size of addressable memory.");
-    }
-
 	FILE *file;
 	errno_t err;
 

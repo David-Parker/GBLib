@@ -1,25 +1,20 @@
 #include "Gpu.h"
 
-void Gpu::LoadTileMap()
+void Gpu::LoadTileMap(Address start, Address end)
 {
-    std::vector<Tile> tiles;
-    
-    Address start = 0x3000;
-    Address end = start + 0x4000;
+	Tile tiles[sizeX * sizeY];
+	Byte bytes[16];
+	int tilesIdx = 0;
 
-    for (Address i = start; i < end; i++)
+    for (Address i = start; i < end;)
     {
-        Byte bytes[16] = {};
-
         for (int j = 0; j < 16; j++)
         {
-            bytes[j] = pMemory->Read(i);
-
-            if (j < 15) i++;
+            bytes[j] = pMemory->Read(i++);
         }
 
         Tile tile = Tile(bytes);
-        tiles.push_back(tile);
+		tiles[tilesIdx++] = tile;
     }
 
     int i = -1;
@@ -31,25 +26,31 @@ void Gpu::LoadTileMap()
         {
             i++;
         }
-        tilemap[i][j++ % sizeY] = tiles[k];
+
+		tilemap[j++ % sizeY][i] = tiles[k];
     }
 }
 
 void Gpu::Draw()
 {
-    for (int i = 0; i < sizeX; i++)
+	// Get Current tiles pointed by memory.
+
+    for (int i = 0; i < TILE_HEIGHT; i++)
     {
-        for (int j = 0; j < sizeY; j++)
+        for (int j = 0; j < TILE_WIDTH; j++)
         {
             for (int k = 0; k < 8; k++)
             {
                 for (int l = 0; l < 8; l++)
                 {
-                    gManager.Draw((i * 8) + k, (j * 8) + l, gManager.GetColor(tilemap[i][j].pixels[l][k]));
+					gManager.AddPixel((j * 8) + l, (i * 8) + k, tilemap[i][j].pixels[k][l]);
                 }
             }
         }
     }
 
+	
+	gManager.Clear();
+	gManager.Draw();
     gManager.Flush();
 }

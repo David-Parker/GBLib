@@ -11,4 +11,9 @@ typedef uint64_t u64;
 typedef int64_t s64;
 
 typedef u8 Byte;
-//typedef u16 Address;
+
+const static int SCALE = 4;
+const static int TILE_WIDTH = 18;
+const static int TILE_HEIGHT = 20;
+const static int SCREEN_WIDTH = TILE_WIDTH * 8 * SCALE;
+const static int SCREEN_HEIGHT = TILE_HEIGHT * 8 * SCALE;

@@ -18,3 +18,12 @@ public:
     void Dump(Address start, Address end);
 };
 
+inline void Memory::Write(Address address, Byte value)
+{
+	memory[address] = value;
+}
+
+inline Byte Memory::Read(Address address)
+{
+	return memory[address];
+}

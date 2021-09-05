@@ -8,13 +8,37 @@ GraphicsManager::~GraphicsManager()
 {
 }
 
-void GraphicsManager::init()
+u32 GraphicsManager::EncodeColor(Byte index)
 {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(GraphicsManager::SCREEN_WIDTH, GraphicsManager::SCREEN_HEIGHT, 0, &window, &renderer);
+	SDL_Color color = ColorPallette[index];
+
+	u32 result = color.a;
+	result <<= 8;
+	result += color.r;
+	result <<= 8;
+	result += color.g;
+	result <<= 8;
+	result += color.b;
+
+	return result;
 }
 
-void GraphicsManager::close()
+void GraphicsManager::Init()
+{
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	{
+		throw new std::exception("Error: Failed to initialize SDL.");
+	}
+
+	if (SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_RENDERER_ACCELERATED, &window, &renderer) != 0)
+	{
+		throw new std::exception("Error: Failed to new SDL window.");
+	}
+
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
+void GraphicsManager::Close()
 {
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
@@ -25,24 +49,23 @@ void GraphicsManager::close()
     SDL_Quit();
 }
 
-void GraphicsManager::Draw(int x, int y, SDL_Color color)
+void GraphicsManager::Clear()
 {
-    Draw(x, y, color.r, color.g, color.b, color.a);
+	SDL_RenderClear(renderer);
 }
 
-void GraphicsManager::Draw(int x, int y, int r, int g, int b, int a)
+void GraphicsManager::Draw()
 {
-    int startx = x * SCALE;
-    int starty = y * SCALE;
-    SDL_SetRenderDrawColor(renderer, r, g, b, a);
+	void* pixels;
+	int pitch;
 
-    for (int i = 0; i < SCALE; i++)
-    {
-        for (int j = 0; j < SCALE; j++)
-        {
-            SDL_RenderDrawPoint(renderer, startx + i, starty + j);
-        }
-    }
+	SDL_LockTexture(texture, NULL, &pixels, &pitch);
+
+	memcpy(pixels, pixelBuffer, sizeof(pixelBuffer));
+
+	SDL_UnlockTexture(texture);
+
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
 }
 
 void GraphicsManager::Flush()
@@ -50,7 +73,7 @@ void GraphicsManager::Flush()
     SDL_RenderPresent(renderer);
 }
 
-SDL_Color GraphicsManager::GetColor(unsigned int num)
+SDL_Color GraphicsManager::GetColor(Byte num)
 {
     if (num > 3)
     {

@@ -99,7 +99,6 @@ void GameBoy::LoadTestRom()
 
 void GameBoy::Render()
 {
-    gpu.LoadTileMap();
     gpu.Draw();
 }
 
@@ -107,13 +106,19 @@ void GameBoy::Start()
 {
 	try
 	{
-		//this->Render();
+		Address start = 0x3000;
+		Address end = start + 0x4000;
+
+		gpu.LoadTileMap(start, end);
 
 		while (1)
 		{
 			int cycles = this->cpu.Tick();
-			//this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
+			this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
 			//std::this_thread::sleep_for(10ms);
+
+			gpu.LoadTileMap(start, end);
+			this->Render();
 		}
 	}
 	catch (std::exception& ex)
@@ -149,20 +154,8 @@ GameInfo GameBoy::GetGameInfo()
         throw new std::exception("Can not get GameInfo. No ROM is loaded.");
     }
 
-    // Get the title
-    char title[16] = {};
-    int loc = 0;
+	GameInfo info;
+	info.Read(&memory);
 
-    for (int i = 0x134; i <= 0x142; ++i)
-    {
-        Byte b = memory.Read(i);
-        title[loc++] = memory.Read(i);
-    }
-
-    std::string titleName(title);
-
-    GameInfo info;
-    info.title = titleName;
-
-    return info;
+	return info;
 }
