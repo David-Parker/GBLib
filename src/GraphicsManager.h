@@ -13,10 +13,10 @@ private:
 
     SDL_Color ColorPallette[4] =
     { 
-        SDL_Color(255, 255, 255, 0),
-        SDL_Color(155, 215, 125, 0),
-        SDL_Color(60, 140, 115, 0),
-        SDL_Color(10, 50, 55, 0)
+        SDL_Color(0, 0, 0, 0),
+        SDL_Color(155, 215, 125, 255),
+        SDL_Color(60, 140, 115, 255),
+        SDL_Color(10, 50, 55, 255)
     };
 
 	u32 EncodedPalette[4] =

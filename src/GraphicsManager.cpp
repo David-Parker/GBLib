@@ -27,15 +27,15 @@ void GraphicsManager::Init()
 {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 	{
-		throw new std::exception("Error: Failed to initialize SDL.");
+		throw std::exception("Error: Failed to initialize SDL.");
 	}
 
 	if (SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_RENDERER_ACCELERATED, &window, &renderer) != 0)
 	{
-		throw new std::exception("Error: Failed to new SDL window.");
+		throw std::exception("Error: Failed to new SDL window.");
 	}
 
-	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
 }
 
 void GraphicsManager::Close()

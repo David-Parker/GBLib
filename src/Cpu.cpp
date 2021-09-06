@@ -7,20 +7,12 @@ Cpu::~Cpu()
 int Cpu::Tick()
 {
 #ifdef _DEBUG
-	static bool init = false;
 	static bool enterStep = false;
 
-	if (!init)
-	{
-		trace.open("trace.txt");
-		init = true;
-	}
-
 	char sZOpCode[256];
-	char sZRegisters[256];
-	char sZFlags[32];
+	char sZRegisters[1024];
 
-	enterStep = enterStep || (PC == 0x000c); // 0x00e6
+	// enterStep = enterStep || (PC == 0x0055); // 0x00e6
 
 	u8 opcode_debug = this->pMemory->Read(PC);
 
@@ -34,9 +26,7 @@ int Cpu::Tick()
 		snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
 	}
 
-	FormatFlagsString(sZFlags, 32);
-
-	snprintf(sZRegisters, 1024, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nIME:	0x%02X\nIE:	0x%02X\nIF:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME, IE, IF);
+	FormatRegisters(sZRegisters, 1024);
 
 	trace << sZRegisters;
 	trace << sZOpCode;
@@ -83,6 +73,29 @@ int Cpu::Tick()
     return cycles + 1;
 }
 
+void Cpu::StartCPU()
+{
+#ifdef _DEBUG
+	trace.open("trace.txt");
+#endif
+
+	running = true;
+}
+
+void Cpu::StopCPU()
+{
+#ifdef _DEBUG
+	trace.flush();
+#endif
+
+	running = false;
+}
+
+bool Cpu::IsRunning()
+{
+	return running;
+}
+
 bool Cpu::FlagMatchesCC(u8 cc)
 {
 	bool matches = false;
@@ -114,7 +127,7 @@ bool Cpu::FlagMatchesCC(u8 cc)
 		}
 		break;
 	default:
-		throw new std::exception("Invalid conditional.");
+		throw std::exception("Invalid conditional.");
 	}
 
 	return matches;
@@ -143,6 +156,15 @@ void Cpu::FormatFlagsString(char* buf, int size)
 	char* c_CY = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? "CY" : "-";
 
 	snprintf(buf, size, "%s %s %s %s", c_Z, c_N, c_H, c_CY);
+}
+
+void Cpu::FormatRegisters(char* buf, int n)
+{
+	char sZFlags[32];
+
+	FormatFlagsString(sZFlags, 32);
+
+	snprintf(buf, n, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nME:	0x%02X\nIE:	0x%02X\nIF:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME, IE, IF);
 }
 
 int Cpu::Daa()
@@ -1398,7 +1420,7 @@ int Cpu::Rst(u8 t)
 		address = 0x38;
 		break;
 	default:
-		throw new std::exception("Invalid memory location for operand t in Rst().");
+		throw std::exception("Invalid memory location for operand t in Rst().");
 	}
 
 	PC.SetLowByte(address);

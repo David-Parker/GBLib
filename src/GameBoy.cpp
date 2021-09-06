@@ -36,9 +36,7 @@ void GameBoy::LoadRom(std::string path)
 	// Clear memory
 	memory.ClearMemory();
 
-	LoadBootRom();
-
-    unsigned currentAddress = 0x100; // Game Code starts at address 100, load scrolling graphic at 104
+    unsigned currentAddress = 0x000; // Game Code starts at address 100, load scrolling graphic at 104
     unsigned char buffer[ROM_SIZE];
     FILE *filepoint;
     errno_t err;
@@ -59,9 +57,11 @@ void GameBoy::LoadRom(std::string path)
         fclose(filepoint);
     }
 
+	LoadBootRom();
+
     RomLoaded = true;
 
-    memory.Dump(0x0000, 0xFFFF);
+    memory.Dump(0x0000, 0x3FFF);
 }
 
 void GameBoy::LoadTestRom()
@@ -106,24 +106,33 @@ void GameBoy::Start()
 {
 	try
 	{
-		Address start = 0x3000;
+		Address start = 0x8000;
 		Address end = start + 0x4000;
 
-		gpu.LoadTileMap(start, end);
+		unsigned long long cycleCount = 0;
 
-		while (1)
+		this->cpu.StartCPU();
+
+		while (this->cpu.IsRunning())
 		{
 			int cycles = this->cpu.Tick();
-			this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
+
+			cycleCount += cycles;
+
+			//this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
 			//std::this_thread::sleep_for(10ms);
 
-			gpu.LoadTileMap(start, end);
-			this->Render();
+			if (cycleCount % 1000 == 0)
+			{
+				gpu.LoadTileMap(start, end);
+				this->Render();
+			}
 		}
 	}
 	catch (std::exception& ex)
 	{
 		std::cout << "Exception encountered: " << ex.what() << std::endl;
+		this->cpu.StopCPU();
 	}
 }
 
@@ -151,7 +160,7 @@ GameInfo GameBoy::GetGameInfo()
 {
     if (!RomLoaded)
     {
-        throw new std::exception("Can not get GameInfo. No ROM is loaded.");
+        throw std::exception("Can not get GameInfo. No ROM is loaded.");
     }
 
 	GameInfo info;

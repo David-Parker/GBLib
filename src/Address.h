@@ -10,6 +10,8 @@ public:
     Address(u16 address) : store(address) {}
     Address() : store(0x0) {}
 
+	bool InRange(Address start, Address end);
+
     operator unsigned short() const
     {
         return store;
@@ -29,3 +31,7 @@ public:
     ~Address() {}
 };
 
+inline bool Address::InRange(Address start, Address end)
+{
+	return store >= start.store && store <= end.store;
+}

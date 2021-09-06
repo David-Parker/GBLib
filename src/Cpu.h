@@ -56,6 +56,8 @@ private:
 	char* opcode_strings[256];
 	char* opcode_strings_16[256];
 
+	bool running;
+
 #ifdef _DEBUG
 	std::ofstream trace;
 #endif
@@ -67,6 +69,7 @@ private:
 	u8 ReadByte();
 	u16 ReadTwoBytes();
 	void FormatFlagsString(char* buf, int size);
+	void FormatRegisters(char* buf, int n);
 
 #pragma region Instructions
 	// Cpu Control									// opcode   (operands) -> M cycles
@@ -1279,4 +1282,7 @@ public:
 
     // Executes and returns the number of machine cycles to perform the next instruction
     int Tick();
+	void StopCPU();
+	void StartCPU();
+	bool IsRunning();
 };

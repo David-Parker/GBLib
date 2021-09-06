@@ -8,7 +8,8 @@
 class Memory
 {
 private:
-    Byte memory[Address::ADDRESSSPACE] = {};
+    Byte RAM[Address::ADDRESSSPACE] = {};
+
 public:
     Memory();
     ~Memory();
@@ -17,13 +18,3 @@ public:
     Byte Read(Address address);
     void Dump(Address start, Address end);
 };
-
-inline void Memory::Write(Address address, Byte value)
-{
-	memory[address] = value;
-}
-
-inline Byte Memory::Read(Address address)
-{
-	return memory[address];
-}

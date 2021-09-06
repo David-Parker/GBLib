@@ -10,7 +10,7 @@
 class GameBoy
 {
 private:
-    static const int ROM_SIZE = 0xFFFF;
+    static const int ROM_SIZE = 0x8000;
     bool RomLoaded = false;
     Gpu gpu;
     Cpu cpu;

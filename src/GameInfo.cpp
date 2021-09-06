@@ -68,9 +68,7 @@ void GameInfo::Read(Memory* pMemory)
 		sZtitle[loc++] = pMemory->Read(i);
 	}
 
-	std::string titleName(title);
-
-	title = titleName;
+	title = sZtitle;
 
 	// Check if game is Game Boy Color
 	Byte cgb_flag = pMemory->Read(0x143);

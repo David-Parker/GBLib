@@ -28,6 +28,7 @@ void Gpu::LoadTileMap(Address start, Address end)
         }
 
 		tilemap[j++ % sizeY][i] = tiles[k];
+		//tilemap[i][j++ % sizeY] = tiles[k];
     }
 }
 
@@ -49,7 +50,6 @@ void Gpu::Draw()
         }
     }
 
-	
 	gManager.Clear();
 	gManager.Draw();
     gManager.Flush();
