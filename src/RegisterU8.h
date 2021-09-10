@@ -31,11 +31,11 @@ public:
         return *pValue;
     }
 
-	int operator=(RegisterU8& other)
-	{
-		*pValue = *other;
-		return *pValue;
-	}
+    int operator=(RegisterU8& other)
+    {
+        *pValue = *other;
+        return *pValue;
+    }
 
     u8 operator*()
     {

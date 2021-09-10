@@ -9,4 +9,3 @@ public:
     Tile(Byte data[16]);
     ~Tile() {}
 };
-

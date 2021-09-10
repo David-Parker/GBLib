@@ -16,15 +16,15 @@ private:
     Cpu cpu;
     Memory memory;
 
-	void LoadBootRom();
-	void Render();
-	void SimulateCycleDelay(int cycles);
+    void LoadBootRom();
+    void Render();
+    void SimulateCycleDelay(int cycles);
 
 public:
     GameBoy() : memory(), cpu(&memory), gpu(&memory) {}
     void LoadRom(std::string path);
-	void LoadTestRom();
-	void Start();
-	void Stop();
+    void LoadTestRom();
+    void Start();
+    void Stop();
     GameInfo GetGameInfo();
 };

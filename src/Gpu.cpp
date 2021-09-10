@@ -2,9 +2,9 @@
 
 void Gpu::LoadTileMap(Address start, Address end)
 {
-	Tile tiles[sizeX * sizeY];
-	Byte bytes[16];
-	int tilesIdx = 0;
+    Tile tiles[sizeX * sizeY];
+    Byte bytes[16];
+    int tilesIdx = 0;
 
     for (Address i = start; i < end;)
     {
@@ -14,7 +14,7 @@ void Gpu::LoadTileMap(Address start, Address end)
         }
 
         Tile tile = Tile(bytes);
-		tiles[tilesIdx++] = tile;
+        tiles[tilesIdx++] = tile;
     }
 
     int i = -1;
@@ -27,14 +27,14 @@ void Gpu::LoadTileMap(Address start, Address end)
             i++;
         }
 
-		tilemap[j++ % sizeY][i] = tiles[k];
-		//tilemap[i][j++ % sizeY] = tiles[k];
+        tilemap[j++ % sizeY][i] = tiles[k];
+        //tilemap[i][j++ % sizeY] = tiles[k];
     }
 }
 
 void Gpu::Draw()
 {
-	// Get Current tiles pointed by memory.
+    // Get Current tiles pointed by memory.
 
     for (int i = 0; i < TILE_HEIGHT; i++)
     {
@@ -44,13 +44,13 @@ void Gpu::Draw()
             {
                 for (int l = 0; l < 8; l++)
                 {
-					gManager.AddPixel((j * 8) + l, (i * 8) + k, tilemap[i][j].pixels[k][l]);
+                    gManager.AddPixel((j * 8) + l, (i * 8) + k, tilemap[i][j].pixels[k][l]);
                 }
             }
         }
     }
 
-	gManager.Clear();
-	gManager.Draw();
+    gManager.Clear();
+    gManager.Draw();
     gManager.Flush();
 }

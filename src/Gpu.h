@@ -15,14 +15,13 @@ private:
     GraphicsManager gManager;
 
 public:
-    Gpu(Memory* pMemory) : pMemory(pMemory) 
-    { 
+    Gpu(Memory* pMemory) : pMemory(pMemory)
+    {
         gManager.Init();
     }
 
     ~Gpu() {}
 
-	void LoadTileMap(Address start, Address end);
+    void LoadTileMap(Address start, Address end);
     void Draw();
 };
-
