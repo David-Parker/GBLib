@@ -16,12 +16,11 @@ private:
 
 public:
     Gpu(Memory* pMemory) : pMemory(pMemory)
-    {
-        gManager.Init();
-    }
+    {}
 
     ~Gpu() {}
 
+    void TurnOnLCD();
     void LoadTileMap(Address start, Address end);
     void Draw();
 };

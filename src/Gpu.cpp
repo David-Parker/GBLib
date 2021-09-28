@@ -1,5 +1,10 @@
 #include "Gpu.h"
 
+void Gpu::TurnOnLCD()
+{
+    gManager.Init();
+}
+
 void Gpu::LoadTileMap(Address start, Address end)
 {
     Tile tiles[sizeX * sizeY];

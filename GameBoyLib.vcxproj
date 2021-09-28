@@ -27,9 +27,14 @@
     <ClInclude Include="src\GlobalDefinitions.h" />
     <ClInclude Include="src\Gpu.h" />
     <ClInclude Include="src\GraphicsManager.h" />
+    <ClInclude Include="src\IMemoryMappable.h" />
+    <ClInclude Include="src\InterruptController.h" />
+    <ClInclude Include="src\IODevices.h" />
     <ClInclude Include="src\Memory.h" />
+    <ClInclude Include="src\PixelProcessingUnit.h" />
     <ClInclude Include="src\RegisterU16.h" />
     <ClInclude Include="src\RegisterU8.h" />
+    <ClInclude Include="src\SoundController.h" />
     <ClInclude Include="src\Tile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -39,7 +44,11 @@
     <ClCompile Include="src\GameInfo.cpp" />
     <ClCompile Include="src\Gpu.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
+    <ClCompile Include="src\InterruptController.cpp" />
+    <ClCompile Include="src\IODevices.cpp" />
     <ClCompile Include="src\Memory.cpp" />
+    <ClCompile Include="src\PixelProcessingUnit.cpp" />
+    <ClCompile Include="src\SoundController.cpp" />
     <ClCompile Include="src\Tile.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -96,6 +105,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>E:\Coding\GameBoy\SDL2-2.0.5\include;$(IncludePath)</IncludePath>
     <LibraryPath>E:\Coding\GameBoy\SDL2-2.0.5\lib\x64;$(LibraryPath)</LibraryPath>
+    <SourcePath>$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

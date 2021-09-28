@@ -45,8 +45,8 @@ private:
 
     // Interrupt flags
     u8 IME; // Interrupt Master Enable
-    u8 IE; // Interrupt Enable
-    u8 IF; // Interrupt Flag
+    u8 GetIF();
+    u8 GetIE();
 
     typedef std::function<int()> instruction_t;
 
@@ -213,9 +213,7 @@ public:
         F((u8*)&AF),
         H((u8*)&HL + 1),
         L((u8*)&HL),
-        IME(0x00),
-        IF(0xe0),
-        IE(0x00)
+        IME(0x00)
     {
         // Set all opcodes initially to an error state. This makes debugging missing opcodes easier.
         for (int i = 0; i < 256; ++i)

@@ -1,6 +1,13 @@
 #pragma once
 #include "GlobalDefinitions.h"
 
+#define ADDR_IF 0xFF0F
+#define ADDR_IE 0xFFFF
+#define ADDR_NR10 0xFF10
+#define ADDR_NR52 0xFF26
+#define ADDR_LCDC 0xFF40
+#define ADDR_WX 0xFF4b
+
 class Address
 {
 private:

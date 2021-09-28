@@ -4,6 +4,16 @@ Cpu::~Cpu()
 {
 }
 
+u8 Cpu::GetIF()
+{
+    return this->pMemory->Read(ADDR_IF);
+}
+u8 Cpu::GetIE()
+{
+    return this->pMemory->Read(ADDR_IE);
+}
+
+
 int Cpu::Tick()
 {
 #ifdef _DEBUG
@@ -164,7 +174,7 @@ void Cpu::FormatRegisters(char* buf, int n)
 
     FormatFlagsString(sZFlags, 32);
 
-    snprintf(buf, n, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nME:	0x%02X\nIE:	0x%02X\nIF:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME, IE, IF);
+    snprintf(buf, n, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nME:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME);
 }
 
 int Cpu::Daa()

@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\ALUHelpers.cpp" />
+    <ClCompile Include="src\Cpu.cpp" />
+    <ClCompile Include="src\GameBoy.cpp" />
+    <ClCompile Include="src\GameInfo.cpp" />
+    <ClCompile Include="src\Gpu.cpp" />
+    <ClCompile Include="src\GraphicsManager.cpp" />
+    <ClCompile Include="src\Memory.cpp" />
+    <ClCompile Include="src\Tile.cpp" />
+    <ClCompile Include="src\SoundController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InterruptController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IODevices.cpp" />
+    <ClCompile Include="src\PixelProcessingUnit.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Address.h" />
+    <ClInclude Include="src\ALUHelpers.h" />
+    <ClInclude Include="src\Cpu.h" />
+    <ClInclude Include="src\GameBoy.h" />
+    <ClInclude Include="src\GameInfo.h" />
+    <ClInclude Include="src\GlobalDefinitions.h" />
+    <ClInclude Include="src\Gpu.h" />
+    <ClInclude Include="src\GraphicsManager.h" />
+    <ClInclude Include="src\Memory.h" />
+    <ClInclude Include="src\RegisterU16.h" />
+    <ClInclude Include="src\RegisterU8.h" />
+    <ClInclude Include="src\Tile.h" />
+    <ClInclude Include="src\SoundController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IMemoryMappable.h" />
+    <ClInclude Include="src\InterruptController.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\IODevices.h" />
+    <ClInclude Include="src\PixelProcessingUnit.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Controllers">
+      <UniqueIdentifier>{f4f98450-270f-4112-8c2d-4e775db33b8f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

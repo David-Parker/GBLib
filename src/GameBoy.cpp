@@ -97,15 +97,20 @@ void GameBoy::LoadTestRom()
     memory.Dump(0x0000, 0xFFFF);
 }
 
-void GameBoy::Render()
+void GameBoy::MapIODevices()
 {
-    gpu.Draw();
+    this->memory.MapMemory(ADDR_IF, ADDR_IF, &devices.interruptController);
+    this->memory.MapMemory(ADDR_IE, ADDR_IE, &devices.interruptController);
+    this->memory.MapMemory(ADDR_NR10, ADDR_NR52, &devices.soundController);
+    this->memory.MapMemory(ADDR_LCDC, ADDR_WX, &devices.ppu);
 }
 
 void GameBoy::Start()
 {
     try
     {
+        this->MapIODevices();
+
         Address start = 0x8000;
         Address end = start + 0x4000;
 
@@ -121,12 +126,6 @@ void GameBoy::Start()
 
             //this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
             //std::this_thread::sleep_for(10ms);
-
-            if (cycleCount % 1000 == 0)
-            {
-                gpu.LoadTileMap(start, end);
-                this->Render();
-            }
         }
     }
     catch (std::exception& ex)
