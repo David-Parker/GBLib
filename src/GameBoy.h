@@ -21,7 +21,6 @@ private:
 
     void MapIODevices();
     void LoadBootRom();
-    void Render();
     void SimulateCycleDelay(int cycles);
 
 public:

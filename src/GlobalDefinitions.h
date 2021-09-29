@@ -13,7 +13,7 @@ typedef int64_t s64;
 typedef u8 Byte;
 
 const static int SCALE = 3;
-const static int TILE_WIDTH = 32; // 20
-const static int TILE_HEIGHT = 32; // 18
+const static int TILE_WIDTH = 20;
+const static int TILE_HEIGHT = 18;
 const static int SCREEN_WIDTH = TILE_WIDTH * 8 * SCALE;
 const static int SCREEN_HEIGHT = TILE_HEIGHT * 8 * SCALE;

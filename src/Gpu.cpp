@@ -5,35 +5,38 @@ void Gpu::TurnOnLCD()
     gManager.Init();
 }
 
-void Gpu::LoadTileMap(Address start, Address end)
+void Gpu::LoadTilePatternTable(Address start)
 {
-    Tile tiles[sizeX * sizeY];
-    Byte bytes[16];
-    int tilesIdx = 0;
-
-    for (Address i = start; i < end;)
+    if (start == 0x8800)
     {
-        for (int j = 0; j < 16; j++)
-        {
-            bytes[j] = pMemory->Read(i++);
-        }
-
-        Tile tile = Tile(bytes);
-        tiles[tilesIdx++] = tile;
+        throw new std::exception("Secondary tile map is not implemented.");
     }
 
-    int i = -1;
-    int j = 0;
+    Byte buf[16];
 
-    for (int k = 0; k < sizeX * sizeY; k++)
+    for (int i = 0; i < 256; i++)
     {
-        if (j % sizeY == 0)
+        // Read in the next tile (16 bytes)
+        for (int j = 0; j < 16; j++)
         {
-            i++;
+            buf[j] = pMemory->Read(start++);
         }
 
-        tilemap[j++ % sizeY][i] = tiles[k];
-        //tilemap[i][j++ % sizeY] = tiles[k];
+        Tile& tile = this->tilePatternTable[i];
+        tile.LoadData(buf);
+    }
+}
+
+void Gpu::LoadTileMap(Address start)
+{
+    int x = 0;
+
+    for (int i = 0; i < sizeY; ++i)
+    {
+        for (int j = 0; j < sizeX; j++)
+        {
+            tileMap[i][j] = pMemory->Read(start++);
+        }
     }
 }
 
@@ -49,7 +52,15 @@ void Gpu::Draw()
             {
                 for (int l = 0; l < 8; l++)
                 {
-                    gManager.AddPixel((j * 8) + l, (i * 8) + k, tilemap[i][j].pixels[k][l]);
+                    int yOffset = pMemory->Read(0xFF42);
+                    int xOffset = pMemory->Read(0xFF43);
+
+                    int pixelY = (j * 8) + l;
+                    int pixelX = (i * 8) + k;
+
+                    Byte tileIdx = this->tileMap[i][j];
+                    Tile& tile = this->tilePatternTable[tileIdx];
+                    gManager.AddPixel((j * 8) + l, (i * 8) + k, tile.GetPixel(l, k));
                 }
             }
         }

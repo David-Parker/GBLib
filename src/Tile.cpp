@@ -1,22 +1,21 @@
 #include "Tile.h"
+#include <cstring>
+#include <random>
 
-Tile::Tile(Byte data[16])
+void Tile::LoadData(Byte data[16])
 {
-    Byte bitIndex;
-    int line = 0;
+    memcpy(this->data, data, 16);
+}
 
-    for (int i = 0; i < 16; i++)
-    {
-        Byte upper = data[i++];
-        Byte lower = data[i];
+// 8 x 8
+Byte Tile::GetPixel(int x, int y)
+{
+    int pixelNum = (y * 8) + x;
+    Byte upperIdx = (pixelNum / 8) * 2;
+    Byte lowerIdx = upperIdx + 1;
+    Byte upper = this->data[upperIdx];
+    Byte lower = this->data[lowerIdx];
+    Byte bitIndex = 1 << (7 - x);
 
-        for (int j = 0; j < 8; j++)
-        {
-            bitIndex = 1 << (7 - j);
-
-            pixels[line][j] = ((upper & bitIndex) ? 1 : 0) + ((lower & bitIndex) ? 2 : 0);
-        }
-
-        line++;
-    }
+    return ((upper & bitIndex) ? 1 : 0) + ((lower & bitIndex) ? 2 : 0);
 }

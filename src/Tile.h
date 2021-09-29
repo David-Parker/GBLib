@@ -3,9 +3,13 @@
 
 class Tile
 {
-public:
-    Byte pixels[8][8] = {};
-    Tile() : pixels() {};
-    Tile(Byte data[16]);
+private:
+    Byte data[16];
+
+public: 
+    Tile() {};
     ~Tile() {}
+
+    void LoadData(Byte data[16]);
+    Byte GetPixel(int x, int y);
 };

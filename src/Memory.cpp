@@ -32,6 +32,9 @@ void Memory::Write(Address address, Byte value)
     if (device != nullptr)
     {
         device->Write(address, value);
+
+        // Also write value to "RAM" for debugging purposes.
+        RAM[address] = value;
         return;
     }
 
@@ -111,7 +114,7 @@ void Memory::Dump(Address start, Address end)
     {
         for (u32 i = start; i <= end; i++)
         {
-            fprintf(file, "[0x%04X]: 0x%04X\n", i, Read((Address)i));
+            fprintf(file, "[0x%04X]: 0x%04X\n", i, RAM[i]);
         }
 
         fclose(file);

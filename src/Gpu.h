@@ -11,6 +11,9 @@ private:
     Memory* pMemory;
     const static u16 sizeX = 32;
     const static u16 sizeY = 32;
+    Tile tilePatternTable[256];
+    Byte tileMap[32][32];
+
     Tile tilemap[sizeX][sizeY];
     GraphicsManager gManager;
 
@@ -21,6 +24,7 @@ public:
     ~Gpu() {}
 
     void TurnOnLCD();
-    void LoadTileMap(Address start, Address end);
+    void LoadTilePatternTable(Address start);
+    void LoadTileMap(Address start);
     void Draw();
 };

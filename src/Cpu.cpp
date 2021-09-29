@@ -44,7 +44,7 @@ int Cpu::Tick()
     // Debug "breakpoint"
     if (enterStep)
     {
-        //pMemory->Dump(0x8000, 0x9FFF);
+        //pMemory->Dump(0x0000, 0xFFFF);
         trace.flush();
         std::cout << sZRegisters;
         std::cout << sZOpCode;

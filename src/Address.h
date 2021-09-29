@@ -24,15 +24,19 @@ public:
         return store;
     }
 
-    Address operator+=(int num)
-    {
-        store += num;
-        return *this;
-    }
-
+    // postfix x++
     Address operator++(int)
     {
-        return operator+=(1);
+        Address copy(*this);
+        operator++();
+        return copy;
+    }
+
+    // prefix ++x
+    Address& operator++()
+    {
+        store++;
+        return *this;
     }
 
     ~Address() {}
