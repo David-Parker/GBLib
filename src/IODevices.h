@@ -4,7 +4,7 @@
 #include "PixelProcessingUnit.h"
 #include "Memory.h"
 
-class IODevices
+struct IODevices
 {
 public:
     InterruptController interruptController;

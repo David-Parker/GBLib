@@ -1,7 +1,9 @@
 #pragma once
 #include "IMemoryMappable.h"
-#include "Gpu.h"
 #include "Memory.h"
+#include "GlobalDefinitions.h"
+#include "GraphicsManager.h"
+#include "Tile.h"
 
 enum LCD_CTRL_FLAGS
 {
@@ -18,15 +20,26 @@ enum LCD_CTRL_FLAGS
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
-    Gpu gpu;
     Memory* pMemory;
     Byte mem[ADDR_PPU_END - ADDR_PPU_START + 1];
+
+    const static u16 sizeX = 32;
+    const static u16 sizeY = 32;
+    Tile tilePatternTable[256];
+    Byte tileMap[sizeY][sizeX];
+    GraphicsManager gManager;
 
     LCD_CTRL_FLAGS lcd_flags;
 
     Address GetBGCodeArea();
     Address GetBGCharArea();
     Address GetWindowCodeArea();
+
+    void TurnOnLCD();
+    void LoadTilePatternTable(Address start);
+    void LoadTileMap(Address start);
+    void LoadColorPalette();
+    void Draw();
 
 public:
     PixelProcessingUnit(Memory* pMemory);

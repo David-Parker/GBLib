@@ -5,7 +5,6 @@
     <ClCompile Include="src\Cpu.cpp" />
     <ClCompile Include="src\GameBoy.cpp" />
     <ClCompile Include="src\GameInfo.cpp" />
-    <ClCompile Include="src\Gpu.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\Tile.cpp" />
@@ -15,7 +14,6 @@
     <ClCompile Include="src\InterruptController.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
-    <ClCompile Include="src\IODevices.cpp" />
     <ClCompile Include="src\PixelProcessingUnit.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
@@ -27,7 +25,6 @@
     <ClInclude Include="src\GameBoy.h" />
     <ClInclude Include="src\GameInfo.h" />
     <ClInclude Include="src\GlobalDefinitions.h" />
-    <ClInclude Include="src\Gpu.h" />
     <ClInclude Include="src\GraphicsManager.h" />
     <ClInclude Include="src\Memory.h" />
     <ClInclude Include="src\RegisterU16.h" />
