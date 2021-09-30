@@ -101,8 +101,8 @@ void GameBoy::MapIODevices()
 {
     this->memory.MapMemory(ADDR_IF, ADDR_IF, &devices.interruptController);
     this->memory.MapMemory(ADDR_IE, ADDR_IE, &devices.interruptController);
-    this->memory.MapMemory(ADDR_NR10, ADDR_NR52, &devices.soundController);
-    this->memory.MapMemory(ADDR_LCDC, ADDR_WX, &devices.ppu);
+    this->memory.MapMemory(ADDR_SOUND_START, ADDR_SOUND_END, &devices.soundController);
+    this->memory.MapMemory(ADDR_PPU_START, ADDR_PPU_END, &devices.ppu);
 }
 
 void GameBoy::Start()

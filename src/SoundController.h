@@ -4,8 +4,7 @@
 class SoundController : public IMemoryMappable
 {
 private:
-    Address offset = ADDR_NR10;
-    Byte mem[21];
+    Byte mem[ADDR_SOUND_END - ADDR_SOUND_START + 1];
 
 public:
     bool On = false;

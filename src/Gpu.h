@@ -12,9 +12,7 @@ private:
     const static u16 sizeX = 32;
     const static u16 sizeY = 32;
     Tile tilePatternTable[256];
-    Byte tileMap[32][32];
-
-    Tile tilemap[sizeX][sizeY];
+    Byte tileMap[sizeY][sizeX];
     GraphicsManager gManager;
 
 public:
@@ -26,5 +24,6 @@ public:
     void TurnOnLCD();
     void LoadTilePatternTable(Address start);
     void LoadTileMap(Address start);
+    void LoadColorPalette();
     void Draw();
 };

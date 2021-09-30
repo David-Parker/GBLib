@@ -40,6 +40,39 @@ void Gpu::LoadTileMap(Address start)
     }
 }
 
+void Gpu::LoadColorPalette()
+{
+    Byte codes[4];
+
+    Byte bgPalette = pMemory->Read(ADDR_PPU_REG_BG_PALETTE_DATA);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        Byte code = bgPalette & 0b00000011;
+        bgPalette >>= 2;
+
+        switch (code)
+        {
+            case 0:
+                gManager.SetPalette(i, DMG_COLOR_WHITE);
+                break;
+            case 1:
+                gManager.SetPalette(i, DMG_COLOR_LIGHT_GRAY);
+                break;
+            case 2:
+                gManager.SetPalette(i, DMG_COLOR_DARK_GRAY);
+                break;
+            case 3:
+                gManager.SetPalette(i, DMG_COLOR_BLACK);
+                break;
+            default:
+                throw std::exception("Invalid color code.");
+        }
+    }
+
+    gManager.ReloadPalette();
+}
+
 void Gpu::Draw()
 {
     // Get Current tiles pointed by memory.
@@ -52,12 +85,6 @@ void Gpu::Draw()
             {
                 for (int l = 0; l < 8; l++)
                 {
-                    int yOffset = pMemory->Read(0xFF42);
-                    int xOffset = pMemory->Read(0xFF43);
-
-                    int pixelY = (j * 8) + l;
-                    int pixelX = (i * 8) + k;
-
                     Byte tileIdx = this->tileMap[i][j];
                     Tile& tile = this->tilePatternTable[tileIdx];
                     gManager.AddPixel((j * 8) + l, (i * 8) + k, tile.GetPixel(l, k));

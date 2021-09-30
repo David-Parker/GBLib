@@ -10,7 +10,7 @@ GraphicsManager::~GraphicsManager()
 
 u32 GraphicsManager::EncodeColor(Byte index)
 {
-    SDL_Color color = ColorPallette[index];
+    SDL_Color color = ColorPalette[index];
 
     u32 result = color.a;
     result <<= 8;
@@ -21,6 +21,19 @@ u32 GraphicsManager::EncodeColor(Byte index)
     result += color.b;
 
     return result;
+}
+
+void GraphicsManager::SetPalette(Byte index, SDL_Color color)
+{
+    ColorPalette[index] = color;
+}
+
+void GraphicsManager::ReloadPalette()
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        EncodedPalette[i] = EncodeColor(i);
+    }
 }
 
 void GraphicsManager::Init()
@@ -71,14 +84,4 @@ void GraphicsManager::Draw()
 void GraphicsManager::Flush()
 {
     SDL_RenderPresent(renderer);
-}
-
-SDL_Color GraphicsManager::GetColor(Byte num)
-{
-    if (num > 3)
-    {
-        throw std::invalid_argument("Number exceeds range of color pallete.");
-    }
-
-    return ColorPallette[num];
 }

@@ -13,7 +13,7 @@ PixelProcessingUnit::~PixelProcessingUnit()
 
 Address PixelProcessingUnit::GetBGCodeArea()
 {
-    Byte reg = LCD_REG_CONTROL;
+    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
 
     if (reg & BG_CODE_AREA_SELECT)
     {
@@ -29,7 +29,7 @@ Address PixelProcessingUnit::GetBGCodeArea()
 
 Address PixelProcessingUnit::GetBGCharArea()
 {
-    Byte reg = LCD_REG_CONTROL;
+    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
 
     if (reg & BG_CHAR_DATA_SELECT)
     {
@@ -45,7 +45,7 @@ Address PixelProcessingUnit::GetBGCharArea()
 
 Address PixelProcessingUnit::GetWindowCodeArea()
 {
-    Byte reg = LCD_REG_CONTROL;
+    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
 
     if (reg & WINDOW_CODE_AREA_SELECT)
     {
@@ -61,9 +61,9 @@ Address PixelProcessingUnit::GetWindowCodeArea()
 
 void PixelProcessingUnit::Write(Address address, Byte value)
 {
-    mem[address - ADDR_LCDC] = value;
+    mem[address - ADDR_PPU_START] = value;
 
-    if (address == ADDR_LCDC)
+    if (address == ADDR_PPU_REG_CONTROL)
     {
         if (value & LCD_CTRL_FLAGS::LCD_ON)
         {
@@ -73,9 +73,13 @@ void PixelProcessingUnit::Write(Address address, Byte value)
             gpu.Draw();
         }
     }
+    else if (address == ADDR_PPU_REG_BG_PALETTE_DATA)
+    {
+        gpu.LoadColorPalette();
+    }
 }
 
 Byte PixelProcessingUnit::Read(Address address)
 {
-    return mem[address - ADDR_LCDC];
+    return mem[address - ADDR_PPU_START];
 }

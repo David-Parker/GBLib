@@ -4,6 +4,11 @@
 #include <stdexcept>
 #include <vector>
 
+#define DMG_COLOR_BLACK SDL_Color(0, 0, 0, 255)
+#define DMG_COLOR_LIGHT_GRAY SDL_Color(155, 155, 155, 155)
+#define DMG_COLOR_DARK_GRAY SDL_Color(55, 55, 55, 255)
+#define DMG_COLOR_WHITE SDL_Color(255, 255, 255, 255)
+
 class GraphicsManager
 {
 private:
@@ -11,12 +16,12 @@ private:
     SDL_Renderer *renderer;
     SDL_Texture* texture;
 
-    SDL_Color ColorPallette[4] =
+    SDL_Color ColorPalette[4] =
     {
-        SDL_Color(32, 32, 32, 255),
-        SDL_Color(77, 83, 60, 255),
-        SDL_Color(139, 149, 109, 255),
-        SDL_Color(245, 245, 245, 255)
+        DMG_COLOR_BLACK,
+        DMG_COLOR_LIGHT_GRAY,
+        DMG_COLOR_DARK_GRAY,
+        DMG_COLOR_WHITE
     };
 
     u32 EncodedPalette[4] =
@@ -29,7 +34,6 @@ private:
 
     u32 pixelBuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 
-    SDL_Color GetColor(Byte num);
     u32 EncodeColor(Byte index);
 public:
     GraphicsManager();
@@ -37,6 +41,8 @@ public:
 
     void Init();
     void Close();
+    void SetPalette(Byte index, SDL_Color color);
+    void ReloadPalette();
     void AddPixel(int x, int y, Byte color);
     void Clear();
     void Draw();

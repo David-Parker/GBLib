@@ -2,10 +2,10 @@
 
 void SoundController::Write(Address address, Byte value)
 {
-
+    mem[address - ADDR_SOUND_START] = value;
 }
 
 Byte SoundController::Read(Address address)
 {
-    return 0;
+    return mem[address - ADDR_SOUND_START];
 }
