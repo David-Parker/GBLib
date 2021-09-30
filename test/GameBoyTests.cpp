@@ -7,11 +7,11 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace GameBoyTests
-{        
+{
     TEST_CLASS(UnitTest1)
     {
     public:
-        
+
         TEST_METHOD(Register_CreateU8FromU16)
         {
             RegisterU16 regU16;
@@ -47,25 +47,25 @@ namespace GameBoyTests
             Assert::IsTrue(lower == 42);
         }
 
-		TEST_METHOD(Register_U8MirrorsU16AfterIncrement)
-		{
-			RegisterU16 regU16;
-			RegisterU8 upper((Byte*)&regU16 + 1);
-			RegisterU8 lower((Byte*)&regU16);
+        TEST_METHOD(Register_U8MirrorsU16AfterIncrement)
+        {
+            RegisterU16 regU16;
+            RegisterU8 upper((Byte*)&regU16 + 1);
+            RegisterU8 lower((Byte*)&regU16);
 
-			++regU16;
+            ++regU16;
 
-			Assert::IsTrue(upper == 0);
-			Assert::IsTrue(lower == 1);
-			Assert::IsTrue(regU16 == 1);
+            Assert::IsTrue(upper == 0);
+            Assert::IsTrue(lower == 1);
+            Assert::IsTrue(regU16 == 1);
 
-			RegisterU16 prev = regU16++;
+            RegisterU16 prev = regU16++;
 
-			Assert::IsTrue(upper == 0);
-			Assert::IsTrue(lower == 2);
-			Assert::IsTrue(regU16 == 2);
-			Assert::IsTrue(prev == 1);
-		}
+            Assert::IsTrue(upper == 0);
+            Assert::IsTrue(lower == 2);
+            Assert::IsTrue(regU16 == 2);
+            Assert::IsTrue(prev == 1);
+        }
 
         TEST_METHOD(Register_SetFlags)
         {
@@ -361,41 +361,41 @@ namespace GameBoyTests
             Assert::IsTrue(reg.GetBit(7) == 0);
         }
 
-		TEST_METHOD(ALUHelpers_Combine)
-		{
-			u8 one = 0;
-			u8 two = 0;
+        TEST_METHOD(ALUHelpers_Combine)
+        {
+            u8 one = 0;
+            u8 two = 0;
 
-			u16 result = ALUHelpers::Combine(one, two);
+            u16 result = ALUHelpers::Combine(one, two);
 
-			Assert::IsTrue(result == 0);
+            Assert::IsTrue(result == 0);
 
-			one = 1;
-			two = 1;
+            one = 1;
+            two = 1;
 
-			result = ALUHelpers::Combine(one, two);
+            result = ALUHelpers::Combine(one, two);
 
-			Assert::IsTrue(result == 0x0101);
-		}
+            Assert::IsTrue(result == 0x0101);
+        }
 
-		TEST_METHOD(ALUHelpers_CarryU8)
-		{
-			Assert::IsFalse(ALUHelpers::Carry7Add(0, 0, 0));
-			Assert::IsFalse(ALUHelpers::Carry7Add(1, 1, 0));
-			Assert::IsFalse(ALUHelpers::Carry7Add(127, 128, 0));
-			Assert::IsTrue(ALUHelpers::Carry7Add(128, 128, 0));
-			Assert::IsTrue(ALUHelpers::Carry7Add(255, 255, 0));
-		}
+        TEST_METHOD(ALUHelpers_CarryU8)
+        {
+            Assert::IsFalse(ALUHelpers::Carry7Add(0, 0, 0));
+            Assert::IsFalse(ALUHelpers::Carry7Add(1, 1, 0));
+            Assert::IsFalse(ALUHelpers::Carry7Add(127, 128, 0));
+            Assert::IsTrue(ALUHelpers::Carry7Add(128, 128, 0));
+            Assert::IsTrue(ALUHelpers::Carry7Add(255, 255, 0));
+        }
 
-		TEST_METHOD(ALUHelpers_HCarryU8)
-		{
-			Assert::IsFalse(ALUHelpers::Carry3Add(0, 0, 0));
-			Assert::IsFalse(ALUHelpers::Carry3Add(1, 1, 0));
-			Assert::IsFalse(ALUHelpers::Carry3Add(7, 8, 0));
-			Assert::IsTrue(ALUHelpers::Carry3Add(8, 8, 0));
-			Assert::IsTrue(ALUHelpers::Carry3Add(255, 1, 0));
-			Assert::IsTrue(ALUHelpers::Carry3Add(255, 127, 0));
-			Assert::IsFalse(ALUHelpers::Carry3Add(255, 128, 0));
-		}
+        TEST_METHOD(ALUHelpers_HCarryU8)
+        {
+            Assert::IsFalse(ALUHelpers::Carry3Add(0, 0, 0));
+            Assert::IsFalse(ALUHelpers::Carry3Add(1, 1, 0));
+            Assert::IsFalse(ALUHelpers::Carry3Add(7, 8, 0));
+            Assert::IsTrue(ALUHelpers::Carry3Add(8, 8, 0));
+            Assert::IsTrue(ALUHelpers::Carry3Add(255, 1, 0));
+            Assert::IsTrue(ALUHelpers::Carry3Add(255, 127, 0));
+            Assert::IsFalse(ALUHelpers::Carry3Add(255, 128, 0));
+        }
     };
 }
