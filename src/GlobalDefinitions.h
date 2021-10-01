@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <exception>
 
 typedef uint8_t u8;
 typedef int8_t s8;
@@ -12,6 +13,7 @@ typedef int64_t s64;
 
 typedef u8 Byte;
 
+constexpr static int ROM_SIZE = 0x8000;
 constexpr static int CLOCK_HZ = 4194304;
 constexpr static int CLOCK_NS_PER_CYCLE = 238;
 constexpr static int CLOCK_CYCLES_PER_MACHINE_CYCLE = 4;

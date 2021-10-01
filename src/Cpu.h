@@ -454,9 +454,6 @@ public:
         opcodes[0xC4] = [this]() { return Callcc(F_NZ, ReadTwoBytes()); };
         opcodes[0xD4] = [this]() { return Callcc(F_NC, ReadTwoBytes()); };
 
-        opcodes[0xE0] = [this]() { return LdnA(ReadByte()); };
-        opcodes[0xE2] = [this]() { return LdCA(); };
-
         opcodes[0xC5] = [this]() { return Push(BC); };
         opcodes[0xD5] = [this]() { return Push(DE); };
         opcodes[0xE5] = [this]() { return Push(HL); };
@@ -975,8 +972,6 @@ public:
         opcode_strings[0xF3] = "Di()";
         opcode_strings[0xC4] = "Callcc(F_NZ, ReadTwoBytes())";
         opcode_strings[0xD4] = "Callcc(F_NC, ReadTwoBytes())";
-        opcode_strings[0xE0] = "LdnA(ReadByte())";
-        opcode_strings[0xE2] = "LdCA()";
         opcode_strings[0xC5] = "Push(BC)";
         opcode_strings[0xD5] = "Push(DE)";
         opcode_strings[0xE5] = "Push(HL)";

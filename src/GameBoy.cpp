@@ -4,6 +4,12 @@
 
 using namespace std::chrono;
 
+GameBoy::GameBoy() 
+    : memory(), cpu(&memory), devices(&memory)
+{
+    this->MapIODevices();
+}
+
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {
@@ -12,6 +18,9 @@ void GameBoy::LoadBootRom()
     FILE *filepoint;
     errno_t err;
     std::string path = "rom/boot.bin";
+
+    this->bootROM = new ROM("boot", 0, 256);
+    this->memory.MapMemory(0x00, 0xFF, this->bootROM);
 
     if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
     {
@@ -28,6 +37,8 @@ void GameBoy::LoadBootRom()
 
         fclose(filepoint);
     }
+
+    this->bootROM->DisableWrites();
 }
 
 // Loads the ROM file into memory
@@ -40,6 +51,9 @@ void GameBoy::LoadRom(std::string path)
     unsigned char buffer[ROM_SIZE];
     FILE *filepoint;
     errno_t err;
+
+    this->gameROM = new ROM("game", 0, ROM_SIZE);
+    this->memory.MapMemory(0x00, ROM_SIZE - 1, this->gameROM);
 
     if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
     {
@@ -57,44 +71,14 @@ void GameBoy::LoadRom(std::string path)
         fclose(filepoint);
     }
 
-    LoadBootRom();
+    this->memory.UnMapMemory(0x000);
+    this->memory.MapMemory(0x100, ROM_SIZE - 1, this->gameROM); // ROM 0x00 to 0xFF is mapped after boot sequence is completed.
 
-    RomLoaded = true;
-
-    memory.Dump(0x0000, 0x3FFF);
-}
-
-void GameBoy::LoadTestRom()
-{
-    // Clear memory
-    memory.ClearMemory();
+    this->gameROM->DisableWrites();
 
     LoadBootRom();
 
-    unsigned currentAddress = 0x00; // Game Code starts at address 100, load scrolling graphic at 104
-    unsigned char buffer[ROM_SIZE];
-    FILE *filepoint;
-    errno_t err;
-
-    if ((err = fopen_s(&filepoint, "rom/tests/cpu_instrs.gb", "rb")) != 0)
-    {
-        throw std::exception("Could not open ROM file.");
-    }
-    else
-    {
-        size_t bytes = fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
-
-        for (u32 i = currentAddress; i < bytes; i++)
-        {
-            memory.Write(i, buffer[i]);
-        }
-
-        fclose(filepoint);
-    }
-
     RomLoaded = true;
-
-    memory.Dump(0x0000, 0xFFFF);
 }
 
 void GameBoy::MapIODevices()
@@ -109,8 +93,6 @@ void GameBoy::Start()
 {
     try
     {
-        this->MapIODevices();
-
         Address start = 0x8000;
         Address end = start + 0x4000;
 
@@ -124,7 +106,7 @@ void GameBoy::Start()
 
             cycleCount += cycles;
 
-            cycleCount += this->devices.ppu.Tick(cycles);
+            this->devices.ppu.Tick(cycles);
 
             //this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
             //std::this_thread::sleep_for(10ms);

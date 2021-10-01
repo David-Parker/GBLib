@@ -33,4 +33,5 @@ public:
     Byte Read(Address address);
     void Dump(Address start, Address end);
     void MapMemory(Address low, Address high, IMemoryMappable* device);
+    void UnMapMemory(Address address);
 };

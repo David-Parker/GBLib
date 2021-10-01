@@ -6,25 +6,26 @@
 #include "GameInfo.h"
 #include "Cpu.h"
 #include "IODevices.h"
+#include "ROM.h"
 
 class GameBoy
 {
 private:
-    static const int ROM_SIZE = 0x8000;
     bool RomLoaded = false;
 
     Cpu cpu;
     Memory memory;
     IODevices devices;
+    ROM* gameROM;
+    ROM* bootROM;
 
     void MapIODevices();
     void LoadBootRom();
     void SimulateCycleDelay(int cycles);
 
 public:
-    GameBoy() : memory(), cpu(&memory), devices(&memory) {}
+    GameBoy();
     void LoadRom(std::string path);
-    void LoadTestRom();
     void Start();
     void Stop();
     GameInfo GetGameInfo();

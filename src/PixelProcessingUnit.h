@@ -60,5 +60,5 @@ public:
 
     void Write(Address address, Byte value);
     Byte Read(Address address);
-    int Tick(int cycles);
+    void Tick(int cycles);
 };

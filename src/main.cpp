@@ -8,7 +8,7 @@ int main()
 {
     GameBoy* boy = new GameBoy();
     boy->LoadRom("rom/Tetris.gb");
-    //boy->LoadTestRom();
+    //boy->LoadRom("rom/tests/cpu_instrs.gb");
     boy->GetGameInfo().PrintInfo();
     boy->Start();
 

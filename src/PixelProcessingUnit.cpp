@@ -150,66 +150,18 @@ void PixelProcessingUnit::BufferScanLine()
 
 void PixelProcessingUnit::Draw()
 {
-    while (true)
-    {
-        for (int i = 0; i < SCREEN_HEIGHT; i++)
-        {
-            for (int j = 0; j < SCREEN_WIDTH; j++)
-            {
-                Byte color = this->backgroundMap.GetPixel((j + SCX) % 256, (i + SCY) % 256);
-                gManager.AddPixel(j, i, color);
-            }
-        }
-
-        gManager.Clear();
-        gManager.Draw();
-        gManager.Flush();
-
-        ++SCY;
-    }
-
-    //this->pMemory->Write(ADDR_PPU_REG_Y_COORD, SCREEN_HEIGHT);
-
-    //while (true)
-    //{
-    //    static s8 xTileIndex = 0;
-    //    static s8 yTileIndex = 0;
-
-    //    yTileIndex--;
-
-    //    for (int i = 0; i < TILE_HEIGHT; i++)
-    //    {
-    //        for (int j = 0; j < TILE_WIDTH; j++)
-    //        {
-    //            Byte tileIdx = this->backgroundMap.tileMap[modulo(i + yTileIndex, TILEMAP_SIZE)][modulo(j + xTileIndex, TILEMAP_SIZE)];
-    //            Tile& tile = this->backgroundMap.tilePatternTable[tileIdx];
-
-    //            for (int k = 0; k < 8; k++)
-    //            {
-    //                for (int l = 0; l < 8; l++)
-    //                {
-    //                    //Byte tileIdx = this->tileMap[(i + yTileIndex) % TILEMAP_SIZE][(j + xTileIndex) % TILEMAP_SIZE];
-    //                    gManager.AddPixel((j * 8) + l, (i * 8) + k, tile.GetPixel(l, k));
-    //                }
-    //            }
-    //        }
-    //    }
-
-    //    gManager.Clear();
-    //    gManager.Draw();
-    //    gManager.Flush();
-
-    //    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    //}
+    gManager.Clear();
+    gManager.Draw();
+    gManager.Flush();
 }
 
-int PixelProcessingUnit::Tick(int cycles)
+void PixelProcessingUnit::Tick(int cycles)
 {
     this->clockCycles += cycles;
 
     if (!this->LCDIsOn())
     {
-        return 0;
+        return;
     }
 
     if (this->clockCycles >= CLOCKS_PER_SCANLINE)
@@ -222,14 +174,10 @@ int PixelProcessingUnit::Tick(int cycles)
         }
         else if (LY == 153)
         {
-            gManager.Clear();
-            gManager.Draw();
-            gManager.Flush();
+            this->Draw();
         }
 
         ++LY;
         LY = LY % 154;
     }
-
-    return 0;
 }

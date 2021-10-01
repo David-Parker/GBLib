@@ -26,6 +26,7 @@
     <ClInclude Include="src\PixelProcessingUnit.h" />
     <ClInclude Include="src\RegisterU16.h" />
     <ClInclude Include="src\RegisterU8.h" />
+    <ClInclude Include="src\ROM.h" />
     <ClInclude Include="src\SoundController.h" />
     <ClInclude Include="src\Tile.h" />
   </ItemGroup>
@@ -39,6 +40,7 @@
     <ClCompile Include="src\InterruptController.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\PixelProcessingUnit.cpp" />
+    <ClCompile Include="src\ROM.cpp" />
     <ClCompile Include="src\SoundController.cpp" />
     <ClCompile Include="src\Tile.cpp" />
   </ItemGroup>

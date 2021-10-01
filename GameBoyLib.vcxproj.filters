@@ -9,15 +9,18 @@
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\Tile.cpp" />
     <ClCompile Include="src\SoundController.cpp">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClCompile>
     <ClCompile Include="src\InterruptController.cpp">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClCompile>
     <ClCompile Include="src\PixelProcessingUnit.cpp">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClCompile>
     <ClCompile Include="src\BGMap.cpp" />
+    <ClCompile Include="src\ROM.cpp">
+      <Filter>MemoryMapped</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
@@ -32,20 +35,23 @@
     <ClInclude Include="src\RegisterU8.h" />
     <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\SoundController.h">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClInclude>
     <ClInclude Include="src\IMemoryMappable.h" />
     <ClInclude Include="src\InterruptController.h">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClInclude>
     <ClInclude Include="src\IODevices.h" />
     <ClInclude Include="src\PixelProcessingUnit.h">
-      <Filter>Controllers</Filter>
+      <Filter>MemoryMapped</Filter>
     </ClInclude>
     <ClInclude Include="src\BGMap.h" />
+    <ClInclude Include="src\ROM.h">
+      <Filter>MemoryMapped</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Controllers">
+    <Filter Include="MemoryMapped">
       <UniqueIdentifier>{f4f98450-270f-4112-8c2d-4e775db33b8f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

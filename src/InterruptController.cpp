@@ -7,7 +7,7 @@ void InterruptController::Write(Address address, Byte value)
     {
         IF = value;
     }
-    if (address == ADDR_IE)
+    else if (address == ADDR_IE)
     {
         IE = value;
     }
@@ -23,7 +23,7 @@ Byte InterruptController::Read(Address address)
     {
         return IF;
     }
-    if (address == ADDR_IE)
+    else if (address == ADDR_IE)
     {
         return IE;
     }
