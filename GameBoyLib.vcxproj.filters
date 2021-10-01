@@ -17,6 +17,7 @@
     <ClCompile Include="src\PixelProcessingUnit.cpp">
       <Filter>Controllers</Filter>
     </ClCompile>
+    <ClCompile Include="src\BGMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
@@ -41,6 +42,7 @@
     <ClInclude Include="src\PixelProcessingUnit.h">
       <Filter>Controllers</Filter>
     </ClInclude>
+    <ClInclude Include="src\BGMap.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Controllers">

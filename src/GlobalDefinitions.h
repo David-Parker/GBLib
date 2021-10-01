@@ -12,8 +12,13 @@ typedef int64_t s64;
 
 typedef u8 Byte;
 
-const static int SCALE = 3;
-const static int TILE_WIDTH = 20;
-const static int TILE_HEIGHT = 18;
-const static int SCREEN_WIDTH = TILE_WIDTH * 8 * SCALE;
-const static int SCREEN_HEIGHT = TILE_HEIGHT * 8 * SCALE;
+constexpr static int CLOCK_HZ = 4194304;
+constexpr static int CLOCK_NS_PER_CYCLE = 238;
+constexpr static int CLOCK_CYCLES_PER_MACHINE_CYCLE = 4;
+constexpr static int CLOCKS_PER_SCANLINE = 252;
+constexpr static int SCALE = 3;
+constexpr static int TILEMAP_SIZE = 32;
+constexpr static int SCREEN_WIDTH = 160;
+constexpr static int SCREEN_HEIGHT = 144;
+constexpr static int SDL_SCREEN_WIDTH = SCREEN_WIDTH * SCALE;
+constexpr static int SDL_SCREEN_HEIGHT = SCREEN_HEIGHT * SCALE;

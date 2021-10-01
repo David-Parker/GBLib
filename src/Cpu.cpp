@@ -17,42 +17,45 @@ u8 Cpu::GetIE()
 int Cpu::Tick()
 {
 #ifdef _DEBUG
-    static bool enterStep = false;
-
-    char sZOpCode[256];
-    char sZRegisters[1024];
-
-    // enterStep = enterStep || (PC == 0x0055); // 0x00e6
-
-    u8 opcode_debug = this->pMemory->Read(PC);
-
-    if (opcode_debug == 0xCB)
+    if (traceEnabled)
     {
-        opcode_debug = this->pMemory->Read(PC + 1);
-        snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0xCB%02X %s\n\n", *PC, opcode_debug, opcode_strings_16[opcode_debug]);
-    }
-    else
-    {
-        snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
-    }
+        static bool enterStep = false;
 
-    FormatRegisters(sZRegisters, 1024);
+        char sZOpCode[256];
+        char sZRegisters[1024];
 
-    trace << sZRegisters;
-    trace << sZOpCode;
+        // enterStep = enterStep || (PC == 0x0055); // 0x00e6
 
-    // Debug "breakpoint"
-    if (enterStep)
-    {
-        //pMemory->Dump(0x0000, 0xFFFF);
-        trace.flush();
-        std::cout << sZRegisters;
-        std::cout << sZOpCode;
-        int x = 2;
+        u8 opcode_debug = this->pMemory->Read(PC);
+
+        if (opcode_debug == 0xCB)
+        {
+            opcode_debug = this->pMemory->Read(PC + 1);
+            snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0xCB%02X %s\n\n", *PC, opcode_debug, opcode_strings_16[opcode_debug]);
+        }
+        else
+        {
+            snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
+        }
+
+        FormatRegisters(sZRegisters, 1024);
+
+        trace << sZRegisters;
+        trace << sZOpCode;
+
+        // Debug "breakpoint"
+        if (enterStep)
+        {
+            //pMemory->Dump(0x0000, 0xFFFF);
+            trace.flush();
+            std::cout << sZRegisters;
+            std::cout << sZOpCode;
+            int x = 2;
+        }
     }
 #endif
 
-    instruction_t instruction;
+    instruction_t* instruction;
 
     // Fetch
     u8 opcode = this->pMemory->Read(PC++);
@@ -61,15 +64,15 @@ int Cpu::Tick()
     if (opcode == 0xCB) // 16-bit OP code switch
     {
         opcode = this->pMemory->Read(PC++);
-        instruction = this->opcodes_16[opcode];
+        instruction = &this->opcodes_16[opcode];
     }
     else
     {
-        instruction = this->opcodes[opcode];
+        instruction = &this->opcodes[opcode];
     }
 
     // Execute
-    int cycles = instruction();
+    int cycles = (*instruction)();
 
     if (cycles == -1)
     {

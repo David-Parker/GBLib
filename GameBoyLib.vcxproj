@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
     <ClInclude Include="src\ALUHelpers.h" />
+    <ClInclude Include="src\BGMap.h" />
     <ClInclude Include="src\Cpu.h" />
     <ClInclude Include="src\GameBoy.h" />
     <ClInclude Include="src\GameInfo.h" />
@@ -30,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ALUHelpers.cpp" />
+    <ClCompile Include="src\BGMap.cpp" />
     <ClCompile Include="src\Cpu.cpp" />
     <ClCompile Include="src\GameBoy.cpp" />
     <ClCompile Include="src\GameInfo.cpp" />

@@ -1,9 +1,11 @@
 #pragma once
+#include "BGMap.h"
 #include "IMemoryMappable.h"
 #include "Memory.h"
 #include "GlobalDefinitions.h"
 #include "GraphicsManager.h"
 #include "Tile.h"
+#include "RegisterU8.h"
 
 enum LCD_CTRL_FLAGS
 {
@@ -20,14 +22,25 @@ enum LCD_CTRL_FLAGS
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
+    RegisterU8 LCDC;
+    RegisterU8 STAT;
+    RegisterU8 SCY;
+    RegisterU8 SCX;
+    RegisterU8 LY;
+    RegisterU8 LYC;
+    RegisterU8 DMA;
+    RegisterU8 BGP;
+    RegisterU8 OBP0;
+    RegisterU8 OBP1;
+    RegisterU8 WY;
+    RegisterU8 WX;
+
     Memory* pMemory;
     Byte mem[ADDR_PPU_END - ADDR_PPU_START + 1];
-
-    const static u16 sizeX = 32;
-    const static u16 sizeY = 32;
-    Tile tilePatternTable[256];
-    Byte tileMap[sizeY][sizeX];
+    BGMap backgroundMap;
     GraphicsManager gManager;
+
+    int clockCycles;
 
     LCD_CTRL_FLAGS lcd_flags;
 
@@ -36,10 +49,10 @@ private:
     Address GetWindowCodeArea();
 
     void TurnOnLCD();
-    void LoadTilePatternTable(Address start);
-    void LoadTileMap(Address start);
-    void LoadColorPalette();
+    void BufferScanLine();
     void Draw();
+    void LoadColorPalette();
+    bool LCDIsOn();
 
 public:
     PixelProcessingUnit(Memory* pMemory);
@@ -47,4 +60,5 @@ public:
 
     void Write(Address address, Byte value);
     Byte Read(Address address);
+    int Tick(int cycles);
 };

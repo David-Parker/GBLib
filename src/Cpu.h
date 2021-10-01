@@ -8,10 +8,6 @@
 #include <functional>
 #include <utility>
 
-#define CLOCK_HZ 4194304
-#define CLOCK_NS_PER_CYCLE 238
-#define CLOCK_CYCLES_PER_MACHINE_CYCLE 4
-
 #define F_NZ 0x00
 #define F_Z  0x01
 #define F_NC 0x02
@@ -59,6 +55,7 @@ private:
     bool running;
 
 #ifdef _DEBUG
+    bool traceEnabled = false;
     std::ofstream trace;
 #endif
 

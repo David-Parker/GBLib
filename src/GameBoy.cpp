@@ -124,6 +124,8 @@ void GameBoy::Start()
 
             cycleCount += cycles;
 
+            cycleCount += this->devices.ppu.Tick(cycles);
+
             //this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
             //std::this_thread::sleep_for(10ms);
         }

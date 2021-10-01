@@ -32,7 +32,7 @@ private:
         EncodeColor(3)
     };
 
-    u32 pixelBuffer[SCREEN_HEIGHT][SCREEN_WIDTH];
+    u32 pixelBuffer[SDL_SCREEN_HEIGHT][SDL_SCREEN_WIDTH];
 
     u32 EncodeColor(Byte index);
 public:
@@ -58,7 +58,7 @@ inline void GraphicsManager::AddPixel(int x, int y, Byte color)
     {
         for (int j = 0; j < SCALE; j++)
         {
-            pixelBuffer[starty + j][startx + i] = EncodedPalette[color];
+            pixelBuffer[starty + i][startx + j] = EncodedPalette[color];
         }
     }
 }

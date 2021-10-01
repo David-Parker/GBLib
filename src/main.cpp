@@ -2,7 +2,9 @@
 #include <string>
 #include "GameBoy.h"
 
-int main(int argc, char* args[])
+#undef main
+
+int main()
 {
     GameBoy* boy = new GameBoy();
     boy->LoadRom("rom/Tetris.gb");
