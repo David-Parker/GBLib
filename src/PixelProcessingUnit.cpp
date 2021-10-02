@@ -17,7 +17,8 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory)
         WY(&mem[ADDR_PPU_REG_OBJ_WINDOW_Y_POS - ADDR_PPU_START]),
         WX(&mem[ADDR_PPU_REG_OBJ_WINDOW_X_POS_MIN_7 - ADDR_PPU_START])
 {
-
+    this->lastUpdateClock = 0;
+    this->mode = LCD_MODE::OBJ_SEARCH;
 }
 
 PixelProcessingUnit::~PixelProcessingUnit()
@@ -27,9 +28,7 @@ PixelProcessingUnit::~PixelProcessingUnit()
 
 Address PixelProcessingUnit::GetBGCodeArea()
 {
-    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
-
-    if (reg & BG_CODE_AREA_SELECT)
+    if (LCDC & BG_CODE_AREA_SELECT)
     {
         // 0x9C00 - 0x9FFF
         return 0x9C00;
@@ -43,9 +42,7 @@ Address PixelProcessingUnit::GetBGCodeArea()
 
 Address PixelProcessingUnit::GetBGCharArea()
 {
-    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
-
-    if (reg & BG_CHAR_DATA_SELECT)
+    if (LCDC & BG_CHAR_DATA_SELECT)
     {
         // 0x8000 - 0x8FFF
         return 0x8000;
@@ -59,9 +56,7 @@ Address PixelProcessingUnit::GetBGCharArea()
 
 Address PixelProcessingUnit::GetWindowCodeArea()
 {
-    Byte reg = mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START];
-
-    if (reg & WINDOW_CODE_AREA_SELECT)
+    if (LCDC & WINDOW_CODE_AREA_SELECT)
     {
         // 0x9C00 - 0x9FFF
         return 0x9C00;
@@ -84,7 +79,6 @@ void PixelProcessingUnit::Write(Address address, Byte value)
             this->TurnOnLCD();
             this->backgroundMap.LoadTilePatternTable(GetBGCharArea());
             this->backgroundMap.LoadTileMap(GetBGCodeArea());
-            //this->Draw();
         }
     }
     else if (address == ADDR_PPU_REG_BG_PALETTE_DATA)
@@ -101,6 +95,7 @@ Byte PixelProcessingUnit::Read(Address address)
 void PixelProcessingUnit::TurnOnLCD()
 {
     gManager.Init();
+    this->mode = LCD_MODE::OBJ_SEARCH;
 }
 
 void PixelProcessingUnit::LoadColorPalette()
@@ -155,29 +150,68 @@ void PixelProcessingUnit::Draw()
     gManager.Flush();
 }
 
-void PixelProcessingUnit::Tick(int cycles)
+void PixelProcessingUnit::Tick(u64 cycles)
 {
-    this->clockCycles += cycles;
-
     if (!this->LCDIsOn())
     {
         return;
     }
 
-    if (this->clockCycles >= CLOCKS_PER_SCANLINE)
+    u64 cyclesElapsed = cycles - this->lastUpdateClock;
+    
+    // (OBJ_SEARCH -> VIDEO_READ -> HBLANK -> VBLANK)
+
+    switch (this->mode)
     {
-        this->clockCycles %= CLOCKS_PER_SCANLINE;
-
-        if (LY < 144)
+    case LCD_MODE::OBJ_SEARCH:
+        if (cyclesElapsed >= CLOCKS_PER_OBJ_SEARCH)
         {
-            this->BufferScanLine();
+            this->mode = LCD_MODE::VIDEO_READ;
+            this->lastUpdateClock = cycles;
         }
-        else if (LY == 153)
+        break;
+    case LCD_MODE::VIDEO_READ:
+        if (cyclesElapsed >= CLOCKS_PER_VIDEO_READ)
         {
-            this->Draw();
+            this->mode = LCD_MODE::HBLANK;
+            this->lastUpdateClock = cycles;
         }
+        break;
+    case LCD_MODE::HBLANK:
+        if (cyclesElapsed >= CLOCKS_PER_HBLANK)
+        {
+            if (LY < SCREEN_HEIGHT)
+            {
+                this->mode = LCD_MODE::OBJ_SEARCH;
+                this->BufferScanLine();
+            }
+            else
+            {
+                this->mode = LCD_MODE::VBLANK;
+                this->Draw();
+            }
 
-        ++LY;
-        LY = LY % 154;
+            ++LY;
+            this->lastUpdateClock = cycles;
+        }
+        break;
+    case LCD_MODE::VBLANK:
+        if (cyclesElapsed >= CLOCKS_PER_VBLANK)
+        {
+            if (LY == 153)
+            {
+                this->mode = LCD_MODE::OBJ_SEARCH;
+                LY = 0;
+            }
+            else
+            {
+                ++LY;
+            }
+
+            this->lastUpdateClock = cycles;
+        }
+        break;
+    default:
+        throw std::exception("Unknown LCD Mode.");
     }
 }

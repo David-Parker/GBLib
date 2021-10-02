@@ -13,32 +13,9 @@ GameBoy::GameBoy()
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {
-    unsigned currentAddress = 0x0;
-    unsigned char buffer[256];
-    FILE *filepoint;
-    errno_t err;
-    std::string path = "rom/boot.bin";
-
     this->bootROM = new ROM("boot", 0, 256);
+    this->bootROM->LoadFromFile("rom/boot.bin");
     this->memory.MapMemory(0x00, 0xFF, this->bootROM);
-
-    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
-    {
-        throw std::exception("Could not open boot ROM file.");
-    }
-    else
-    {
-        size_t bytes = fread(buffer, sizeof(unsigned char), 256, filepoint);
-
-        for (u32 i = 0; i < bytes; i++)
-        {
-            memory.Write(i, buffer[i]);
-        }
-
-        fclose(filepoint);
-    }
-
-    this->bootROM->DisableWrites();
 }
 
 // Loads the ROM file into memory
@@ -46,37 +23,11 @@ void GameBoy::LoadRom(std::string path)
 {
     // Clear memory
     memory.ClearMemory();
-
-    unsigned currentAddress = 0x000; // Game Code starts at address 100, load scrolling graphic at 104
-    unsigned char buffer[ROM_SIZE];
-    FILE *filepoint;
-    errno_t err;
+    LoadBootRom();
 
     this->gameROM = new ROM("game", 0, ROM_SIZE);
-    this->memory.MapMemory(0x00, ROM_SIZE - 1, this->gameROM);
-
-    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
-    {
-        throw std::exception("Could not open ROM file.");
-    }
-    else
-    {
-        size_t bytes = fread(buffer, sizeof(unsigned char), ROM_SIZE, filepoint);
-
-        for (u32 i = currentAddress; i < bytes; i++)
-        {
-            memory.Write(i, buffer[i]);
-        }
-
-        fclose(filepoint);
-    }
-
-    this->memory.UnMapMemory(0x000);
+    this->gameROM->LoadFromFile(path);
     this->memory.MapMemory(0x100, ROM_SIZE - 1, this->gameROM); // ROM 0x00 to 0xFF is mapped after boot sequence is completed.
-
-    this->gameROM->DisableWrites();
-
-    LoadBootRom();
 
     RomLoaded = true;
 }
@@ -93,10 +44,7 @@ void GameBoy::Start()
 {
     try
     {
-        Address start = 0x8000;
-        Address end = start + 0x4000;
-
-        unsigned long long cycleCount = 0;
+        u64 cycleCount = 0;
 
         this->cpu.StartCPU();
 
@@ -106,7 +54,7 @@ void GameBoy::Start()
 
             cycleCount += cycles;
 
-            this->devices.ppu.Tick(cycles);
+            this->devices.ppu.Tick(cycleCount);
 
             //this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
             //std::this_thread::sleep_for(10ms);

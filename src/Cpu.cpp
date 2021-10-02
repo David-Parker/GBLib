@@ -13,7 +13,6 @@ u8 Cpu::GetIE()
     return this->pMemory->Read(ADDR_IE);
 }
 
-
 int Cpu::Tick()
 {
 #ifdef _DEBUG

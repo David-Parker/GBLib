@@ -19,6 +19,14 @@ enum LCD_CTRL_FLAGS
     BG_DISPLAY_ON = 1,
 };
 
+enum LCD_MODE
+{
+    HBLANK,
+    VBLANK,
+    OBJ_SEARCH,
+    VIDEO_READ
+};
+
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
@@ -40,7 +48,8 @@ private:
     BGMap backgroundMap;
     GraphicsManager gManager;
 
-    int clockCycles;
+    LCD_MODE mode;
+    u64 lastUpdateClock;
 
     LCD_CTRL_FLAGS lcd_flags;
 
@@ -60,5 +69,5 @@ public:
 
     void Write(Address address, Byte value);
     Byte Read(Address address);
-    void Tick(int cycles);
+    void Tick(u64 cycles);
 };

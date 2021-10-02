@@ -49,15 +49,13 @@ void Memory::Write(Address address, Byte value)
     /* 0xFF80 - 0xFFFE (HIGH RAM) */
     /* 0xFFFF - 0xFFFF (INTERRUPT REGISTER) */
 
-    if (address == 0xFF50)
+    if (address == 0xFF50 && value == 1)
     {
         // Unload boot ROM
-        this->Read(0x00);
         this->UnMapMemory(0x0);
         IMemoryMappable* gameROM = this->IsMemoryMapped(0x100);
         this->UnMapMemory(0x100);
         this->MapMemory(0x0, ROM_SIZE - 1, gameROM);
-        this->Read(0x00);
     }
     else if (
         address.InRange(0xE000, 0xFDFF) ||
@@ -79,7 +77,6 @@ void Memory::Write(Address address, Byte value)
         RAM[address] = value;
     }
 }
-
 
 Byte Memory::Read(Address address)
 {
@@ -126,11 +123,11 @@ void Memory::Dump(Address start, Address end)
                 i.InRange(0xFEA0, 0xFEFF) ||
                 i.InRange(0xFF4C, 0xFF7F))
             {
-                fprintf(file, "[0x%04X]: 0x%04X\n", i, 0x0);
+                fprintf(file, "[0x%04X]: 0x0000\n", (int)i);
             }
             else
             {
-                fprintf(file, "[0x%04X]: 0x%04X\n", i, RAM[i]);
+                fprintf(file, "[0x%04X]: 0x%04X\n", (int)i, RAM[i]);
             }
         }
 
