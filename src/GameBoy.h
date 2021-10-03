@@ -7,6 +7,7 @@
 #include "Cpu.h"
 #include "IODevices.h"
 #include "ROM.h"
+#include "VideoRAM.h"
 
 class GameBoy
 {

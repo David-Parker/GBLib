@@ -104,6 +104,11 @@ void Memory::ClearMemory()
     {
         RAM[i] = 0;
     }
+
+    for (Address i = ADDR_VIDEO_RAM_START; i <= ADDR_VIDEO_RAM_END; ++i)
+    {
+        vRAM.Write(i, 0);
+    }
 }
 
 void Memory::Dump(Address start, Address end)

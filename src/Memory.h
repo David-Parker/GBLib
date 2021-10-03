@@ -6,6 +6,7 @@
 #include "Address.h"
 #include "GlobalDefinitions.h"
 #include "IMemoryMappable.h"
+#include "VideoRAM.h"
 
 class Memory
 {
@@ -28,6 +29,8 @@ private:
 public:
     Memory();
     ~Memory();
+    VideoRAM vRAM;
+
     void ClearMemory();
     void Write(Address address, Byte value);
     Byte Read(Address address);

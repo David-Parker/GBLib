@@ -21,6 +21,9 @@
 #define ADDR_PPU_REG_OBJ_WINDOW_Y_POS 0xFF4A
 #define ADDR_PPU_REG_OBJ_WINDOW_X_POS_MIN_7 0xFF4B
 
+#define ADDR_VIDEO_RAM_START 0x8000
+#define ADDR_VIDEO_RAM_END 0x97FF
+
 class Address
 {
 private:

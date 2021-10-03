@@ -38,6 +38,7 @@ void GameBoy::MapIODevices()
     this->memory.MapMemory(ADDR_IE, ADDR_IE, &devices.interruptController);
     this->memory.MapMemory(ADDR_SOUND_START, ADDR_SOUND_END, &devices.soundController);
     this->memory.MapMemory(ADDR_PPU_START, ADDR_PPU_END, &devices.ppu);
+    this->memory.MapMemory(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END, &memory.vRAM);
 }
 
 void GameBoy::Start()
@@ -63,13 +64,13 @@ void GameBoy::Start()
     catch (std::exception& ex)
     {
         std::cout << "Exception encountered: " << ex.what() << std::endl;
-        this->cpu.StopCPU();
+        this->Stop();
     }
 }
 
 void GameBoy::Stop()
 {
-
+    this->cpu.StopCPU();
 }
 
 void GameBoy::SimulateCycleDelay(int cycles)

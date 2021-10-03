@@ -2,7 +2,8 @@
 #include <cstring>
 #include <random>
 
-void Tile::LoadData(Byte data[16])
+void Tile::LoadTileData(Memory* pMemory, Address data)
 {
-    memcpy(this->data, data, 16);
+    this->pMemory = pMemory;
+    this->data = data;
 }

@@ -21,6 +21,9 @@
     <ClCompile Include="src\ROM.cpp">
       <Filter>MemoryMapped</Filter>
     </ClCompile>
+    <ClCompile Include="src\VideoRAM.cpp">
+      <Filter>MemoryMapped</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
@@ -47,6 +50,9 @@
     </ClInclude>
     <ClInclude Include="src\BGMap.h" />
     <ClInclude Include="src\ROM.h">
+      <Filter>MemoryMapped</Filter>
+    </ClInclude>
+    <ClInclude Include="src\VideoRAM.h">
       <Filter>MemoryMapped</Filter>
     </ClInclude>
   </ItemGroup>

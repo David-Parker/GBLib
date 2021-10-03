@@ -167,6 +167,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
         if (cyclesElapsed >= CLOCKS_PER_OBJ_SEARCH)
         {
             this->mode = LCD_MODE::VIDEO_READ;
+            this->pMemory->vRAM.DisableAccess();
             this->lastUpdateClock = cycles;
         }
         break;
@@ -174,6 +175,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
         if (cyclesElapsed >= CLOCKS_PER_VIDEO_READ)
         {
             this->mode = LCD_MODE::HBLANK;
+            this->pMemory->vRAM.EnableAccess();
             this->lastUpdateClock = cycles;
         }
         break;
