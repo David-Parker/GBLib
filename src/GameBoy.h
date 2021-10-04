@@ -7,7 +7,6 @@
 #include "Cpu.h"
 #include "IODevices.h"
 #include "ROM.h"
-#include "VideoRAM.h"
 
 class GameBoy
 {
@@ -26,6 +25,7 @@ private:
 
 public:
     GameBoy();
+    ~GameBoy();
     void LoadRom(std::string path);
     void Start();
     void Stop();

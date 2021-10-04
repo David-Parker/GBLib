@@ -2,16 +2,18 @@
 #include "IMemoryMappable.h"
 #include "GlobalDefinitions.h"
 
-class VideoRAM :
+class RAM :
     public IMemoryMappable
 {
 private:
     Byte* mem;
     bool canAccess;
+    Address start;
+    Address end;
 
 public:
-    VideoRAM();
-    ~VideoRAM();
+    RAM(Address start, Address end);
+    ~RAM();
 
     void Write(Address address, Byte value);
     Byte Read(Address address);

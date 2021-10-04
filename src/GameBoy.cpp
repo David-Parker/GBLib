@@ -10,6 +10,12 @@ GameBoy::GameBoy()
     this->MapIODevices();
 }
 
+GameBoy::~GameBoy()
+{
+    free(this->bootROM);
+    free(this->gameROM);
+}
+
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {

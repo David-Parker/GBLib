@@ -6,7 +6,7 @@
 #include "Address.h"
 #include "GlobalDefinitions.h"
 #include "IMemoryMappable.h"
-#include "VideoRAM.h"
+#include "RAM.h"
 
 class Memory
 {
@@ -22,14 +22,14 @@ private:
     };
 
     std::vector<AddressRange> mappedIO;
-    Byte RAM[Address::ADDRESSSPACE] = {};
+    Byte MEM[Address::ADDRESSSPACE] = {};
 
     IMemoryMappable* IsMemoryMapped(Address address);
 
 public:
     Memory();
     ~Memory();
-    VideoRAM vRAM;
+    RAM vRAM;
 
     void ClearMemory();
     void Write(Address address, Byte value);

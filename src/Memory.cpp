@@ -3,7 +3,7 @@
 #include "Memory.h"
 
 Memory::Memory()
-    : mappedIO()
+    : mappedIO(), vRAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END)
 {
 }
 
@@ -74,7 +74,7 @@ void Memory::Write(Address address, Byte value)
     }
     else
     {
-        RAM[address] = value;
+        MEM[address] = value;
     }
 }
 
@@ -95,14 +95,14 @@ Byte Memory::Read(Address address)
         throw std::exception("Attempted read to unusable address space.");
     }
 
-    return RAM[address];
+    return MEM[address];
 }
 
 void Memory::ClearMemory()
 {
     for (u32 i = 0; i < Address::ADDRESSSPACE; ++i)
     {
-        RAM[i] = 0;
+        MEM[i] = 0;
     }
 
     for (Address i = ADDR_VIDEO_RAM_START; i <= ADDR_VIDEO_RAM_END; ++i)
@@ -132,7 +132,7 @@ void Memory::Dump(Address start, Address end)
             }
             else
             {
-                fprintf(file, "[0x%04X]: 0x%04X\n", (int)i, RAM[i]);
+                fprintf(file, "[0x%04X]: 0x%04X\n", (int)i, Read(i));
             }
         }
 

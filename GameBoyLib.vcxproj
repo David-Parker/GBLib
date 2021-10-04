@@ -29,7 +29,7 @@
     <ClInclude Include="src\ROM.h" />
     <ClInclude Include="src\SoundController.h" />
     <ClInclude Include="src\Tile.h" />
-    <ClInclude Include="src\VideoRAM.h" />
+    <ClInclude Include="src\RAM.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ALUHelpers.cpp" />
@@ -44,7 +44,7 @@
     <ClCompile Include="src\ROM.cpp" />
     <ClCompile Include="src\SoundController.cpp" />
     <ClCompile Include="src\Tile.cpp" />
-    <ClCompile Include="src\VideoRAM.cpp" />
+    <ClCompile Include="src\RAM.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6B38DC4F-5A2C-46FA-AC3B-810CFC9BF943}</ProjectGuid>
