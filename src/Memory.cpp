@@ -3,112 +3,55 @@
 #include "Memory.h"
 
 Memory::Memory()
-    : mappedIO(), vRAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END)
+    :   vRAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END),
+        eRAM(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END),
+        gRAM(ADDR_GENERAL_RAM_START, ADDR_GENERAL_RAM_END),
+        oRAM(ADDR_OAM_RAM_START, ADDR_OAM_RAM_END),
+        hRAM(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END)
 {
+    this->MapMemory(0x00, Address::ADDRESSSPACE - 1, &this->unMapped);
+    this->MapMemory(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END, &this->vRAM);
+    this->MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, &this->eRAM);
+    this->MapMemory(ADDR_GENERAL_RAM_START, ADDR_GENERAL_RAM_END, &this->gRAM);
+    this->MapMemory(ADDR_OAM_RAM_START, ADDR_OAM_RAM_END, &this->oRAM);
+    this->MapMemory(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END, &this->hRAM);
 }
 
 Memory::~Memory()
 {
 }
 
-IMemoryMappable* Memory::IsMemoryMapped(Address address)
-{
-    for (auto& range : this->mappedIO)
-    {
-        if (address.InRange(range.low, range.high))
-        {
-            return range.device;
-        }
-    }
-
-    return nullptr;
-}
-
+/* 0x0000 - 0x3FFF (ROM) */
+/* 0x4000 - 0x7FFF (ROM SWITCHABLE) */
+/* 0x8000 - 0x9FFF (VRAM) */
+/* 0xA000 - 0xBFFF (RAM EXTERNAL CARTRIDGE) */
+/* 0xC000 - 0xDFFF (RAM) */
+/* 0xE000 - 0xFDFF (UNUSABLE) */
+/* 0xFE00 - 0xFE9F (OAM RAM) */
+/* 0xFEA0 - 0xFEFF (UNUSABLE) */
+/* 0xFF00 - 0xFF7F (I/O) */
+/* 0xFF80 - 0xFFFE (HIGH RAM) */
+/* 0xFFFF - 0xFFFF (INTERRUPT REGISTER) */
 void Memory::Write(Address address, Byte value)
 {
-    // Checked for mapped I/O devices
-    IMemoryMappable* device = this->IsMemoryMapped(address);
-
-    if (device != nullptr)
-    {
-        device->Write(address, value);
-
-        return;
-    }
-
-    /* 0x0000 - 0x3FFF (ROM) */
-    /* 0x4000 - 0x7FFF (ROM SWITCHABLE) */
-    /* 0x8000 - 0x9FFF (VRAM) */
-    /* 0xA000 - 0xBFFF (RAM EXTERNAL CARTRIDGE) */
-    /* 0xC000 - 0xDFFF (RAM) */
-    /* 0xE000 - 0xFDFF (UNUSABLE) */
-    /* 0xFE00 - 0xFE9F (SPRITE ATTR) */
-    /* 0xFEA0 - 0xFEFF (UNUSABLE) */
-    /* 0xFF00 - 0xFF70 (I/O) */
-    /* 0xFF71 - 0xFF7F (UNUSABLE) */
-    /* 0xFF80 - 0xFFFE (HIGH RAM) */
-    /* 0xFFFF - 0xFFFF (INTERRUPT REGISTER) */
-
     if (address == 0xFF50 && value == 1)
     {
         // Unload boot ROM
-        this->UnMapMemory(0x0);
-        IMemoryMappable* gameROM = this->IsMemoryMapped(0x100);
-        this->UnMapMemory(0x100);
+        IMemoryMappable* gameROM = this->addressSpace[0x100];
         this->MapMemory(0x0, ROM_SIZE - 1, gameROM);
     }
-    else if (
-        address.InRange(0xE000, 0xFDFF) ||
-        address.InRange(0xFEA0, 0xFEFF) ||
-        address.InRange(0xFF4C, 0xFF7F))
-    {
-        throw std::exception("Attempted write to unusable address space.");
-    }
-    else if (address.InRange(0xFF00, 0xFF70))
-    {
-        throw std::exception("I/O not implemented.");
-    }
-    else if (address.InRange(0xFFFF, 0xFFFF))
-    {
-        throw std::exception("Interrupts not implemented.");
-    }
-    else
-    {
-        MEM[address] = value;
-    }
+
+    this->addressSpace[address]->Write(address, value);
 }
 
 Byte Memory::Read(Address address)
 {
-    // Checked for mapped I/O devices
-    IMemoryMappable* device = this->IsMemoryMapped(address);
-
-    if (device != nullptr)
-    {
-        return device->Read(address);
-    }
-
-    if (address.InRange(0xE000, 0xFDFF) ||
-        address.InRange(0xFEA0, 0xFEFF) ||
-        address.InRange(0xFF4C, 0xFF7F))
-    {
-        throw std::exception("Attempted read to unusable address space.");
-    }
-
-    return MEM[address];
+    return this->addressSpace[address]->Read(address);
 }
 
 void Memory::ClearMemory()
 {
-    for (u32 i = 0; i < Address::ADDRESSSPACE; ++i)
-    {
-        MEM[i] = 0;
-    }
-
-    for (Address i = ADDR_VIDEO_RAM_START; i <= ADDR_VIDEO_RAM_END; ++i)
-    {
-        vRAM.Write(i, 0);
-    }
+    // TODO
 }
 
 void Memory::Dump(Address start, Address end)
@@ -124,9 +67,7 @@ void Memory::Dump(Address start, Address end)
     {
         for (Address i = start; i <= end; i++)
         {
-            if (i.InRange(0xE000, 0xFDFF) ||
-                i.InRange(0xFEA0, 0xFEFF) ||
-                i.InRange(0xFF4C, 0xFF7F))
+            if (this->addressSpace[i] == &this->unMapped)
             {
                 fprintf(file, "[0x%04X]: 0x0000\n", (int)i);
             }
@@ -142,25 +83,16 @@ void Memory::Dump(Address start, Address end)
 
 void Memory::MapMemory(Address low, Address high, IMemoryMappable* device)
 {
-    if (this->IsMemoryMapped(low) != nullptr ||
-        this->IsMemoryMapped(high) != nullptr)
+    for (int i = low; i <= high; ++i)
     {
-        throw std::exception("Cannot map memory, a mapping in this range already exists.");
+        this->addressSpace[i] = device;
     }
-
-    mappedIO.emplace_back(low, high, device);
 }
 
-void Memory::UnMapMemory(Address address)
+void Memory::UnMapMemory(Address low, Address high)
 {
-    for (auto& it = this->mappedIO.begin(); it != this->mappedIO.end(); ++it)
+    for (int i = low; i <= high; ++i)
     {
-        if (address.InRange(it->low, it->high))
-        {
-            this->mappedIO.erase(it);
-            return;
-        }
+        this->addressSpace[i] = &this->unMapped;
     }
-
-    throw std::exception("Cannot unmap memory, no memory mapped device found.");
 }

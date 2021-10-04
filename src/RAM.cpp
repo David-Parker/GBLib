@@ -21,7 +21,7 @@ void RAM::Write(Address address, Byte value)
         return;
     }
 
-    this->mem[address - start] = value;
+    this->mem[address - this->start] = value;
 }
 
 Byte RAM::Read(Address address)
@@ -31,7 +31,7 @@ Byte RAM::Read(Address address)
         return 0xFF;
     }
 
-    return this->mem[address - start];
+    return this->mem[address - this->start];
 }
 
 void RAM::EnableAccess()

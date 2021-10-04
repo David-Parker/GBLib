@@ -168,6 +168,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
         {
             this->mode = LCD_MODE::VIDEO_READ;
             this->pMemory->vRAM.DisableAccess();
+            this->pMemory->oRAM.DisableAccess();
             this->lastUpdateClock = cycles;
         }
         break;
@@ -176,6 +177,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
         {
             this->mode = LCD_MODE::HBLANK;
             this->pMemory->vRAM.EnableAccess();
+            this->pMemory->oRAM.EnableAccess();
             this->lastUpdateClock = cycles;
         }
         break;

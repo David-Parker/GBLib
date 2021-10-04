@@ -7,6 +7,7 @@
 #include "GlobalDefinitions.h"
 #include "IMemoryMappable.h"
 #include "RAM.h"
+#include "UnMappedMemory.h"
 
 class Memory
 {
@@ -21,20 +22,22 @@ private:
         IMemoryMappable* device;
     };
 
-    std::vector<AddressRange> mappedIO;
-    Byte MEM[Address::ADDRESSSPACE] = {};
-
-    IMemoryMappable* IsMemoryMapped(Address address);
+    UnMappedMemory unMapped;
+    IMemoryMappable* addressSpace[Address::ADDRESSSPACE];
 
 public:
     Memory();
     ~Memory();
-    RAM vRAM;
+    RAM vRAM; // Video RAM
+    RAM eRAM; // External RAM
+    RAM gRAM; // General Purpose RAM
+    RAM oRAM; // OAM RAM
+    RAM hRAM; // High RAM
 
     void ClearMemory();
     void Write(Address address, Byte value);
     Byte Read(Address address);
     void Dump(Address start, Address end);
     void MapMemory(Address low, Address high, IMemoryMappable* device);
-    void UnMapMemory(Address address);
+    void UnMapMemory(Address low, Address high);
 };
