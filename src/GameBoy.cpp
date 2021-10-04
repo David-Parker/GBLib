@@ -1,5 +1,4 @@
 #include "GameBoy.h"
-#include <chrono>
 #include <thread>
 
 using namespace std::chrono;
@@ -8,6 +7,7 @@ GameBoy::GameBoy()
     : memory(), cpu(&memory), devices(&memory)
 {
     this->MapIODevices();
+    this->lastTimestamp = high_resolution_clock::now();
 }
 
 GameBoy::~GameBoy()
@@ -62,8 +62,7 @@ void GameBoy::Start()
 
             this->devices.ppu.Tick(cycleCount);
 
-            //this->SimulateCycleDelay(cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE);
-            //std::this_thread::sleep_for(10ms);
+            this->SimulateTime(cycles);
         }
     }
     catch (std::exception& ex)
@@ -78,19 +77,14 @@ void GameBoy::Stop()
     this->cpu.StopCPU();
 }
 
-void GameBoy::SimulateCycleDelay(int cycles)
+void GameBoy::SimulateTime(int cycles)
 {
-    auto t1 = high_resolution_clock::now();
+    auto diff = high_resolution_clock::now() - this->lastTimestamp;
+    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE * cycles);
 
-    while (1)
-    {
-        auto t2 = high_resolution_clock::now();
+    while (high_resolution_clock::now() < waitTo);
 
-        if (duration_cast<nanoseconds>(t2 - t1).count() >= cycles * CLOCK_NS_PER_CYCLE)
-        {
-            return;
-        }
-    }
+    this->lastTimestamp = high_resolution_clock::now();
 }
 
 GameInfo GameBoy::GetGameInfo()

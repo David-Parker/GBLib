@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <string>
 #include <errno.h>
 #include <stdexcept>
@@ -12,6 +13,7 @@ class GameBoy
 {
 private:
     bool RomLoaded = false;
+    std::chrono::steady_clock::time_point lastTimestamp;
 
     Cpu cpu;
     Memory memory;
@@ -21,7 +23,7 @@ private:
 
     void MapIODevices();
     void LoadBootRom();
-    void SimulateCycleDelay(int cycles);
+    void SimulateTime(int cycles);
 
 public:
     GameBoy();
