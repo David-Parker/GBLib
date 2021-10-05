@@ -47,6 +47,7 @@ public:
     void Clear();
     void Draw();
     void Flush();
+    void HandleEvents();
 };
 
 inline void GraphicsManager::AddPixel(int x, int y, Byte color)

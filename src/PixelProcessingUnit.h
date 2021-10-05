@@ -19,6 +19,17 @@ enum LCD_CTRL_FLAGS
     BG_DISPLAY_ON = 1,
 };
 
+enum LCD_STAT_FLAGS
+{
+    MATCH_INT_SOURCE = 64,
+    OAM_INT_SOURCE = 32,
+    VBLANK_INT_SOURCE = 16,
+    HBLANK_INT_SOURCE = 8,
+    MATCH_FLAG = 4,
+    MODE_FLAG_UPPER = 2,
+    MODE_FLAG_LOWER = 1
+};
+
 enum LCD_MODE
 {
     HBLANK,
@@ -62,6 +73,7 @@ private:
     void Draw();
     void LoadColorPalette();
     bool LCDIsOn();
+    void TestLYCMatch();
 
 public:
     PixelProcessingUnit(Memory* pMemory);

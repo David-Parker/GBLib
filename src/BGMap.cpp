@@ -13,7 +13,7 @@ void BGMap::LoadTilePatternTable(Address start)
 {
     if (start == 0x8800)
     {
-        throw new std::exception("Secondary tile map is not implemented.");
+        throw std::exception("Secondary tile map is not implemented.");
     }
 
     for (int i = 0; i < 256; i++)

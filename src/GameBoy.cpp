@@ -62,7 +62,7 @@ void GameBoy::Start()
 
             this->devices.ppu.Tick(cycleCount);
 
-            this->SimulateTime(cycles);
+            this->SimulateTimeStep(cycles);
         }
     }
     catch (std::exception& ex)
@@ -77,7 +77,7 @@ void GameBoy::Stop()
     this->cpu.StopCPU();
 }
 
-void GameBoy::SimulateTime(int cycles)
+void GameBoy::SimulateTimeStep(int cycles)
 {
     auto diff = high_resolution_clock::now() - this->lastTimestamp;
     auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE * cycles);

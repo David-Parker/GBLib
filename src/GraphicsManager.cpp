@@ -1,4 +1,5 @@
 #include "GraphicsManager.h"
+#include "SDL_events.h"
 
 GraphicsManager::GraphicsManager()
 {
@@ -43,7 +44,7 @@ void GraphicsManager::Init()
         throw std::exception("Error: Failed to initialize SDL.");
     }
 
-    if (SDL_CreateWindowAndRenderer(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SDL_RENDERER_ACCELERATED, &window, &renderer) != 0)
+    if (SDL_CreateWindowAndRenderer(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer) != 0)
     {
         throw std::exception("Error: Failed to new SDL window.");
     }
@@ -58,6 +59,9 @@ void GraphicsManager::Close()
 
     SDL_DestroyWindow(window);
     window = nullptr;
+
+    SDL_DestroyTexture(texture);
+    texture = nullptr;
 
     SDL_Quit();
 }
@@ -84,4 +88,16 @@ void GraphicsManager::Draw()
 void GraphicsManager::Flush()
 {
     SDL_RenderPresent(renderer);
+}
+
+void GraphicsManager::HandleEvents()
+{
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event)) { 
+        if (event.type == SDL_QUIT)
+        {
+            exit(EXIT_SUCCESS);
+        }
+    }
 }

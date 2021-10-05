@@ -86,7 +86,7 @@ namespace GameBoyTests
             Assert::IsTrue(reg == 0);
 
             reg.SetFlags(RegisterU8::ZERO_FLAG | RegisterU8::SUB_FLAG);
-            Assert::IsTrue(reg == RegisterU8::ZERO_FLAG | RegisterU8::SUB_FLAG);
+            Assert::IsTrue(reg == (RegisterU8::ZERO_FLAG | RegisterU8::SUB_FLAG));
         }
 
         TEST_METHOD(Register_ClearFlags)
@@ -258,6 +258,25 @@ namespace GameBoyTests
             u8 value = 0b00000001;
             int bit0 = value << 7;
             Assert::IsTrue(bit0 == 0b10000000);
+        }
+
+        TEST_METHOD(RegisterU8_Operator_Equals)
+        {
+            Byte value1 = 0xFF;
+            Byte value2 = 0xFF;
+            RegisterU8 reg1(&value1);
+            RegisterU8 reg2(&value2);
+            Assert::IsTrue(value1 == 0xFF);
+            Assert::IsTrue(value1 == value2);
+        }
+
+        TEST_METHOD(RegisterU8_Operator_Not_Equals)
+        {
+            Byte value1 = 0xFF;
+            Byte value2 = 0xFE;
+            RegisterU8 reg1(&value1);
+            RegisterU8 reg2(&value2);
+            Assert::IsTrue(value1 != value2);
         }
 
         TEST_METHOD(RegisterU8_GetHighNibble)

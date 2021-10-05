@@ -23,7 +23,7 @@ private:
 
     void MapIODevices();
     void LoadBootRom();
-    void SimulateTime(int cycles);
+    void SimulateTimeStep(int cycles);
 
 public:
     GameBoy();

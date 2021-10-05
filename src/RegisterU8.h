@@ -68,11 +68,6 @@ public:
         return *this;
     }
 
-    bool operator==(int num)
-    {
-        return *pValue == num;
-    }
-
     void SetFlags(u8 flags)
     {
         *pValue = (*pValue | flags);

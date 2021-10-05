@@ -23,7 +23,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory)
 
 PixelProcessingUnit::~PixelProcessingUnit()
 {
-
+    this->gManager.Close();
 }
 
 Address PixelProcessingUnit::GetBGCodeArea()
@@ -167,6 +167,8 @@ void PixelProcessingUnit::Tick(u64 cycles)
         if (cyclesElapsed >= CLOCKS_PER_OBJ_SEARCH)
         {
             this->mode = LCD_MODE::VIDEO_READ;
+            this->STAT.SetBit(0);
+            this->STAT.SetBit(1);
             this->pMemory->vRAM.DisableAccess();
             this->pMemory->oRAM.DisableAccess();
             this->lastUpdateClock = cycles;
@@ -176,6 +178,8 @@ void PixelProcessingUnit::Tick(u64 cycles)
         if (cyclesElapsed >= CLOCKS_PER_VIDEO_READ)
         {
             this->mode = LCD_MODE::HBLANK;
+            this->STAT.ResetBit(0);
+            this->STAT.ResetBit(1);
             this->pMemory->vRAM.EnableAccess();
             this->pMemory->oRAM.EnableAccess();
             this->lastUpdateClock = cycles;
@@ -187,15 +191,21 @@ void PixelProcessingUnit::Tick(u64 cycles)
             if (LY < SCREEN_HEIGHT)
             {
                 this->mode = LCD_MODE::OBJ_SEARCH;
+                this->STAT.ResetBit(0);
+                this->STAT.SetBit(1);
                 this->BufferScanLine();
             }
             else
             {
                 this->mode = LCD_MODE::VBLANK;
+                this->STAT.SetBit(0);
+                this->STAT.ResetBit(1);
                 this->Draw();
             }
 
             ++LY;
+
+            this->TestLYCMatch();
             this->lastUpdateClock = cycles;
         }
         break;
@@ -205,6 +215,8 @@ void PixelProcessingUnit::Tick(u64 cycles)
             if (LY == 153)
             {
                 this->mode = LCD_MODE::OBJ_SEARCH;
+                this->STAT.ResetBit(0);
+                this->STAT.SetBit(1);
                 LY = 0;
             }
             else
@@ -212,10 +224,24 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 ++LY;
             }
 
+            this->TestLYCMatch();
             this->lastUpdateClock = cycles;
+            this->gManager.HandleEvents();
         }
         break;
     default:
         throw std::exception("Unknown LCD Mode.");
+    }
+}
+
+void PixelProcessingUnit::TestLYCMatch()
+{
+    if (LY == LYC)
+    {
+        this->STAT.SetBit(LCD_STAT_FLAGS::MATCH_FLAG);
+    }
+    else
+    {
+        this->STAT.ResetBit(LCD_STAT_FLAGS::MATCH_FLAG);
     }
 }

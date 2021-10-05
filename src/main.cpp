@@ -1,10 +1,9 @@
 #include <iostream>
 #include <string>
 #include "GameBoy.h"
+#include "SDL.h"
 
-#undef main
-
-int main()
+int main(int argc, char* argv[])
 {
     GameBoy* boy = new GameBoy();
     boy->LoadRom("rom/Tetris.gb");
