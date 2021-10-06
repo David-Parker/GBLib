@@ -55,9 +55,10 @@ private:
     RegisterU8 WX;
 
     Memory* pMemory;
-    Byte mem[ADDR_PPU_END - ADDR_PPU_START + 1];
+    Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
     GraphicsManager gManager;
+    bool lcdInit;
 
     LCD_MODE mode;
     u64 lastUpdateClock;

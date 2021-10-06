@@ -27,3 +27,4 @@ constexpr static int SCREEN_WIDTH = 160;
 constexpr static int SCREEN_HEIGHT = 144;
 constexpr static int SDL_SCREEN_WIDTH = SCREEN_WIDTH * SCALE;
 constexpr static int SDL_SCREEN_HEIGHT = SCREEN_HEIGHT * SCALE;
+constexpr static int INVALID_READ = 0xFF;

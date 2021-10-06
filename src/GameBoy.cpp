@@ -12,8 +12,8 @@ GameBoy::GameBoy()
 
 GameBoy::~GameBoy()
 {
-    free(this->bootROM);
-    free(this->gameROM);
+    delete this->bootROM;
+    delete this->gameROM;
 }
 
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
@@ -21,29 +21,30 @@ void GameBoy::LoadBootRom()
 {
     this->bootROM = new ROM("boot", 0, 256);
     this->bootROM->LoadFromFile("rom/boot.bin");
-    this->memory.MapMemory(0x00, 0xFF, this->bootROM);
+    this->memory.MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, this->bootROM);
 }
 
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
-    // Clear memory
-    memory.ClearMemory();
     LoadBootRom();
 
     this->gameROM = new ROM("game", 0, ROM_SIZE);
     this->gameROM->LoadFromFile(path);
-    this->memory.MapMemory(0x100, ROM_SIZE - 1, this->gameROM); // ROM 0x00 to 0xFF is mapped after boot sequence is completed.
+    this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
 
-    RomLoaded = true;
+    this->romLoaded = true;
 }
 
 void GameBoy::MapIODevices()
 {
-    this->memory.MapMemory(ADDR_IF, ADDR_IF, &devices.interruptController);
-    this->memory.MapMemory(ADDR_IE, ADDR_IE, &devices.interruptController);
+    this->memory.MapMemory(ADDR_INTERRUPT_FLAG, ADDR_INTERRUPT_FLAG, &devices.interruptController);
+    this->memory.MapMemory(ADDR_INTERRUPT_ENABLE, ADDR_INTERRUPT_ENABLE, &devices.interruptController);
     this->memory.MapMemory(ADDR_SOUND_START, ADDR_SOUND_END, &devices.soundController);
     this->memory.MapMemory(ADDR_PPU_START, ADDR_PPU_END, &devices.ppu);
+    this->memory.MapMemory(ADDR_JOYPAD_INPUT, ADDR_JOYPAD_INPUT, &devices.joypadController);
+    this->memory.MapMemory(ADDR_SERIAL_START, ADDR_SERIAL_END, &devices.serialController);
+    this->memory.MapMemory(ADDR_TIMER_START, ADDR_TIMER_END, &devices.timerController);
 }
 
 void GameBoy::Start()
@@ -89,7 +90,7 @@ void GameBoy::SimulateTimeStep(int cycles)
 
 GameInfo GameBoy::GetGameInfo()
 {
-    if (!RomLoaded)
+    if (!this->romLoaded)
     {
         throw std::exception("Can not get GameInfo. No ROM is loaded.");
     }

@@ -44,12 +44,12 @@ Address PixelProcessingUnit::GetBGCharArea()
 {
     if (LCDC & BG_CHAR_DATA_SELECT)
     {
-        // 0x8000 - 0x8FFF
+        // 0x8000 - 0x87FF
         return 0x8000;
     }
     else
     {
-        // 0x8800 - 0x97FF
+        // 0x8800 - 0x8FFF
         return 0x8800;
     }
 }
@@ -77,8 +77,6 @@ void PixelProcessingUnit::Write(Address address, Byte value)
         if (value & LCD_CTRL_FLAGS::LCD_ON)
         {
             this->TurnOnLCD();
-            this->backgroundMap.LoadTilePatternTable(GetBGCharArea());
-            this->backgroundMap.LoadTileMap(GetBGCodeArea());
         }
     }
     else if (address == ADDR_PPU_REG_BG_PALETTE_DATA)
@@ -94,8 +92,14 @@ Byte PixelProcessingUnit::Read(Address address)
 
 void PixelProcessingUnit::TurnOnLCD()
 {
+    if (this->lcdInit)
+    {
+        return;
+    }
+
     gManager.Init();
     this->mode = LCD_MODE::OBJ_SEARCH;
+    this->lcdInit = true;
 }
 
 void PixelProcessingUnit::LoadColorPalette()
@@ -138,7 +142,7 @@ void PixelProcessingUnit::BufferScanLine()
 {
     for (int j = 0; j < SCREEN_WIDTH; j++)
     {
-        Byte color = this->backgroundMap.GetPixel((j + SCX) % 256, (LY + SCY) % 256);
+        Byte color = this->backgroundMap.GetPixel(GetBGCharArea(), GetBGCodeArea(), (j + SCX) % 256, (LY + SCY) % 256);
         gManager.AddPixel(j, LY, color);
     }
 }

@@ -9,10 +9,9 @@ private:
     Memory* pMemory;
 
 public: 
-    Tile() {};
+    Tile(Memory* pMemory, Address data);
     ~Tile() {}
 
-    void LoadTileData(Memory* pMemory, Address data);
     Byte GetPixel(int x, int y);
 };
 

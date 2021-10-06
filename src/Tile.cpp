@@ -2,8 +2,7 @@
 #include <cstring>
 #include <random>
 
-void Tile::LoadTileData(Memory* pMemory, Address data)
+Tile::Tile(Memory* pMemory, Address data)
+    : pMemory(pMemory), data(data)
 {
-    this->pMemory = pMemory;
-    this->data = data;
 }

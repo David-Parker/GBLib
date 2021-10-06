@@ -39,7 +39,7 @@ void ROM::LoadFromFile(std::string path)
 
 void ROM::Write(Address address, Byte value)
 {
-    throw std::exception("Cannot write to Read Only Memory.");
+    // No op. Some games incorrectly try to write to ROM, therefore we cannot throw an exception here, and will instead do nothing.
 }
 
 Byte ROM::Read(Address address)

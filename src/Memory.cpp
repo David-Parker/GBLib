@@ -34,14 +34,19 @@ Memory::~Memory()
 /* 0xFFFF - 0xFFFF (INTERRUPT REGISTER) */
 void Memory::Write(Address address, Byte value)
 {
-    if (address == 0xFF50 && value == 1)
+    if (address == 0xFF50)
     {
-        // Unload boot ROM
-        IMemoryMappable* gameROM = this->addressSpace[0x100];
-        this->MapMemory(0x0, ROM_SIZE - 1, gameROM);
+        if (value == 1)
+        {
+            // Unload boot ROM
+            IMemoryMappable* gameROM = this->addressSpace[0x100];
+            this->MapMemory(0x0, ROM_SIZE - 1, gameROM);
+        }
     }
-
-    this->addressSpace[address]->Write(address, value);
+    else
+    {
+        this->addressSpace[address]->Write(address, value);
+    }
 }
 
 Byte Memory::Read(Address address)

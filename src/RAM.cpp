@@ -28,7 +28,7 @@ Byte RAM::Read(Address address)
 {
     if (!this->canAccess)
     {
-        return 0xFF;
+        return INVALID_READ;
     }
 
     return this->mem[address - this->start];

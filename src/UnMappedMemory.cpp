@@ -11,10 +11,11 @@ UnMappedMemory::~UnMappedMemory()
 
 void UnMappedMemory::Write(Address address, Byte value)
 {
-    throw std::exception("Cannot write, memory address is unmapped.");
+    // Cannot throw an exception because many games incorrectly try to access unmapped memory.
 }
 
 Byte UnMappedMemory::Read(Address address)
 {
-    throw std::exception("Cannot read, memory address is unmapped.");
+    // Cannot throw an exception because many games incorrectly try to access unmapped memory.
+    return INVALID_READ;
 }

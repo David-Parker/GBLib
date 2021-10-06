@@ -3,11 +3,11 @@
 
 void InterruptController::Write(Address address, Byte value)
 {
-    if (address == ADDR_IF)
+    if (address == ADDR_INTERRUPT_FLAG)
     {
         IF = value;
     }
-    else if (address == ADDR_IE)
+    else if (address == ADDR_INTERRUPT_ENABLE)
     {
         IE = value;
     }
@@ -19,11 +19,11 @@ void InterruptController::Write(Address address, Byte value)
 
 Byte InterruptController::Read(Address address)
 {
-    if (address == ADDR_IF)
+    if (address == ADDR_INTERRUPT_FLAG)
     {
         return IF;
     }
-    else if (address == ADDR_IE)
+    else if (address == ADDR_INTERRUPT_ENABLE)
     {
         return IE;
     }

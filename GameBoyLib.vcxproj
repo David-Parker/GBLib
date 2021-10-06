@@ -22,14 +22,17 @@
     <ClInclude Include="src\IMemoryMappable.h" />
     <ClInclude Include="src\InterruptController.h" />
     <ClInclude Include="src\IODevices.h" />
+    <ClInclude Include="src\JoypadController.h" />
     <ClInclude Include="src\Memory.h" />
     <ClInclude Include="src\PixelProcessingUnit.h" />
     <ClInclude Include="src\RegisterU16.h" />
     <ClInclude Include="src\RegisterU8.h" />
     <ClInclude Include="src\ROM.h" />
+    <ClInclude Include="src\SerialTransferController.h" />
     <ClInclude Include="src\SoundController.h" />
     <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\RAM.h" />
+    <ClInclude Include="src\TimerController.h" />
     <ClInclude Include="src\UnMappedMemory.h" />
   </ItemGroup>
   <ItemGroup>
@@ -40,12 +43,15 @@
     <ClCompile Include="src\GameInfo.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
     <ClCompile Include="src\InterruptController.cpp" />
+    <ClCompile Include="src\JoypadController.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\PixelProcessingUnit.cpp" />
     <ClCompile Include="src\ROM.cpp" />
+    <ClCompile Include="src\SerialTransferController.cpp" />
     <ClCompile Include="src\SoundController.cpp" />
     <ClCompile Include="src\Tile.cpp" />
     <ClCompile Include="src\RAM.cpp" />
+    <ClCompile Include="src\TimerController.cpp" />
     <ClCompile Include="src\UnMappedMemory.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

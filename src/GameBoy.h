@@ -12,7 +12,7 @@
 class GameBoy
 {
 private:
-    bool RomLoaded = false;
+    bool romLoaded = false;
     std::chrono::steady_clock::time_point lastTimestamp;
 
     Cpu cpu;

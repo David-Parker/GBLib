@@ -1,6 +1,6 @@
 #include "BGMap.h"
 
-BGMap::BGMap(Memory* pMemory) 
+BGMap::BGMap(Memory* pMemory)
     : pMemory(pMemory)
 {
 }
@@ -9,22 +9,36 @@ BGMap::~BGMap()
 {
 }
 
-void BGMap::LoadTilePatternTable(Address start)
+Byte BGMap::GetPixel(Address tileData, Address tileMap, int x, int y)
 {
-    if (start == 0x8800)
+    int tileX = x / 8;
+    int tileY = y / 8;
+    int pixelX = x % 8;
+    int pixelY = y % 8;
+
+    Byte tileIndex = this->GetTile(tileMap, tileX, tileY);
+    Address tileAddress;
+
+    if (tileData == ADDR_VIDEO_RAM_BLOCK_ZERO)
     {
-        throw std::exception("Secondary tile map is not implemented.");
+        tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
+    }
+    else if (tileData == ADDR_VIDEO_RAM_BLOCK_ONE)
+    {
+        s8 tileIndexSigned = (s8)tileIndex;
+        tileAddress = ADDR_VIDEO_RAM_BLOCK_TWO + (tileIndexSigned * 16);
+    }
+    else
+    {
+        throw std::exception("Cannot read tile data from address.");
     }
 
-    for (int i = 0; i < 256; i++)
-    {
-        Tile& tile = this->tilePatternTable[i];
-        tile.LoadTileData(this->pMemory, start);
-        start = start + 16;
-    }
+    Tile tile(pMemory, tileAddress);
+    return tile.GetPixel(pixelX, pixelY);
 }
 
-void BGMap::LoadTileMap(Address start)
+Byte BGMap::GetTile(Address tileMap, int xTile, int yTile)
 {
-    this->tileMapStart = start;
+    int offset = (yTile * 32) + xTile;
+    return this->pMemory->Read(tileMap + offset);
 }

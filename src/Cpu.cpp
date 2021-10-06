@@ -6,11 +6,11 @@ Cpu::~Cpu()
 
 u8 Cpu::GetIF()
 {
-    return this->pMemory->Read(ADDR_IF);
+    return this->pMemory->Read(ADDR_INTERRUPT_FLAG);
 }
 u8 Cpu::GetIE()
 {
-    return this->pMemory->Read(ADDR_IE);
+    return this->pMemory->Read(ADDR_INTERRUPT_ENABLE);
 }
 
 int Cpu::Tick()
@@ -20,10 +20,10 @@ int Cpu::Tick()
     {
         static bool enterStep = false;
 
+        // enterStep = enterStep || (PC >= 0x300);
+
         char sZOpCode[256];
         char sZRegisters[1024];
-
-        // enterStep = enterStep || (PC == 0x0055); // 0x00e6
 
         u8 opcode_debug = this->pMemory->Read(PC);
 
