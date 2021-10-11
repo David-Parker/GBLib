@@ -20,36 +20,40 @@ int Cpu::Tick()
     {
         static bool enterStep = false;
 
-        // enterStep = enterStep || (PC >= 0x300);
-
-        char sZOpCode[256];
-        char sZRegisters[1024];
-
-        u8 opcode_debug = this->pMemory->Read(PC);
-
-        if (opcode_debug == 0xCB)
-        {
-            opcode_debug = this->pMemory->Read(PC + 1);
-            snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0xCB%02X %s\n\n", *PC, opcode_debug, opcode_strings_16[opcode_debug]);
-        }
-        else
-        {
-            snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
-        }
-
-        FormatRegisters(sZRegisters, 1024);
-
-        trace << sZRegisters;
-        trace << sZOpCode;
+         enterStep = enterStep || (PC >= 0x100);
 
         // Debug "breakpoint"
         if (enterStep)
         {
+            steps++;
+            char sZOpCode[256];
+            char sZRegisters[1024];
+
+            u8 opcode_debug = this->pMemory->Read(PC);
+
+            if (opcode_debug == 0xCB)
+            {
+                opcode_debug = this->pMemory->Read(PC + 1);
+                snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0xCB%02X %s\n\n", *PC, opcode_debug, opcode_strings_16[opcode_debug]);
+            }
+            else
+            {
+                snprintf(sZOpCode, 256, " -> PC: 0x%04X, Opcode: 0x%04X %s\n", *PC, opcode_debug, opcode_strings[opcode_debug]);
+            }
+
+            FormatRegisters(sZRegisters, 1024);
+
+            trace << sZRegisters;
+            trace << sZOpCode;
+
+            char cyclesBuf[16];
+            snprintf(cyclesBuf, 16, "0x%X\n\n", this->cyclesTotal);
+            trace << " -> Cycles: " << cyclesBuf;
+
             //pMemory->Dump(0x0000, 0xFFFF);
             trace.flush();
-            std::cout << sZRegisters;
-            std::cout << sZOpCode;
-            int x = 2;
+            //std::cout << sZRegisters;
+            //std::cout << sZOpCode;
         }
     }
 #endif
@@ -73,6 +77,11 @@ int Cpu::Tick()
     // Execute
     int cycles = (*instruction)();
 
+    this->cyclesTotal += cycles;
+
+    // Flags register lower 4 bits are always 0.
+    F = F & 0xF0;
+
     if (cycles == -1)
     {
         // ERROR, unknown opcode.
@@ -81,8 +90,7 @@ int Cpu::Tick()
         throw std::exception(msg);
     }
 
-    // Extra cycle for the opcode fetch
-    return cycles + 1;
+    return cycles;
 }
 
 void Cpu::StartCPU()
@@ -176,12 +184,44 @@ void Cpu::FormatRegisters(char* buf, int n)
 
     FormatFlagsString(sZFlags, 32);
 
-    snprintf(buf, n, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nME:	0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME);
+    snprintf(buf, n, "BC:	0x%04X\nDE:	0x%04X\nHL:	0x%04X\nSP:	0x%04X\nAF:	0x%04X\nPC:	0x%04X\nB:	0x%02X\nC:	0x%02X\nD:	0x%02X\nE:	0x%02X\nH:	0x%02X\nL:	0x%02X\nA:	0x%02X\nF:	%s\nME:	0x%02X\nLY: 0x%02X\n", *BC, *DE, *HL, *SP, *AF, *PC, *B, *C, *D, *E, *H, *L, *A, sZFlags, IME, pMemory->Read(ADDR_PPU_REG_Y_COORD));
 }
 
 int Cpu::Daa()
 {
-    return -1;
+    u16 correction = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? 0x60 : 0x00;
+
+    if (F.FlagIsSet(RegisterU8::HCARRY_FLAG) || (!F.FlagIsSet(RegisterU8::SUB_FLAG) && ((A & 0x0F) > 9))) {
+        correction |= 0x06;
+    }
+
+    if (F.FlagIsSet(RegisterU8::CARRY_FLAG) || (!F.FlagIsSet(RegisterU8::SUB_FLAG) && (A > 0x99))) {
+        correction |= 0x60;
+    }
+
+    if (F.FlagIsSet(RegisterU8::SUB_FLAG)) {
+        A = A - correction;
+    }
+    else {
+        A = A + correction;
+    }
+
+    if (((correction << 2) & 0x100) != 0) {
+        F.SetFlags(RegisterU8::CARRY_FLAG);
+    }
+
+    F.ClearFlags(RegisterU8::HCARRY_FLAG);
+
+    if (A == 0)
+    {
+        F.SetFlags(RegisterU8::ZERO_FLAG);
+    }
+    else
+    {
+        F.ClearFlags(RegisterU8::ZERO_FLAG);
+    }
+
+    return 1;
 }
 
 int Cpu::Cpl()
@@ -1059,7 +1099,7 @@ int Cpu::Jrecc(u8 cc, s8 value)
 
 int Cpu::JpHL()
 {
-    PC = pMemory->Read(HL);
+    PC = HL;
 
     return 1;
 }
@@ -1111,6 +1151,7 @@ int Cpu::SubCommon(u8 value, bool subCarry)
 
     A = A - value - carry;
 
+    flags += RegisterU8::SUB_FLAG;
     flags += A == 0 ? RegisterU8::ZERO_FLAG : 0;
 
     F.SetFlags(flags);
@@ -1256,12 +1297,12 @@ int Cpu::Inc(RegisterU8& reg)
 
     int flags = 0;
 
-    if (reg == 0b00001111)
+    ++reg;
+
+    if ((reg & 0x0F) == 0x00)
     {
         flags += RegisterU8::HCARRY_FLAG;
     }
-
-    ++reg;
 
     if (reg == 0)
     {
@@ -1305,12 +1346,12 @@ int Cpu::Dec(RegisterU8& reg)
 
     int flags = RegisterU8::SUB_FLAG;
 
-    if (reg == 0)
+    --reg;
+
+    if ((reg & 0x0F) == 0x0F)
     {
         flags += RegisterU8::HCARRY_FLAG;
     }
-
-    --reg;
 
     if (reg == 0)
     {

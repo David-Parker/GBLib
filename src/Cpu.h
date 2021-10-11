@@ -46,6 +46,8 @@ private:
 
     typedef std::function<int()> instruction_t;
 
+    unsigned long long cyclesTotal = 0;
+
     instruction_t opcodes[256];
     instruction_t opcodes_16[256];
 
@@ -55,7 +57,8 @@ private:
     bool running;
 
 #ifdef _DEBUG
-    bool traceEnabled = false;
+    unsigned long long steps = 0;
+    bool traceEnabled = true;
     std::ofstream trace;
 #endif
 
@@ -212,6 +215,9 @@ public:
         L((u8*)&HL),
         IME(0x00)
     {
+#ifdef _DEBUG
+        PC = 0x100;
+#endif
         // Set all opcodes initially to an error state. This makes debugging missing opcodes easier.
         for (int i = 0; i < 256; ++i)
         {
@@ -441,7 +447,7 @@ public:
         opcodes[0xC1] = [this]() { return Pop(BC); };
         opcodes[0xD1] = [this]() { return Pop(DE); };
         opcodes[0xE1] = [this]() { return Pop(HL); };
-        opcodes[0xF1] = [this]() { return Pop(SP); };
+        opcodes[0xF1] = [this]() { return Pop(AF); };
 
         opcodes[0xC2] = [this]() { return Jpcc(F_NZ, ReadTwoBytes()); };
         opcodes[0xD2] = [this]() { return Jpcc(F_NC, ReadTwoBytes()); };
@@ -963,7 +969,7 @@ public:
         opcode_strings[0xC1] = "Pop(BC)";
         opcode_strings[0xD1] = "Pop(DE)";
         opcode_strings[0xE1] = "Pop(HL)";
-        opcode_strings[0xF1] = "Pop(SP)";
+        opcode_strings[0xF1] = "Pop(AF)";
         opcode_strings[0xC2] = "Jpcc(F_NZ, ReadTwoBytes())";
         opcode_strings[0xD2] = "Jpcc(F_NC, ReadTwoBytes())";
         opcode_strings[0xE2] = "LdCA()";

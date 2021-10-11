@@ -58,7 +58,7 @@ private:
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
     GraphicsManager gManager;
-    bool lcdInit;
+    bool lcdOn;
 
     LCD_MODE mode;
     u64 lastUpdateClock;
@@ -70,6 +70,7 @@ private:
     Address GetWindowCodeArea();
 
     void TurnOnLCD();
+    void TurnOffLCD();
     void BufferScanLine();
     void Draw();
     void LoadColorPalette();

@@ -92,14 +92,24 @@ Byte PixelProcessingUnit::Read(Address address)
 
 void PixelProcessingUnit::TurnOnLCD()
 {
-    if (this->lcdInit)
+    if (this->lcdOn)
     {
         return;
     }
 
     gManager.Init();
-    this->mode = LCD_MODE::OBJ_SEARCH;
-    this->lcdInit = true;
+    this->lcdOn = true;
+}
+
+void PixelProcessingUnit::TurnOffLCD()
+{
+    if (!this->lcdOn)
+    {
+        return;
+    }
+
+    gManager.Close();
+    this->lcdOn = false;
 }
 
 void PixelProcessingUnit::LoadColorPalette()
@@ -140,15 +150,21 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
-    for (int j = 0; j < SCREEN_WIDTH; j++)
+    if (!this->lcdOn)
+        return;
+
+    for (int i = 0; i < SCREEN_WIDTH; i++)
     {
-        Byte color = this->backgroundMap.GetPixel(GetBGCharArea(), GetBGCodeArea(), (j + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(j, LY, color);
+        Byte color = this->backgroundMap.GetPixel(GetBGCharArea(), GetBGCodeArea(), (i + SCX) % 256, (LY + SCY) % 256);
+        gManager.AddPixel(i, LY, color);
     }
 }
 
 void PixelProcessingUnit::Draw()
 {
+    if (!this->lcdOn)
+        return;
+
     gManager.Clear();
     gManager.Draw();
     gManager.Flush();
@@ -156,12 +172,13 @@ void PixelProcessingUnit::Draw()
 
 void PixelProcessingUnit::Tick(u64 cycles)
 {
-    if (!this->LCDIsOn())
+    u64 cyclesElapsed = cycles - this->lastUpdateClock;
+
+    if (!this->lcdOn)
     {
+        this->lastUpdateClock = cyclesElapsed;
         return;
     }
-
-    u64 cyclesElapsed = cycles - this->lastUpdateClock;
     
     // (OBJ_SEARCH -> VIDEO_READ -> HBLANK -> VBLANK)
 
@@ -173,64 +190,62 @@ void PixelProcessingUnit::Tick(u64 cycles)
             this->mode = LCD_MODE::VIDEO_READ;
             this->STAT.SetBit(0);
             this->STAT.SetBit(1);
-            this->pMemory->vRAM.DisableAccess();
-            this->pMemory->oRAM.DisableAccess();
-            this->lastUpdateClock = cycles;
+            //this->pMemory->vRAM.DisableAccess();
+            //this->pMemory->oRAM.DisableAccess();
+            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_OBJ_SEARCH);
         }
         break;
     case LCD_MODE::VIDEO_READ:
         if (cyclesElapsed >= CLOCKS_PER_VIDEO_READ)
         {
             this->mode = LCD_MODE::HBLANK;
+            this->TestLYCMatch();
             this->STAT.ResetBit(0);
             this->STAT.ResetBit(1);
-            this->pMemory->vRAM.EnableAccess();
-            this->pMemory->oRAM.EnableAccess();
-            this->lastUpdateClock = cycles;
+            //this->pMemory->vRAM.EnableAccess();
+            //this->pMemory->oRAM.EnableAccess();
+            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_VIDEO_READ);
         }
         break;
     case LCD_MODE::HBLANK:
         if (cyclesElapsed >= CLOCKS_PER_HBLANK)
         {
+            this->BufferScanLine();
+            ++LY;
+
             if (LY < SCREEN_HEIGHT)
             {
                 this->mode = LCD_MODE::OBJ_SEARCH;
                 this->STAT.ResetBit(0);
                 this->STAT.SetBit(1);
-                this->BufferScanLine();
             }
             else
             {
                 this->mode = LCD_MODE::VBLANK;
                 this->STAT.SetBit(0);
                 this->STAT.ResetBit(1);
-                this->Draw();
             }
 
-            ++LY;
-
-            this->TestLYCMatch();
-            this->lastUpdateClock = cycles;
+            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_HBLANK);
         }
         break;
     case LCD_MODE::VBLANK:
         if (cyclesElapsed >= CLOCKS_PER_VBLANK)
         {
-            if (LY == 153)
+            ++LY;
+
+            if (LY == 154)
             {
                 this->mode = LCD_MODE::OBJ_SEARCH;
                 this->STAT.ResetBit(0);
                 this->STAT.SetBit(1);
+                this->Draw();
                 LY = 0;
-            }
-            else
-            {
-                ++LY;
             }
 
             this->TestLYCMatch();
-            this->lastUpdateClock = cycles;
             this->gManager.HandleEvents();
+            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_VBLANK);
         }
         break;
     default:

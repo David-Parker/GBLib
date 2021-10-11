@@ -27,11 +27,18 @@ void GameBoy::LoadBootRom()
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
+#ifndef _DEBUG
     LoadBootRom();
+#endif
 
     this->gameROM = new ROM("game", 0, ROM_SIZE);
     this->gameROM->LoadFromFile(path);
+
+#ifndef _DEBUG
     this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
+#else
+    this->memory.MapMemory(0, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
+#endif
 
     this->romLoaded = true;
 }
@@ -80,12 +87,15 @@ void GameBoy::Stop()
 
 void GameBoy::SimulateTimeStep(int cycles)
 {
-    auto diff = high_resolution_clock::now() - this->lastTimestamp;
-    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE * cycles);
+#ifdef _DEBUG
+    return;
+#endif
+
+    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE * CLOCK_CYCLES_PER_MACHINE_CYCLE * cycles);
 
     while (high_resolution_clock::now() < waitTo);
 
-    this->lastTimestamp = high_resolution_clock::now();
+    this->lastTimestamp = waitTo;
 }
 
 GameInfo GameBoy::GetGameInfo()

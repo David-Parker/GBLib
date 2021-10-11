@@ -62,8 +62,6 @@ void GraphicsManager::Close()
 
     SDL_DestroyTexture(texture);
     texture = nullptr;
-
-    SDL_Quit();
 }
 
 void GraphicsManager::Clear()
@@ -97,6 +95,7 @@ void GraphicsManager::HandleEvents()
     while (SDL_PollEvent(&event)) { 
         if (event.type == SDL_QUIT)
         {
+            SDL_Quit();
             exit(EXIT_SUCCESS);
         }
     }
