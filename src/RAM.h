@@ -2,8 +2,7 @@
 #include "IMemoryMappable.h"
 #include "GlobalDefinitions.h"
 
-class RAM :
-    public IMemoryMappable
+class RAM : public IMemoryMappable
 {
 private:
     Byte* mem;

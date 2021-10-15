@@ -1,6 +1,7 @@
 #pragma once
 #include "BGMap.h"
 #include "IMemoryMappable.h"
+#include "InterruptController.h"
 #include "Memory.h"
 #include "GlobalDefinitions.h"
 #include "GraphicsManager.h"
@@ -55,18 +56,19 @@ private:
     RegisterU8 WX;
 
     Memory* pMemory;
+    InterruptController* pInterruptController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
     GraphicsManager gManager;
     bool lcdOn;
 
     LCD_MODE mode;
-    u64 lastUpdateClock;
+    u64 clockCycles;
 
     LCD_CTRL_FLAGS lcd_flags;
 
-    Address GetBGCodeArea();
-    Address GetBGCharArea();
+    Address GetBGTileMap();
+    Address GetBGTileData();
     Address GetWindowCodeArea();
 
     void TurnOnLCD();
@@ -78,7 +80,7 @@ private:
     void TestLYCMatch();
 
 public:
-    PixelProcessingUnit(Memory* pMemory);
+    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController);
     ~PixelProcessingUnit();
 
     void Write(Address address, Byte value);

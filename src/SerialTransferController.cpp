@@ -1,14 +1,6 @@
 #include "SerialTransferController.h"
 #include <iostream>
 
-SerialTransferController::SerialTransferController()
-{
-}
-
-SerialTransferController::~SerialTransferController()
-{
-}
-
 void SerialTransferController::Write(Address address, Byte value)
 {
     mem[address - ADDR_SERIAL_START] = value;

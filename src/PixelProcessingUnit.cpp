@@ -1,9 +1,12 @@
 #include "PixelProcessingUnit.h"
 #include <thread>
 
-PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory) 
+PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController)
     :   pMemory(pMemory),
+        pInterruptController(interruptController),
         backgroundMap(pMemory), 
+        clockCycles(0),
+        mode(LCD_MODE::OBJ_SEARCH),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
         SCY(&mem[ADDR_PPU_REG_SCROLL_Y - ADDR_PPU_START]),
@@ -17,8 +20,6 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory)
         WY(&mem[ADDR_PPU_REG_OBJ_WINDOW_Y_POS - ADDR_PPU_START]),
         WX(&mem[ADDR_PPU_REG_OBJ_WINDOW_X_POS_MIN_7 - ADDR_PPU_START])
 {
-    this->lastUpdateClock = 0;
-    this->mode = LCD_MODE::OBJ_SEARCH;
 }
 
 PixelProcessingUnit::~PixelProcessingUnit()
@@ -26,7 +27,7 @@ PixelProcessingUnit::~PixelProcessingUnit()
     this->gManager.Close();
 }
 
-Address PixelProcessingUnit::GetBGCodeArea()
+Address PixelProcessingUnit::GetBGTileMap()
 {
     if (LCDC & BG_CODE_AREA_SELECT)
     {
@@ -40,7 +41,7 @@ Address PixelProcessingUnit::GetBGCodeArea()
     }
 }
 
-Address PixelProcessingUnit::GetBGCharArea()
+Address PixelProcessingUnit::GetBGTileData()
 {
     if (LCDC & BG_CHAR_DATA_SELECT)
     {
@@ -155,7 +156,7 @@ void PixelProcessingUnit::BufferScanLine()
 
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
-        Byte color = this->backgroundMap.GetPixel(GetBGCharArea(), GetBGCodeArea(), (i + SCX) % 256, (LY + SCY) % 256);
+        Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
         gManager.AddPixel(i, LY, color);
     }
 }
@@ -172,43 +173,38 @@ void PixelProcessingUnit::Draw()
 
 void PixelProcessingUnit::Tick(u64 cycles)
 {
-    u64 cyclesElapsed = cycles - this->lastUpdateClock;
-
     if (!this->lcdOn)
     {
-        this->lastUpdateClock = cyclesElapsed;
         return;
     }
+    else
+    {
+        this->clockCycles += cycles;
+    }
     
-    // (OBJ_SEARCH -> VIDEO_READ -> HBLANK -> VBLANK)
-
     switch (this->mode)
     {
     case LCD_MODE::OBJ_SEARCH:
-        if (cyclesElapsed >= CLOCKS_PER_OBJ_SEARCH)
+        if (this->clockCycles >= CLOCKS_PER_OBJ_SEARCH)
         {
             this->mode = LCD_MODE::VIDEO_READ;
             this->STAT.SetBit(0);
             this->STAT.SetBit(1);
-            //this->pMemory->vRAM.DisableAccess();
-            //this->pMemory->oRAM.DisableAccess();
-            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_OBJ_SEARCH);
+            this->clockCycles -= CLOCKS_PER_OBJ_SEARCH;
         }
         break;
     case LCD_MODE::VIDEO_READ:
-        if (cyclesElapsed >= CLOCKS_PER_VIDEO_READ)
+        if (this->clockCycles >= CLOCKS_PER_VIDEO_READ)
         {
             this->mode = LCD_MODE::HBLANK;
             this->TestLYCMatch();
             this->STAT.ResetBit(0);
             this->STAT.ResetBit(1);
-            //this->pMemory->vRAM.EnableAccess();
-            //this->pMemory->oRAM.EnableAccess();
-            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_VIDEO_READ);
+            this->clockCycles -= CLOCKS_PER_VIDEO_READ;
         }
         break;
     case LCD_MODE::HBLANK:
-        if (cyclesElapsed >= CLOCKS_PER_HBLANK)
+        if (this->clockCycles >= CLOCKS_PER_HBLANK)
         {
             this->BufferScanLine();
             ++LY;
@@ -224,13 +220,14 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->mode = LCD_MODE::VBLANK;
                 this->STAT.SetBit(0);
                 this->STAT.ResetBit(1);
+                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
             }
 
-            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_HBLANK);
+            this->clockCycles -= CLOCKS_PER_HBLANK;
         }
         break;
     case LCD_MODE::VBLANK:
-        if (cyclesElapsed >= CLOCKS_PER_VBLANK)
+        if (this->clockCycles >= CLOCKS_PER_VBLANK)
         {
             ++LY;
 
@@ -245,7 +242,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
 
             this->TestLYCMatch();
             this->gManager.HandleEvents();
-            this->lastUpdateClock = cycles - (cyclesElapsed - CLOCKS_PER_VBLANK);
+            this->clockCycles -= CLOCKS_PER_VBLANK;
         }
         break;
     default:

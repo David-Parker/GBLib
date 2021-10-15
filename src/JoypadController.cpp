@@ -1,13 +1,5 @@
 #include "JoypadController.h"
 
-JoypadController::JoypadController()
-{
-}
-
-JoypadController::~JoypadController()
-{
-}
-
 void JoypadController::Write(Address address, Byte value)
 {
     reg = value;

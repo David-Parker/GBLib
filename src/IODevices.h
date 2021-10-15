@@ -17,6 +17,16 @@ public:
     SerialTransferController serialController;
     TimerController timerController;
 
-    IODevices(Memory* pMemory) : ppu(pMemory) {}
+    IODevices(Memory* pMemory) 
+    : 
+        interruptController(),
+        soundController(&interruptController),
+        ppu(pMemory, &interruptController),
+        joypadController(&interruptController),
+        serialController(&interruptController),
+        timerController(&interruptController)
+    {
+    }
+
     ~IODevices() {}
 };

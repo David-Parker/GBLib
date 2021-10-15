@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy() 
-    : memory(), cpu(&memory), devices(&memory)
+    : memory(), devices(&memory), cpu(&memory, &devices.interruptController)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -68,8 +68,8 @@ void GameBoy::Start()
 
             cycleCount += cycles;
 
-            this->devices.ppu.Tick(cycleCount);
-
+            this->devices.ppu.Tick(cycles);
+            this->devices.timerController.Tick(cycles);
             this->SimulateTimeStep(cycles);
         }
     }

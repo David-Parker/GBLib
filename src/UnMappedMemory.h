@@ -2,8 +2,7 @@
 #include "IMemoryMappable.h"
 #include "GlobalDefinitions.h"
 
-class UnMappedMemory :
-    public IMemoryMappable
+class UnMappedMemory : public IMemoryMappable
 {
 public:
     UnMappedMemory();

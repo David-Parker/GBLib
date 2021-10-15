@@ -2,6 +2,7 @@
 #include "Address.h"
 #include "ALUHelpers.h"
 #include "GlobalDefinitions.h"
+#include "InterruptController.h"
 #include "Memory.h"
 #include "RegisterU8.h"
 #include "RegisterU16.h"
@@ -40,9 +41,8 @@ private:
     RegisterU8 F; // Flags
 
     // Interrupt flags
-    u8 IME; // Interrupt Master Enable
-    u8 GetIF();
-    u8 GetIE();
+    bool IME; // Interrupt Master Enable
+    InterruptController* pInterruptController;
 
     typedef std::function<int()> instruction_t;
 
@@ -55,6 +55,7 @@ private:
     char* opcode_strings_16[256];
 
     bool running;
+    bool halted;
 
 #ifdef _DEBUG
     unsigned long long steps = 0;
@@ -70,6 +71,7 @@ private:
     u16 ReadTwoBytes();
     void FormatFlagsString(char* buf, int size);
     void FormatRegisters(char* buf, int n);
+    int HandleInterrupts();
 
 #pragma region Instructions
     // Cpu Control									// opcode   (operands) -> M cycles
@@ -197,10 +199,12 @@ private:
 
 public:
     // On startup, PC starts at 0x0 which is the boot ROM. During boot, the stack pointer is set to 0xFFFE.
-    Cpu(Memory* pMemory) :
+    Cpu(Memory* pMemory, InterruptController* interruptController) :
         SP(0x000),
         PC(0x000),
         pMemory(pMemory),
+        pInterruptController(interruptController),
+        halted(false),
         BC(0x00),
         DE(0x00),
         HL(0x00),
