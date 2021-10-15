@@ -832,15 +832,13 @@ int Cpu::Sra(RegisterU8& reg)
     F.ClearAllFlags();
 
     int bit0 = reg.GetBit(0);
-    int bit7 = reg.GetBit(7);
 
     if (bit0 == 1)
     {
         F.SetFlags(RegisterU8::CARRY_FLAG);
     }
 
-    reg = reg >> 1;
-    reg = reg | bit7;
+    reg = (s8)reg >> 1;
 
     if (reg == 0)
     {
@@ -856,15 +854,13 @@ int Cpu::SraHL()
     u8 value = pMemory->Read(HL);
 
     int bit0 = value & 0x01;
-    int bit7 = (value >> 7) & 0x01;
 
     if (bit0 == 1)
     {
         F.SetFlags(RegisterU8::CARRY_FLAG);
     }
 
-    value = value >> 1;
-    value = value | bit7;
+    value = (s8)value >> 1;
 
     if (value == 0)
     {
@@ -1326,12 +1322,12 @@ int Cpu::IncHL()
     int flags = 0;
     u8 value = pMemory->Read(HL);
 
-    if (value == 0b00001111)
+    ++value;
+
+    if ((value & 0x0F) == 0x00)
     {
         flags += RegisterU8::HCARRY_FLAG;
     }
-
-    value++;
 
     if (value == 0)
     {
@@ -1375,12 +1371,12 @@ int Cpu::DecHL()
     int flags = RegisterU8::SUB_FLAG;
     u8 value = pMemory->Read(HL);
 
-    if (value == 0)
+    --value;
+
+    if ((value & 0x0F) == 0x0F)
     {
         flags += RegisterU8::HCARRY_FLAG;
     }
-
-    value--;
 
     if (value == 0)
     {
