@@ -1,12 +1,15 @@
 #include "GraphicsManager.h"
 #include "SDL_events.h"
 
-GraphicsManager::GraphicsManager()
+GraphicsManager::GraphicsManager(int width, int height, int scale)
+    : width(width), height(height), scale(scale)
 {
+    this->pixelBuffer = (u32*)malloc(this->width * this->height * sizeof(u32));
 }
 
 GraphicsManager::~GraphicsManager()
 {
+    free( this->pixelBuffer);
 }
 
 u32 GraphicsManager::EncodeColor(Byte index)
@@ -37,6 +40,21 @@ void GraphicsManager::ReloadPalette()
     }
 }
 
+void GraphicsManager::AddPixel(int x, int y, Byte color)
+{
+    int startx = x * this->scale;
+    int starty = y * this->scale;
+
+    for (int i = 0; i < this->scale; i++)
+    {
+        for (int j = 0; j < this->scale; j++)
+        {
+            int idx = (starty+i) * width + (startx + j);
+            this->pixelBuffer[idx] = EncodedPalette[color];
+        }
+    }
+}
+
 void GraphicsManager::Init()
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -44,12 +62,12 @@ void GraphicsManager::Init()
         throw std::exception("Error: Failed to initialize SDL.");
     }
 
-    if (SDL_CreateWindowAndRenderer(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SDL_WINDOW_SHOWN, &window, &renderer) != 0)
+    if (SDL_CreateWindowAndRenderer(this->width, this->height, SDL_WINDOW_SHOWN, &window, &renderer) != 0)
     {
         throw std::exception("Error: Failed to new SDL window.");
     }
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT);
+    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height);
 }
 
 void GraphicsManager::Close()
@@ -76,7 +94,7 @@ void GraphicsManager::Draw()
 
     SDL_LockTexture(texture, NULL, &pixels, &pitch);
 
-    memcpy(pixels, pixelBuffer, sizeof(pixelBuffer));
+    memcpy(pixels, pixelBuffer, this->width * this->height * sizeof(u32));
 
     SDL_UnlockTexture(texture);
 

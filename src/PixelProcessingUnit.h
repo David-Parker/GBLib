@@ -60,7 +60,12 @@ private:
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
     GraphicsManager gManager;
-    bool lcdOn;
+    bool lcdInitialized;
+
+#ifdef _DEBUG
+    GraphicsManager* tileDebugger;
+    void DrawTileDebug();
+#endif
 
     LCD_MODE mode;
     u64 clockCycles;

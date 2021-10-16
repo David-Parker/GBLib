@@ -246,6 +246,4 @@ ModelManifest.xml
 *.ppm
 
 # Custom
-dump.txt
-trace.txt
-trace-other.txt
+*.txt

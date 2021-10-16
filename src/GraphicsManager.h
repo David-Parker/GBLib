@@ -12,6 +12,7 @@
 class GraphicsManager
 {
 private:
+    int width, height, scale;
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_Texture* texture;
@@ -32,11 +33,11 @@ private:
         EncodeColor(3)
     };
 
-    u32 pixelBuffer[SDL_SCREEN_HEIGHT][SDL_SCREEN_WIDTH];
+    u32* pixelBuffer;
 
     u32 EncodeColor(Byte index);
 public:
-    GraphicsManager();
+    GraphicsManager(int width, int height, int scale);
     ~GraphicsManager();
 
     void Init();
@@ -49,17 +50,3 @@ public:
     void Flush();
     void HandleEvents();
 };
-
-inline void GraphicsManager::AddPixel(int x, int y, Byte color)
-{
-    int startx = x * SCALE;
-    int starty = y * SCALE;
-
-    for (int i = 0; i < SCALE; i++)
-    {
-        for (int j = 0; j < SCALE; j++)
-        {
-            pixelBuffer[starty + i][startx + j] = EncodedPalette[color];
-        }
-    }
-}

@@ -7,5 +7,6 @@ void JoypadController::Write(Address address, Byte value)
 
 Byte JoypadController::Read(Address address)
 {
-    return reg;
+    return 0xF;
+    //return reg;
 }

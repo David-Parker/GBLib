@@ -11,12 +11,11 @@ int Cpu::Tick()
     {
         static bool enterStep = false;
 
-         enterStep = enterStep || (PC >= 0x100);
+        enterStep = enterStep || (PC >= 0x100);
 
         // Debug "breakpoint"
         if (enterStep)
         {
-            steps++;
             char sZOpCode[256];
             char sZRegisters[1024];
 
@@ -46,6 +45,8 @@ int Cpu::Tick()
             //std::cout << sZRegisters;
             //std::cout << sZOpCode;
         }
+
+        steps++;
     }
 #endif
     // Check for new interrupt requests
