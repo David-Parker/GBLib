@@ -36,6 +36,7 @@
     <ClCompile Include="src\TimerController.cpp">
       <Filter>MemoryMapped</Filter>
     </ClCompile>
+    <ClCompile Include="src\InputManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
@@ -79,6 +80,7 @@
     <ClInclude Include="src\TimerController.h">
       <Filter>MemoryMapped</Filter>
     </ClInclude>
+    <ClInclude Include="src\InputManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MemoryMapped">

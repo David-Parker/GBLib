@@ -7,6 +7,7 @@
 #include "GameInfo.h"
 #include "Cpu.h"
 #include "IODevices.h"
+#include "InputManager.h"
 #include "ROM.h"
 
 class GameBoy
@@ -20,6 +21,7 @@ private:
     IODevices devices;
     ROM* gameROM;
     ROM* bootROM;
+    InputManager inputManager;
 
     void MapIODevices();
     void LoadBootRom();

@@ -80,7 +80,6 @@ private:
     void TurnOffLCD();
     void BufferScanLine();
     void Draw();
-    void LoadColorPalette();
     bool LCDIsOn();
     void TestLYCMatch();
 

@@ -97,7 +97,7 @@ void PixelProcessingUnit::Write(Address address, Byte value)
     {
         BGP = value;
 
-        this->LoadColorPalette();
+        this->backgroundMap.LoadColorPalette(BGP);
     }
     else if (address == ADDR_PPU_REG_Y_COORD)
     {
@@ -128,37 +128,6 @@ void PixelProcessingUnit::TurnOffLCD()
     // gManager.Close();
 }
 
-void PixelProcessingUnit::LoadColorPalette()
-{
-    Byte bgPalette = BGP;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        Byte code = bgPalette & 0b00000011;
-        bgPalette >>= 2;
-
-        switch (code)
-        {
-        case 0:
-            gManager.SetPalette(i, DMG_COLOR_WHITE);
-            break;
-        case 1:
-            gManager.SetPalette(i, DMG_COLOR_LIGHT_GRAY);
-            break;
-        case 2:
-            gManager.SetPalette(i, DMG_COLOR_DARK_GRAY);
-            break;
-        case 3:
-            gManager.SetPalette(i, DMG_COLOR_BLACK);
-            break;
-        default:
-            throw std::exception("Invalid color code.");
-        }
-    }
-
-    gManager.ReloadPalette();
-}
-
 bool PixelProcessingUnit::LCDIsOn()
 {
     return LCDC.FlagIsSet(LCD_CTRL_FLAGS::LCD_ON);
@@ -169,7 +138,7 @@ void PixelProcessingUnit::BufferScanLine()
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
         Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(i, LY, color);
+        gManager.AddPixel(i, LY, color, this->backgroundMap.palette);
     }
 }
 
@@ -263,7 +232,6 @@ void PixelProcessingUnit::Tick(u64 cycles)
             }
 
             this->TestLYCMatch();
-            this->gManager.HandleEvents();
             this->clockCycles -= CLOCKS_PER_VBLANK;
         }
         break;
@@ -300,7 +268,7 @@ void PixelProcessingUnit::DrawTileDebug()
             {
                 for (int k = 0; k < 8; ++k)
                 {
-                    this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j));
+                    this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette);
                 }
             }
 

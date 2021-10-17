@@ -20,6 +20,7 @@
     <ClInclude Include="src\GlobalDefinitions.h" />
     <ClInclude Include="src\GraphicsManager.h" />
     <ClInclude Include="src\IMemoryMappable.h" />
+    <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\InterruptController.h" />
     <ClInclude Include="src\IODevices.h" />
     <ClInclude Include="src\JoypadController.h" />
@@ -42,6 +43,7 @@
     <ClCompile Include="src\GameBoy.cpp" />
     <ClCompile Include="src\GameInfo.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
+    <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\InterruptController.cpp" />
     <ClCompile Include="src\JoypadController.cpp" />
     <ClCompile Include="src\Memory.cpp" />

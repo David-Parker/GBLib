@@ -59,7 +59,7 @@ private:
 
 #ifdef _DEBUG
     unsigned long long steps = 0;
-    bool traceEnabled = true;
+    bool traceEnabled = false;
     std::ofstream trace;
 #endif
 

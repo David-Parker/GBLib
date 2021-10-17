@@ -27,20 +27,7 @@ u32 GraphicsManager::EncodeColor(Byte index)
     return result;
 }
 
-void GraphicsManager::SetPalette(Byte index, SDL_Color color)
-{
-    ColorPalette[index] = color;
-}
-
-void GraphicsManager::ReloadPalette()
-{
-    for (int i = 0; i < 4; ++i)
-    {
-        EncodedPalette[i] = EncodeColor(i);
-    }
-}
-
-void GraphicsManager::AddPixel(int x, int y, Byte color)
+void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4])
 {
     int startx = x * this->scale;
     int starty = y * this->scale;
@@ -50,7 +37,7 @@ void GraphicsManager::AddPixel(int x, int y, Byte color)
         for (int j = 0; j < this->scale; j++)
         {
             int idx = (starty+i) * width + (startx + j);
-            this->pixelBuffer[idx] = EncodedPalette[color];
+            this->pixelBuffer[idx] = EncodedPalette[palette[color]];
         }
     }
 }
@@ -104,17 +91,4 @@ void GraphicsManager::Draw()
 void GraphicsManager::Flush()
 {
     SDL_RenderPresent(renderer);
-}
-
-void GraphicsManager::HandleEvents()
-{
-    SDL_Event event;
-
-    while (SDL_PollEvent(&event)) { 
-        if (event.type == SDL_QUIT)
-        {
-            SDL_Quit();
-            exit(EXIT_SUCCESS);
-        }
-    }
 }

@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy() 
-    : memory(), devices(&memory), cpu(&memory, &devices.interruptController)
+    : memory(), devices(&memory), cpu(&memory, &devices.interruptController), inputManager(&memory, &devices.interruptController, &devices.joypadController)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -70,6 +70,7 @@ void GameBoy::Start()
 
             this->devices.ppu.Tick(cycles);
             this->devices.timerController.Tick(cycles);
+            this->inputManager.HandleEvents();
             this->SimulateTimeStep(cycles);
         }
     }
@@ -91,7 +92,7 @@ void GameBoy::SimulateTimeStep(int cycles)
     return;
 #endif
 
-    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE * CLOCK_CYCLES_PER_MACHINE_CYCLE * cycles);
+    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE /** CLOCK_CYCLES_PER_MACHINE_CYCLE*/ * cycles);
 
     while (high_resolution_clock::now() < waitTo);
 
