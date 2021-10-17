@@ -74,16 +74,16 @@ private:
     int HandleInterrupts();
 
 #pragma region Instructions
-    // Cpu Control									// opcode   (operands) -> M cycles
-    int Daa();										// 00100111 -> 1
-    int Cpl();										// 00101111 -> 1
+    // Cpu Control                                  // opcode   (operands) -> M cycles
+    int Daa();                                      // 00100111 -> 1
+    int Cpl();                                      // 00101111 -> 1
     int Nop();                                      // 00000000 -> 1
-    int Ccf();										// 00111111 -> 1
-    int Scf();										// 00110111 -> 1
-    int Di();										// 11110011 -> 1
-    int Ei();										// 11111011 -> 1
-    int Halt(); // TODO this is not implemented		// 01110110 -> 1
-    int Stop(); // TODO this is not implemented 	// 00010000 -> 1
+    int Ccf();                                      // 00111111 -> 1
+    int Scf();                                      // 00110111 -> 1
+    int Di();                                       // 11110011 -> 1
+    int Ei();                                       // 11111011 -> 1
+    int Halt(); // TODO this is not implemented     // 01110110 -> 1
+    int Stop(); // TODO this is not implemented     // 00010000 -> 1
 
     // 8-bit Transfer and I/O                       
     int Ld(RegisterU8& dest, RegisterU8& src);      // 01xxxyyy (r, r') -> 1
