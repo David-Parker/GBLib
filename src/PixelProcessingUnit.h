@@ -8,6 +8,10 @@
 #include "Tile.h"
 #include "RegisterU8.h"
 
+#define LCD_LAYER_BG 0
+#define LCD_LAYER_WIN 1
+#define LCD_LAYER_OAM 2
+
 enum LCD_CTRL_FLAGS
 {
     LCD_ON = 128,

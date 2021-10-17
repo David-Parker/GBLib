@@ -8,7 +8,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         clockCycles(0),
         mode(LCD_MODE::OBJ_SEARCH),
         lcdInitialized(false),
-        gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE),
+        gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 3),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
         SCY(&mem[ADDR_PPU_REG_SCROLL_Y - ADDR_PPU_START]),
@@ -23,14 +23,13 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         WX(&mem[ADDR_PPU_REG_OBJ_WINDOW_X_POS_MIN_7 - ADDR_PPU_START])
 {
 #ifdef _DEBUG
-    this->tileDebugger = new GraphicsManager(192 * 3, 128 * 3, 3);
+    this->tileDebugger = new GraphicsManager(192 * 3, 128 * 3, 3, 1);
     this->tileDebugger->Init();
 #endif
 }
 
 PixelProcessingUnit::~PixelProcessingUnit()
 {
-    this->gManager.Close();
 }
 
 Address PixelProcessingUnit::GetBGTileMap()
@@ -138,7 +137,7 @@ void PixelProcessingUnit::BufferScanLine()
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
         Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(i, LY, color, this->backgroundMap.palette);
+        gManager.AddPixel(i, LY, color, this->backgroundMap.palette, LCD_LAYER_BG);
     }
 }
 
@@ -268,7 +267,7 @@ void PixelProcessingUnit::DrawTileDebug()
             {
                 for (int k = 0; k < 8; ++k)
                 {
-                    this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette);
+                    this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette, LCD_LAYER_BG);
                 }
             }
 
