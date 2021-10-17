@@ -44,6 +44,18 @@ enum LCD_MODE
     VIDEO_READ
 };
 
+enum OAM_ATTRIBUTES
+{
+    OAM_BG_WIN_OVER_OBJ = 128,
+    OAM_Y_FLIP = 64,
+    OAM_X_FLIP = 32,
+    OAM_DMG_PALETTE_NUM = 16,
+    OAM_TILE_VRAM_BANK = 8,
+    OAM_CGB_PALETTE_NUM_2 = 4,
+    OAM_CGB_PALETTE_NUM_1 = 2,
+    OAM_CGB_PALETTE_NUM_0 = 1
+};
+
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
@@ -64,6 +76,9 @@ private:
     InterruptController* pInterruptController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
+    Byte bgPalette[4];
+    Byte objPalette0[4];
+    Byte objPalette1[4];
     InputManager iManager;
     GraphicsManager gManager;
     bool lcdInitialized;
@@ -90,6 +105,7 @@ private:
     void Draw();
     bool LCDIsOn();
     void TestLYCMatch();
+    void LoadColorPalette(Byte reg, Byte palette[4]);
 
 public:
     PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController);

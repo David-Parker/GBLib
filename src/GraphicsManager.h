@@ -23,11 +23,12 @@ struct GraphicsLayer
 class GraphicsManager
 {
 private:
-    int width, height, scale;
+    int width, height, scale, numLayers;
     SDL_Window *window;
     SDL_Renderer *renderer;
-    std::vector<GraphicsLayer> layers;
+    GraphicsLayer* layers;
     u32* transparentBuffer;
+    u32 transparentEncoded;
 
     SDL_Color ColorPalette[4] =
     {
@@ -51,7 +52,7 @@ public:
     ~GraphicsManager();
 
     void Init();
-    void AddPixel(int x, int y, Byte color, Byte palette[4], int layer);
+    void AddPixel(int x, int y, Byte color, Byte palette[4], int layer, bool checkTransparent);
     void Clear();
     void Draw();
     void Flush();

@@ -97,7 +97,7 @@ void GameBoy::SimulateTimeStep(int cycles)
 
         while (high_resolution_clock::now() < waitTo);
 
-        this->lastTimestamp = waitTo;
+        this->lastTimestamp = high_resolution_clock::now();
 
         this->cyclesElapsed = 0;
     }

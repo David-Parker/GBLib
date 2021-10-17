@@ -79,3 +79,8 @@ bool InterruptController::InterruptIsEnabled(u8 flags)
 {
     return IE.FlagIsSet(flags);
 }
+
+bool InterruptController::AnyInterruptRequested()
+{
+    return (*IF & 0b00011111) > 0;
+}

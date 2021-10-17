@@ -1485,73 +1485,76 @@ int Cpu::Rst(u8 t)
 
 int Cpu::HandleInterrupts()
 {
-    if (this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_VBLANK) &&
-        this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_VBLANK))
+    if (this->pInterruptController->AnyInterruptRequested())
     {
-        this->halted = false;
-
-        if (IME == true)
+        if (this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_VBLANK) &&
+            this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_VBLANK))
         {
-            IME = false;
-            this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_VBLANK);
-            Callnn(0x40);
-            return 5;
+            this->halted = false;
+
+            if (IME == true)
+            {
+                IME = false;
+                this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_VBLANK);
+                Callnn(0x40);
+                return 5;
+            }
         }
-    }
-    else if (
-        this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_LCD_STAT) &&
-        this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_LCD_STAT))
-    {
-        this->halted = false;
-
-        if (IME == true)
+        else if (
+            this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_LCD_STAT) &&
+            this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_LCD_STAT))
         {
-            IME = false;
-            this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_LCD_STAT);
-            Callnn(0x48);
-            return 5;
+            this->halted = false;
+
+            if (IME == true)
+            {
+                IME = false;
+                this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_LCD_STAT);
+                Callnn(0x48);
+                return 5;
+            }
         }
-    }
-    else if (
-        this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_TIMER) &&
-        this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_TIMER))
-    {
-        this->halted = false;
-
-        if (IME == true)
+        else if (
+            this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_TIMER) &&
+            this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_TIMER))
         {
-            IME = false;
-            this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_TIMER);
-            Callnn(0x50);
-            return 5;
+            this->halted = false;
+
+            if (IME == true)
+            {
+                IME = false;
+                this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_TIMER);
+                Callnn(0x50);
+                return 5;
+            }
         }
-    }
-    else if (
-        this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_SERIAL) &&
-        this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_SERIAL))
-    {
-        this->halted = false;
-
-        if (IME == true)
+        else if (
+            this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_SERIAL) &&
+            this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_SERIAL))
         {
-            IME = false;
-            this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_SERIAL);
-            Callnn(0x58);
-            return 5;
+            this->halted = false;
+
+            if (IME == true)
+            {
+                IME = false;
+                this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_SERIAL);
+                Callnn(0x58);
+                return 5;
+            }
         }
-    }
-    else if (
-        this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_JOYPAD) &&
-        this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_JOYPAD))
-    {
-        this->halted = false;
-
-        if (IME == true)
+        else if (
+            this->pInterruptController->InterruptIsRequested(INTERRUPT_FLAGS::INT_JOYPAD) &&
+            this->pInterruptController->InterruptIsEnabled(INTERRUPT_FLAGS::INT_JOYPAD))
         {
-            IME = false;
-            this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_JOYPAD);
-            Callnn(0x60);
-            return 5;
+            this->halted = false;
+
+            if (IME == true)
+            {
+                IME = false;
+                this->pInterruptController->ClearInterruptRequest(INTERRUPT_FLAGS::INT_JOYPAD);
+                Callnn(0x60);
+                return 5;
+            }
         }
     }
     

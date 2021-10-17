@@ -9,7 +9,7 @@ Memory::Memory()
         oRAM(ADDR_OAM_RAM_START, ADDR_OAM_RAM_END),
         hRAM(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END)
 {
-    this->MapMemory(0x00, Address::ADDRESSSPACE - 1, &this->unMapped);
+    this->MapMemory(0x00, ADDRESSSPACE - 1, &this->unMapped);
     this->MapMemory(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END, &this->vRAM);
     this->MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, &this->eRAM);
     this->MapMemory(ADDR_GENERAL_RAM_START, ADDR_GENERAL_RAM_END, &this->gRAM);

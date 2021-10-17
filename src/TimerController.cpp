@@ -74,5 +74,7 @@ int TimerController::GetTimerFrequencyClocks()
     case 3:
         return 64;
         break;
+    default:
+        throw std::exception("Invalid Timer Frequency.");
     }
 }

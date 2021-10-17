@@ -80,7 +80,7 @@ public:
 
     bool FlagIsSet(u8 flags)
     {
-        if ((flags & *pValue) > 0)
+        if ((flags & *pValue) == flags)
         {
             return true;
         }

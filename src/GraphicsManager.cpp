@@ -1,16 +1,17 @@
 #include "GraphicsManager.h"
 #include "SDL_events.h"
 
-GraphicsManager::GraphicsManager(int width, int height, int scale, int layers)
-    : width(width), height(height), scale(scale), layers(layers)
+GraphicsManager::GraphicsManager(int width, int height, int scale, int numLayers)
+    : width(width), height(height), scale(scale), numLayers(numLayers)
 {
     size_t bytes = width * height * sizeof(u32);
     this->transparentBuffer = (u32*)malloc(width * height * sizeof(u32));
-    u32 color = EncodeColor(TRANSPARENT_BACKGROUND);
+    this->transparentEncoded = EncodeColor(TRANSPARENT_BACKGROUND);
+    this->layers = (GraphicsLayer*)malloc(sizeof(GraphicsLayer) * numLayers);
 
     for (int i = 0; i < width * height; ++i)
     {
-        this->transparentBuffer[i] = color;
+        this->transparentBuffer[i] = this->transparentEncoded;
     }
 }
 
@@ -24,7 +25,7 @@ GraphicsManager::~GraphicsManager()
 
     free(this->transparentBuffer);
 
-    for (int i = 0; i < this->layers.size(); ++i)
+    for (int i = 0; i < this->numLayers; ++i)
     {
         free(this->layers[i].pixelBuffer);
 
@@ -33,6 +34,8 @@ GraphicsManager::~GraphicsManager()
             SDL_DestroyTexture(this->layers[i].texture);
         }
     }
+
+    free(this->layers);
 }
 
 u32 GraphicsManager::EncodeColor(SDL_Color color)
@@ -48,7 +51,7 @@ u32 GraphicsManager::EncodeColor(SDL_Color color)
     return result;
 }
 
-void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int layer)
+void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int layer, bool checkTransparent)
 {
     int startx = x * this->scale;
     int starty = y * this->scale;
@@ -58,7 +61,15 @@ void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int la
         for (int j = 0; j < this->scale; j++)
         {
             int idx = (starty+i) * width + (startx + j);
-            this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
+
+            if (checkTransparent && color == 0)
+            {
+                this->layers[layer].pixelBuffer[idx] = this->transparentEncoded;
+            }
+            else
+            {
+                this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
+            }
         }
     }
 }
@@ -77,7 +88,7 @@ void GraphicsManager::Init()
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
-    for (int i = 0; i < this->layers.size(); ++i)
+    for (int i = 0; i < this->numLayers; ++i)
     {
         this->layers[i].pixelBuffer = (u32*)malloc(width * height * sizeof(u32));
         this->layers[i].texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height);
@@ -96,7 +107,7 @@ void GraphicsManager::Draw()
     void* pixels;
     int pitch;
 
-    for (int i = 0; i < this->layers.size(); ++i)
+    for (int i = 0; i < this->numLayers; ++i)
     {
         GraphicsLayer* layer = &this->layers[i];
 

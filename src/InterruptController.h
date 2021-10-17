@@ -31,6 +31,7 @@ public:
     void DisableInterrupt(u8 flags);
     bool InterruptIsRequested(u8 flags);
     bool InterruptIsEnabled(u8 flags);
+    bool AnyInterruptRequested();
     void ClearAllRequests();
     void DisableAllInterrupts();
 };

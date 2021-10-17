@@ -17,11 +17,6 @@ public:
         return value;
     }
 
-    operator Address() const
-    {
-        return value;
-    }
-
     int operator=(int num)
     {
         value = num;

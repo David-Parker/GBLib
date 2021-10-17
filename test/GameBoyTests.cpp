@@ -157,6 +157,12 @@ namespace GameBoyTests
             Assert::IsFalse(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
             Assert::IsFalse(reg.FlagIsSet(RegisterU8::HCARRY_FLAG));
             Assert::IsFalse(reg.FlagIsSet(RegisterU8::SUB_FLAG));
+
+            reg.SetFlags(RegisterU8::ZERO_FLAG | RegisterU8::CARRY_FLAG);
+            Assert::IsFalse(reg.FlagIsSet(RegisterU8::ZERO_FLAG | RegisterU8::CARRY_FLAG | RegisterU8::HCARRY_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG | RegisterU8::CARRY_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::ZERO_FLAG));
+            Assert::IsTrue(reg.FlagIsSet(RegisterU8::CARRY_FLAG));
         }
 
         TEST_METHOD(RegisterU8_Operators)

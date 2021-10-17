@@ -55,42 +55,4 @@
 #define ADDR_HIGH_RAM_START 0xFF80
 #define ADDR_HIGH_RAM_END 0xFFFF
 
-
-class Address
-{
-private:
-    u16 store;
-public:
-    static const int ADDRESSSPACE = 65536;
-    Address(u16 address) : store(address) {}
-    Address() : store(0x0) {}
-
-    bool InRange(Address start, Address end);
-
-    operator unsigned short() const
-    {
-        return store;
-    }
-
-    // postfix x++
-    Address operator++(int)
-    {
-        Address copy(*this);
-        operator++();
-        return copy;
-    }
-
-    // prefix ++x
-    Address& operator++()
-    {
-        store++;
-        return *this;
-    }
-
-    ~Address() {}
-};
-
-inline bool Address::InRange(Address start, Address end)
-{
-    return store >= start.store && store <= end.store;
-}
+bool InRange(Address addr, Address start, Address end);

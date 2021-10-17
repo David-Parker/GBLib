@@ -188,12 +188,12 @@ private:
     int DecHL();                                    // 00110101 -> 3
 
     // Call and Return
-    int Callnn(u16 value);							// 11001101 + xxxxxxxx (n) + xxxxxxxx (n) -> 6
-    int Callcc(u8 cc, u16 value);					// 110xx100 (cc) + xxxxxxxx (n) + xxxxxxxx (n) -> 6/3
-    int Ret();										// 11001001 -> 4
-    int RetI();										// 11011001 -> 4
-    int Retcc(u8 cc);								// 110xx000 (cc) -> 5/2
-    int Rst(u8 t);									// 11xxx111 (t) -> 4
+    int Callnn(u16 value);                          // 11001101 + xxxxxxxx (n) + xxxxxxxx (n) -> 6
+    int Callcc(u8 cc, u16 value);                   // 110xx100 (cc) + xxxxxxxx (n) + xxxxxxxx (n) -> 6/3
+    int Ret();                                      // 11001001 -> 4
+    int RetI();                                     // 11011001 -> 4
+    int Retcc(u8 cc);                               // 110xx000 (cc) -> 5/2
+    int Rst(u8 t);                                  // 11xxx111 (t) -> 4
 
 #pragma endregion Instructions
 

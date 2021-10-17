@@ -12,6 +12,7 @@ typedef uint64_t u64;
 typedef int64_t s64;
 
 typedef u8 Byte;
+typedef u16 Address;
 
 constexpr static int ROM_SIZE = 0x8000;
 constexpr static int CLOCK_HZ = 4194304;
@@ -30,3 +31,4 @@ constexpr static int SCREEN_HEIGHT = 144;
 constexpr static int SDL_SCREEN_WIDTH = SCREEN_WIDTH * SCALE;
 constexpr static int SDL_SCREEN_HEIGHT = SCREEN_HEIGHT * SCALE;
 constexpr static int INVALID_READ = 0xFF;
+constexpr static int ADDRESSSPACE = 65536;

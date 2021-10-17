@@ -37,6 +37,7 @@
     <ClInclude Include="src\UnMappedMemory.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Address.cpp" />
     <ClCompile Include="src\ALUHelpers.cpp" />
     <ClCompile Include="src\BGMap.cpp" />
     <ClCompile Include="src\Cpu.cpp" />

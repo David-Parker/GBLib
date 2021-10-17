@@ -110,8 +110,17 @@ void PixelProcessingUnit::Write(Address address, Byte value)
     else if (address == ADDR_PPU_REG_BG_PALETTE_DATA)
     {
         BGP = value;
-
-        this->backgroundMap.LoadColorPalette(BGP);
+        LoadColorPalette(BGP, this->bgPalette);
+    }
+    else if (address == ADDR_PPU_REG_OBJ_PALETTE_0_DATA)
+    {
+        OBP0 = value;
+        LoadColorPalette(OBP0, this->objPalette0);
+    }
+    else if (address == ADDR_PPU_REG_OBJ_PALETTE_1_DATA)
+    {
+        OBP1 = value;
+        LoadColorPalette(OBP1, this->objPalette1);
     }
     else
     {
@@ -128,6 +137,10 @@ void PixelProcessingUnit::TurnOnLCD()
 {
     if (!this->lcdInitialized)
     {
+        this->clockCycles = 0;
+        this->mode = LCD_MODE::OBJ_SEARCH;
+        LY = 0;
+        this->TestLYCMatch();
         gManager.Init();
         this->lcdInitialized = true;
     }
@@ -145,11 +158,16 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
+    if (!this->LCDIsOn())
+    {
+        return;
+    }
+
     // BG
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
         Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(i, LY, color, this->backgroundMap.palette, LCD_LAYER_BG);
+        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG, false);
     }
 
     // Window
@@ -157,6 +175,11 @@ void PixelProcessingUnit::BufferScanLine()
 
 void PixelProcessingUnit::BufferSprites()
 {
+    if (!this->LCDIsOn())
+    {
+        return;
+    }
+
     Address oam = ADDR_OAM_RAM_START;
 
     for (int i = 0; i < 40; ++i)
@@ -167,7 +190,6 @@ void PixelProcessingUnit::BufferSprites()
         Byte attr = pMemory->Read(oam++);
 
         Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
-        Tile tile(pMemory, tileAddress);
 
         for (int y = 0; y < 8; ++y)
         {
@@ -179,8 +201,16 @@ void PixelProcessingUnit::BufferSprites()
                 if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1 &&
                     yAdjusted >= 0 && yAdjusted <= SCREEN_HEIGHT - 1)
                 {
-                    Byte color = tile.GetPixel(x, y);
-                    gManager.AddPixel(xAdjusted, yAdjusted, color, this->backgroundMap.palette, LCD_LAYER_OAM);
+                    Byte color = Tile::GetPixel(pMemory, tileAddress, x, y);
+
+                    if (attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM)
+                    {
+                        gManager.AddPixel(xAdjusted, yAdjusted, color, this->objPalette1, LCD_LAYER_OAM, true);
+                    }
+                    else
+                    {
+                        gManager.AddPixel(xAdjusted, yAdjusted, color, this->objPalette0, LCD_LAYER_OAM, true);
+                    }
                 }
             }
         }
@@ -189,6 +219,11 @@ void PixelProcessingUnit::BufferSprites()
 
 void PixelProcessingUnit::Draw()
 {
+    if (!this->LCDIsOn())
+    {
+        return;
+    }
+
     gManager.Clear();
     gManager.Draw();
     gManager.Flush();
@@ -196,14 +231,8 @@ void PixelProcessingUnit::Draw()
 
 void PixelProcessingUnit::Tick(u64 cycles)
 {
-    if (!this->LCDIsOn())
-    {
-        return;
-    }
-
     this->clockCycles += cycles;
 
-    
     switch (this->mode)
     {
     case LCD_MODE::OBJ_SEARCH:
@@ -304,6 +333,17 @@ void PixelProcessingUnit::TestLYCMatch()
     }
 }
 
+void PixelProcessingUnit::LoadColorPalette(Byte reg, Byte palette[4])
+{
+    for (int i = 0; i < 4; ++i)
+    {
+        Byte code = reg & 0b00000011;
+        reg >>= 2;
+
+        palette[i] = code;
+    }
+}
+
 #ifdef _DEBUG
 void PixelProcessingUnit::DrawTileDebug()
 {
@@ -316,13 +356,11 @@ void PixelProcessingUnit::DrawTileDebug()
         {
             for (int x = 0; x < 24; ++x)
             {
-                Tile tile(pMemory, tileAddress);
-
                 for (int j = 0; j < 8; ++j)
                 {
                     for (int k = 0; k < 8; ++k)
                     {
-                        this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette, LCD_LAYER_BG);
+                        this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, Tile::GetPixel(pMemory, tileAddress, k, j) , this->bgPalette, LCD_LAYER_BG, false);
                     }
                 }
 

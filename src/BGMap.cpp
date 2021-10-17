@@ -24,25 +24,11 @@ Byte BGMap::GetPixel(Address tileData, Address tileMap, int x, int y)
         throw std::exception("Cannot read tile data from address.");
     }
 
-    Tile tile(pMemory, tileAddress);
-    return tile.GetPixel(pixelX, pixelY);
+    return Tile::GetPixel(pMemory, tileAddress, pixelX, pixelY);
 }
 
 Byte BGMap::GetTile(Address tileMap, int xTile, int yTile)
 {
     int offset = (yTile * 32) + xTile;
     return this->pMemory->Read(tileMap + offset);
-}
-
-void BGMap::LoadColorPalette(RegisterU8& BGP)
-{
-    Byte bgPalette = BGP;
-
-    for (int i = 0; i < 4; ++i)
-    {
-        Byte code = bgPalette & 0b00000011;
-        bgPalette >>= 2;
-
-        this->palette[i] = code;
-    }
 }

@@ -23,7 +23,7 @@ private:
     };
 
     UnMappedMemory unMapped;
-    IMemoryMappable* addressSpace[Address::ADDRESSSPACE];
+    IMemoryMappable* addressSpace[ADDRESSSPACE];
 
 public:
     Memory();

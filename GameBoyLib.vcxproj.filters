@@ -37,6 +37,7 @@
       <Filter>MemoryMapped</Filter>
     </ClCompile>
     <ClCompile Include="src\InputManager.cpp" />
+    <ClCompile Include="src\Address.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
