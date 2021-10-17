@@ -1,7 +1,7 @@
 #include "PixelProcessingUnit.h"
 #include <thread>
 
-PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController)
+PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController)
     :   pMemory(pMemory),
         pInterruptController(interruptController),
         backgroundMap(pMemory), 
@@ -9,6 +9,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         mode(LCD_MODE::OBJ_SEARCH),
         lcdInitialized(false),
         gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 3),
+        iManager(pMemory, interruptController, joypadController),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
         SCY(&mem[ADDR_PPU_REG_SCROLL_Y - ADDR_PPU_START]),
@@ -92,15 +93,25 @@ void PixelProcessingUnit::Write(Address address, Byte value)
         
         STAT = upper + lower;
     }
+    else if (address == ADDR_PPU_REG_Y_COORD)
+    {
+        return;
+    }
+    else if (address == ADDR_PPU_REG_DMA_TRANSFER)
+    {
+        Address source = value * 0x100;
+        Address dest = ADDR_OAM_RAM_START;
+
+        for (int i = 0; i <= 0x9F; ++i)
+        {
+            pMemory->Write(dest+i, pMemory->Read(source+i));
+        }
+    }
     else if (address == ADDR_PPU_REG_BG_PALETTE_DATA)
     {
         BGP = value;
 
         this->backgroundMap.LoadColorPalette(BGP);
-    }
-    else if (address == ADDR_PPU_REG_Y_COORD)
-    {
-        return;
     }
     else
     {
@@ -134,10 +145,45 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
+    // BG
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
         Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
         gManager.AddPixel(i, LY, color, this->backgroundMap.palette, LCD_LAYER_BG);
+    }
+
+    // Window
+}
+
+void PixelProcessingUnit::BufferSprites()
+{
+    Address oam = ADDR_OAM_RAM_START;
+
+    for (int i = 0; i < 40; ++i)
+    {
+        Byte yPos = pMemory->Read(oam++);
+        Byte xPos = pMemory->Read(oam++);
+        Byte tileIndex = pMemory->Read(oam++);
+        Byte attr = pMemory->Read(oam++);
+
+        Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
+        Tile tile(pMemory, tileAddress);
+
+        for (int y = 0; y < 8; ++y)
+        {
+            for (int x = 0; x < 8; ++x)
+            {
+                int yAdjusted = (yPos - 16) + y;
+                int xAdjusted = (xPos - 8) + x;
+
+                if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1 &&
+                    yAdjusted >= 0 && yAdjusted <= SCREEN_HEIGHT - 1)
+                {
+                    Byte color = tile.GetPixel(x, y);
+                    gManager.AddPixel(xAdjusted, yAdjusted, color, this->backgroundMap.palette, LCD_LAYER_OAM);
+                }
+            }
+        }
     }
 }
 
@@ -222,6 +268,13 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->mode = LCD_MODE::OBJ_SEARCH;
                 this->STAT.ResetBit(0);
                 this->STAT.SetBit(1);
+
+                if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
+                {
+                    this->BufferSprites();
+                }
+
+                this->iManager.HandleEvents();
                 this->Draw();
                 LY = 0;
 
@@ -254,29 +307,32 @@ void PixelProcessingUnit::TestLYCMatch()
 #ifdef _DEBUG
 void PixelProcessingUnit::DrawTileDebug()
 {
-    // Render tile map for debugging
-    Address tileAddress = 0x8000;
-
-    for (int y = 0; y < 16; ++y)
+    if (drawDebugTile)
     {
-        for (int x = 0; x < 24; ++x)
+        // Render tile map for debugging
+        Address tileAddress = 0x8000;
+
+        for (int y = 0; y < 16; ++y)
         {
-            Tile tile(pMemory, tileAddress);
-
-            for (int j = 0; j < 8; ++j)
+            for (int x = 0; x < 24; ++x)
             {
-                for (int k = 0; k < 8; ++k)
+                Tile tile(pMemory, tileAddress);
+
+                for (int j = 0; j < 8; ++j)
                 {
-                    this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette, LCD_LAYER_BG);
+                    for (int k = 0; k < 8; ++k)
+                    {
+                        this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, tile.GetPixel(k, j), this->backgroundMap.palette, LCD_LAYER_BG);
+                    }
                 }
+
+                tileAddress = tileAddress + 16;
             }
-
-            tileAddress = tileAddress + 16;
         }
-    }
 
-    this->tileDebugger->Clear();
-    this->tileDebugger->Draw();
-    this->tileDebugger->Flush();
+        this->tileDebugger->Clear();
+        this->tileDebugger->Draw();
+        this->tileDebugger->Flush();
+    }
 }
 #endif

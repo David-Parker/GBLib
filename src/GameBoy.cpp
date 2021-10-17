@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy() 
-    : memory(), devices(&memory), cpu(&memory, &devices.interruptController), inputManager(&memory, &devices.interruptController, &devices.joypadController)
+    : memory(), devices(&memory), cpu(&memory, &devices.interruptController)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -58,19 +58,15 @@ void GameBoy::Start()
 {
     try
     {
-        u64 cycleCount = 0;
-
         this->cpu.StartCPU();
+        this->cyclesElapsed = 0;
 
         while (this->cpu.IsRunning())
         {
             int cycles = this->cpu.Tick();
 
-            cycleCount += cycles;
-
             this->devices.ppu.Tick(cycles);
             this->devices.timerController.Tick(cycles);
-            this->inputManager.HandleEvents();
             this->SimulateTimeStep(cycles);
         }
     }
@@ -91,12 +87,20 @@ void GameBoy::SimulateTimeStep(int cycles)
 #ifdef _DEBUG
     return;
 #endif
+    
+    // After one frame has passed (16.7ms / 69905 clocks) wait till the end of the "real time" for that frame
+    this->cyclesElapsed += cycles;
 
-    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_CYCLE /** CLOCK_CYCLES_PER_MACHINE_CYCLE*/ * cycles);
+    if (this->cyclesElapsed >= CLOCK_CYCLES_PER_FRAME)
+    {
+        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME);
 
-    while (high_resolution_clock::now() < waitTo);
+        while (high_resolution_clock::now() < waitTo);
 
-    this->lastTimestamp = waitTo;
+        this->lastTimestamp = waitTo;
+
+        this->cyclesElapsed = 0;
+    }
 }
 
 GameInfo GameBoy::GetGameInfo()

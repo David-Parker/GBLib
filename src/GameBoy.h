@@ -15,13 +15,13 @@ class GameBoy
 private:
     bool romLoaded = false;
     std::chrono::steady_clock::time_point lastTimestamp;
+    u64 cyclesElapsed;
 
     Cpu cpu;
     Memory memory;
     IODevices devices;
     ROM* gameROM;
     ROM* bootROM;
-    InputManager inputManager;
 
     void MapIODevices();
     void LoadBootRom();

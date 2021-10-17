@@ -5,6 +5,7 @@
 #include "Memory.h"
 #include "GlobalDefinitions.h"
 #include "GraphicsManager.h"
+#include "InputManager.h"
 #include "Tile.h"
 #include "RegisterU8.h"
 
@@ -63,11 +64,13 @@ private:
     InterruptController* pInterruptController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
+    InputManager iManager;
     GraphicsManager gManager;
     bool lcdInitialized;
 
 #ifdef _DEBUG
     GraphicsManager* tileDebugger;
+    bool drawDebugTile = false;
     void DrawTileDebug();
 #endif
 
@@ -83,12 +86,13 @@ private:
     void TurnOnLCD();
     void TurnOffLCD();
     void BufferScanLine();
+    void BufferSprites();
     void Draw();
     bool LCDIsOn();
     void TestLYCMatch();
 
 public:
-    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController);
+    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController);
     ~PixelProcessingUnit();
 
     void Write(Address address, Byte value);
