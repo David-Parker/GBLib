@@ -158,7 +158,7 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
-    if (!this->LCDIsOn() || !LCDC.FlagIsSet(LCD_CTRL_FLAGS::BG_WIN_DISPLAY_ON))
+    if (!this->LCDIsOn())
     {
         return;
     }
@@ -195,9 +195,8 @@ void PixelProcessingUnit::BufferScanLine()
     if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
         Address oam = ADDR_OAM_RAM_START;
-        bool bigSprite = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE);
 
-        if (bigSprite)
+        if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
         {
             throw std::exception("8x16 sprites not implemented.");
         }
@@ -230,8 +229,10 @@ void PixelProcessingUnit::BufferScanLine()
 
                     if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
                     {
+                        int y = LY - (yPos - 16);
+
                         u8 layer = LCD_LAYER_OBJ_TOP;
-                        Byte color = Tile::GetPixel(pMemory, tileAddress, x, LY - (yPos - 16));
+                        Byte color = Tile::GetPixel(pMemory, tileAddress, attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x, attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y);
                         Byte* palette = attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
 
                         if (color == 0)
@@ -293,20 +294,15 @@ void PixelProcessingUnit::Tick(u64 cycles)
             }
 
             this->mode = LCD_MODE::HBLANK;
-            this->TestLYCMatch();
             this->STAT.ResetBit(0);
             this->STAT.ResetBit(1);
             this->clockCycles -= CLOCKS_PER_VIDEO_READ;
-
-            if (this->STAT.FlagIsSet(LCD_STAT_FLAGS::MATCH_FLAG) && STAT.FlagIsSet(LCD_STAT_FLAGS::MATCH_INT_SOURCE))
-            {
-                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
-            }
         }
         break;
     case LCD_MODE::HBLANK:
         if (this->clockCycles >= CLOCKS_PER_HBLANK)
         {
+            this->TestLYCMatch();
             this->BufferScanLine();
             ++LY;
 
@@ -318,6 +314,11 @@ void PixelProcessingUnit::Tick(u64 cycles)
             }
             else
             {
+                if (STAT.FlagIsSet(LCD_STAT_FLAGS::VBLANK_INT_SOURCE))
+                {
+                    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+                }
+
                 this->mode = LCD_MODE::VBLANK;
                 this->STAT.SetBit(0);
                 this->STAT.ResetBit(1);
@@ -330,14 +331,19 @@ void PixelProcessingUnit::Tick(u64 cycles)
     case LCD_MODE::VBLANK:
         if (this->clockCycles >= CLOCKS_PER_VBLANK)
         {
+            this->TestLYCMatch();
             ++LY;
 
             if (LY == 154)
             {
+                if (STAT.FlagIsSet(LCD_STAT_FLAGS::OAM_INT_SOURCE))
+                {
+                    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+                }
+
                 this->mode = LCD_MODE::OBJ_SEARCH;
                 this->STAT.ResetBit(0);
                 this->STAT.SetBit(1);
-                //this->BufferSprites();
                 this->iManager.HandleEvents();
                 this->Draw();
                 LY = 0;
@@ -347,7 +353,6 @@ void PixelProcessingUnit::Tick(u64 cycles)
 #endif
             }
 
-            this->TestLYCMatch();
             this->clockCycles -= CLOCKS_PER_VBLANK;
         }
         break;
@@ -361,6 +366,11 @@ void PixelProcessingUnit::TestLYCMatch()
     if (LY == LYC)
     {
         this->STAT.SetBit(LCD_STAT_FLAGS::MATCH_FLAG);
+
+        if (STAT.FlagIsSet(LCD_STAT_FLAGS::MATCH_INT_SOURCE))
+        {
+            this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+        }
     }
     else
     {

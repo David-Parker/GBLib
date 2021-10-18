@@ -6,9 +6,9 @@
 int main(int argc, char* argv[])
 {
     GameBoy* boy = new GameBoy();
-    boy->LoadRom("rom/Dr. Mario (World).gb");
+    //boy->LoadRom("rom/Dr. Mario (World).gb");
     //boy->LoadRom("rom/Tetris.gb");
-    //boy->LoadRom("rom/Tennis (World).gb");
+    boy->LoadRom("rom/Tennis (World).gb");
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/01-special.gb"); // Passed
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/02-interrupts.gb"); // Passed
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb"); // Passed
