@@ -51,7 +51,7 @@ u32 GraphicsManager::EncodeColor(SDL_Color color)
     return result;
 }
 
-void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int layer, bool checkTransparent)
+void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int layer)
 {
     int startx = x * this->scale;
     int starty = y * this->scale;
@@ -62,14 +62,7 @@ void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int la
         {
             int idx = (starty+i) * width + (startx + j);
 
-            if (checkTransparent && color == 0)
-            {
-                this->layers[layer].pixelBuffer[idx] = this->transparentEncoded;
-            }
-            else
-            {
-                this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
-            }
+            this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
         }
     }
 }

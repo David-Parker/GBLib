@@ -8,7 +8,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         clockCycles(0),
         mode(LCD_MODE::OBJ_SEARCH),
         lcdInitialized(false),
-        gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 3),
+        gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 4),
         iManager(pMemory, interruptController, joypadController),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
@@ -47,7 +47,7 @@ Address PixelProcessingUnit::GetBGTileMap()
     }
 }
 
-Address PixelProcessingUnit::GetBGTileData()
+Address PixelProcessingUnit::GetTileData()
 {
     if (LCDC.FlagIsSet(BG_CHAR_DATA_SELECT))
     {
@@ -61,7 +61,7 @@ Address PixelProcessingUnit::GetBGTileData()
     }
 }
 
-Address PixelProcessingUnit::GetWindowCodeArea()
+Address PixelProcessingUnit::GetWindowTileMap()
 {
     if (LCDC.FlagIsSet(WINDOW_CODE_AREA_SELECT))
     {
@@ -158,7 +158,7 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
-    if (!this->LCDIsOn())
+    if (!this->LCDIsOn() || !LCDC.FlagIsSet(LCD_CTRL_FLAGS::BG_WIN_DISPLAY_ON))
     {
         return;
     }
@@ -166,21 +166,43 @@ void PixelProcessingUnit::BufferScanLine()
     // BG
     for (int i = 0; i < SCREEN_WIDTH; i++)
     {
-        Byte color = this->backgroundMap.GetPixel(GetBGTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG, false);
+        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
+        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
     }
 
     // Window
+    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::WINDOWING_ON))
+    {
+        if (LY >= WY)
+        {
+            int xAdjusted = WX - 7;
+
+            for (int i = xAdjusted; i < SCREEN_WIDTH; i++)
+            {
+                if (i >= 0)
+                {
+                    Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, LY - WY);
+                    gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
+                }
+            }
+        }
+    }
 }
 
 void PixelProcessingUnit::BufferSprites()
 {
-    if (!this->LCDIsOn())
+    if (!this->LCDIsOn() || !LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
         return;
     }
 
     Address oam = ADDR_OAM_RAM_START;
+    bool bigSprite = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE);
+
+    if (bigSprite)
+    {
+        throw std::exception("8x16 sprites not implemented.");
+    }
 
     for (int i = 0; i < 40; ++i)
     {
@@ -188,6 +210,14 @@ void PixelProcessingUnit::BufferSprites()
         Byte xPos = pMemory->Read(oam++);
         Byte tileIndex = pMemory->Read(oam++);
         Byte attr = pMemory->Read(oam++);
+
+        // Sprite is completely hidden and is not considered in the renderer
+        if (yPos == 0 || yPos >= SCREEN_HEIGHT + 16 ||
+            xPos == 0 || xPos >= SCREEN_WIDTH + 8 ||
+            (yPos < 8 && !bigSprite))
+        {
+            continue;
+        }
 
         Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
 
@@ -203,14 +233,15 @@ void PixelProcessingUnit::BufferSprites()
                 {
                     Byte color = Tile::GetPixel(pMemory, tileAddress, x, y);
 
-                    if (attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM)
+                    if (color == 0)
                     {
-                        gManager.AddPixel(xAdjusted, yAdjusted, color, this->objPalette1, LCD_LAYER_OAM, true);
+                        continue;
                     }
-                    else
-                    {
-                        gManager.AddPixel(xAdjusted, yAdjusted, color, this->objPalette0, LCD_LAYER_OAM, true);
-                    }
+
+                    //int layer = attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ ? LCD_LAYER_OBJ_BOTTOM : LCD_LAYER_OBJ_TOP;
+                    Byte* palette = attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
+
+                    gManager.AddPixel(xAdjusted, yAdjusted, color, palette, LCD_LAYER_OBJ_TOP);
                 }
             }
         }
@@ -281,6 +312,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->mode = LCD_MODE::VBLANK;
                 this->STAT.SetBit(0);
                 this->STAT.ResetBit(1);
+                this->BufferSprites();
                 this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
             }
 
@@ -297,12 +329,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->mode = LCD_MODE::OBJ_SEARCH;
                 this->STAT.ResetBit(0);
                 this->STAT.SetBit(1);
-
-                if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
-                {
-                    this->BufferSprites();
-                }
-
+                //this->BufferSprites();
                 this->iManager.HandleEvents();
                 this->Draw();
                 LY = 0;
@@ -360,7 +387,7 @@ void PixelProcessingUnit::DrawTileDebug()
                 {
                     for (int k = 0; k < 8; ++k)
                     {
-                        this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, Tile::GetPixel(pMemory, tileAddress, k, j) , this->bgPalette, LCD_LAYER_BG, false);
+                        this->tileDebugger->AddPixel(x * 8 + k, y * 8 + j, Tile::GetPixel(pMemory, tileAddress, k, j) , this->bgPalette, LCD_LAYER_BG);
                     }
                 }
 

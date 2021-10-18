@@ -52,7 +52,7 @@ public:
     ~GraphicsManager();
 
     void Init();
-    void AddPixel(int x, int y, Byte color, Byte palette[4], int layer, bool checkTransparent);
+    void AddPixel(int x, int y, Byte color, Byte palette[4], int layer);
     void Clear();
     void Draw();
     void Flush();

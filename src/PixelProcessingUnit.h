@@ -9,9 +9,10 @@
 #include "Tile.h"
 #include "RegisterU8.h"
 
-#define LCD_LAYER_BG 0
-#define LCD_LAYER_WIN 1
-#define LCD_LAYER_OAM 2
+#define LCD_LAYER_OBJ_BOTTOM 0
+#define LCD_LAYER_BG 1
+#define LCD_LAYER_WIN 2
+#define LCD_LAYER_OBJ_TOP 3
 
 enum LCD_CTRL_FLAGS
 {
@@ -20,9 +21,9 @@ enum LCD_CTRL_FLAGS
     WINDOWING_ON = 32,
     BG_CHAR_DATA_SELECT = 16,
     BG_CODE_AREA_SELECT = 8,
-    OBJ_BLOCK_SELECT = 4,
+    OBJ_SIZE = 4,
     OBJ_ON = 2,
-    BG_DISPLAY_ON = 1,
+    BG_WIN_DISPLAY_ON = 1,
 };
 
 enum LCD_STAT_FLAGS
@@ -95,8 +96,8 @@ private:
     LCD_CTRL_FLAGS lcd_flags;
 
     Address GetBGTileMap();
-    Address GetBGTileData();
-    Address GetWindowCodeArea();
+    Address GetTileData();
+    Address GetWindowTileMap();
 
     void TurnOnLCD();
     void TurnOffLCD();
