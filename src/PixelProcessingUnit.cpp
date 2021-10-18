@@ -163,85 +163,94 @@ void PixelProcessingUnit::BufferScanLine()
         return;
     }
 
-    // BG
-    for (int i = 0; i < SCREEN_WIDTH; i++)
+    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::BG_WIN_DISPLAY_ON))
     {
-        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
-    }
-
-    // Window
-    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::WINDOWING_ON))
-    {
-        if (LY >= WY)
+        // BG
+        for (int i = 0; i < SCREEN_WIDTH; i++)
         {
-            int xAdjusted = WX - 7;
+            Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
+            gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
+        }
 
-            for (int i = xAdjusted; i < SCREEN_WIDTH; i++)
+        // Window
+        if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::WINDOWING_ON))
+        {
+            if (LY >= WY)
             {
-                if (i >= 0)
+                int xAdjusted = WX - 7;
+
+                for (int i = xAdjusted; i < SCREEN_WIDTH; i++)
                 {
-                    Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, LY - WY);
-                    gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
+                    if (i >= 0)
+                    {
+                        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, LY - WY);
+                        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
+                    }
                 }
             }
         }
     }
-}
 
-void PixelProcessingUnit::BufferSprites()
-{
-    if (!this->LCDIsOn() || !LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
+    // Sprites
+    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
-        return;
-    }
+        Address oam = ADDR_OAM_RAM_START;
+        bool bigSprite = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE);
 
-    Address oam = ADDR_OAM_RAM_START;
-    bool bigSprite = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE);
-
-    if (bigSprite)
-    {
-        throw std::exception("8x16 sprites not implemented.");
-    }
-
-    for (int i = 0; i < 40; ++i)
-    {
-        Byte yPos = pMemory->Read(oam++);
-        Byte xPos = pMemory->Read(oam++);
-        Byte tileIndex = pMemory->Read(oam++);
-        Byte attr = pMemory->Read(oam++);
-
-        // Sprite is completely hidden and is not considered in the renderer
-        if (yPos == 0 || yPos >= SCREEN_HEIGHT + 16 ||
-            xPos == 0 || xPos >= SCREEN_WIDTH + 8 ||
-            (yPos < 8 && !bigSprite))
+        if (bigSprite)
         {
-            continue;
+            throw std::exception("8x16 sprites not implemented.");
         }
 
-        Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
+        // Only 10 sprites can render per scan line
+        int spriteCount = 0;
 
-        for (int y = 0; y < 8; ++y)
+        for (int i = 0; i < 40; ++i)
         {
-            for (int x = 0; x < 8; ++x)
+            if (spriteCount == 10)
             {
-                int yAdjusted = (yPos - 16) + y;
-                int xAdjusted = (xPos - 8) + x;
+                continue;
+            }
 
-                if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1 &&
-                    yAdjusted >= 0 && yAdjusted <= SCREEN_HEIGHT - 1)
+            Byte yPos = pMemory->Read(oam++);
+            Byte xPos = pMemory->Read(oam++);
+            Byte tileIndex = pMemory->Read(oam++);
+            Byte attr = pMemory->Read(oam++);
+
+            // Sprite is in this scanline
+            if (LY >= (yPos - 16) && LY < (yPos - 16) + 8)
+            {
+                spriteCount++;
+
+                Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
+
+                for (int x = 0; x < 8; ++x)
                 {
-                    Byte color = Tile::GetPixel(pMemory, tileAddress, x, y);
+                    int xAdjusted = (xPos - 8) + x;
 
-                    if (color == 0)
+                    if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
                     {
-                        continue;
+                        u8 layer = LCD_LAYER_OBJ_TOP;
+                        Byte color = Tile::GetPixel(pMemory, tileAddress, x, LY - (yPos - 16));
+                        Byte* palette = attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
+
+                        if (color == 0)
+                        {
+                            continue;
+                        }
+
+                        if (attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
+                        {
+                            Byte bgColor = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (xAdjusted + SCX) % 256, (LY + SCY) % 256);
+
+                            if (bgColor != 0)
+                            {
+                                layer = LCD_LAYER_OBJ_BOTTOM;
+                            }
+                        }
+
+                        gManager.AddPixel(xAdjusted, LY, color, palette, layer);
                     }
-
-                    //int layer = attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ ? LCD_LAYER_OBJ_BOTTOM : LCD_LAYER_OBJ_TOP;
-                    Byte* palette = attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
-
-                    gManager.AddPixel(xAdjusted, yAdjusted, color, palette, LCD_LAYER_OBJ_TOP);
                 }
             }
         }
@@ -312,7 +321,6 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->mode = LCD_MODE::VBLANK;
                 this->STAT.SetBit(0);
                 this->STAT.ResetBit(1);
-                this->BufferSprites();
                 this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
             }
 

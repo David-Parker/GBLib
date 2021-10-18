@@ -102,7 +102,6 @@ private:
     void TurnOnLCD();
     void TurnOffLCD();
     void BufferScanLine();
-    void BufferSprites();
     void Draw();
     bool LCDIsOn();
     void TestLYCMatch();
