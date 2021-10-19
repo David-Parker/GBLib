@@ -24,6 +24,7 @@ private:
 
     UnMappedMemory unMapped;
     IMemoryMappable* addressSpace[ADDRESSSPACE];
+    Byte cartrigeType;
 
 public:
     Memory();

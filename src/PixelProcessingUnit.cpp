@@ -137,18 +137,25 @@ void PixelProcessingUnit::TurnOnLCD()
 {
     if (!this->lcdInitialized)
     {
-        this->clockCycles = 0;
-        this->mode = LCD_MODE::OBJ_SEARCH;
-        LY = 0;
-        this->TestLYCMatch();
         gManager.Init();
         this->lcdInitialized = true;
+        this->ResetLCD();
     }
 }
 
 void PixelProcessingUnit::TurnOffLCD()
 {
-    // gManager.Close();
+    //this->ResetLCD();
+}
+
+void PixelProcessingUnit::ResetLCD()
+{
+    this->clockCycles = 0;
+    this->mode = LCD_MODE::OBJ_SEARCH;
+    this->STAT.ResetBit(0);
+    this->STAT.SetBit(1);
+    LY = 0;
+    this->TestLYCMatch();
 }
 
 bool PixelProcessingUnit::LCDIsOn()
@@ -194,12 +201,12 @@ void PixelProcessingUnit::BufferScanLine()
     // Sprites
     if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
-        Address oam = ADDR_OAM_RAM_START;
-
         if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
         {
             throw std::exception("8x16 sprites not implemented.");
         }
+
+        Address oam = ADDR_OAM_RAM_START;
 
         // Only 10 sprites can render per scan line
         int spriteCount = 0;
@@ -227,6 +234,7 @@ void PixelProcessingUnit::BufferScanLine()
                 {
                     int xAdjusted = (xPos - 8) + x;
 
+                    // Sprite is visible horizontally
                     if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
                     {
                         int y = LY - (yPos - 16);
@@ -272,7 +280,7 @@ void PixelProcessingUnit::Draw()
 
 void PixelProcessingUnit::Tick(u64 cycles)
 {
-    this->clockCycles += cycles;
+    this->clockCycles += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
 
     switch (this->mode)
     {

@@ -93,7 +93,7 @@ void GameBoy::SimulateTimeStep(int cycles)
 
     if (this->cyclesElapsed >= CLOCK_CYCLES_PER_FRAME)
     {
-        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME);
+        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME * CLOCK_CYCLES_PER_MACHINE_CYCLE);
 
         while (high_resolution_clock::now() < waitTo);
 

@@ -101,6 +101,7 @@ private:
 
     void TurnOnLCD();
     void TurnOffLCD();
+    void ResetLCD();
     void BufferScanLine();
     void Draw();
     bool LCDIsOn();

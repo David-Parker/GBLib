@@ -47,7 +47,9 @@ void GameInfo::PrintInfo()
     std::cout << "Title: " << title << std::endl;
     std::cout << "GameBoy Color: " << isCGB << std::endl;
     std::cout << "Super GameBoy: " << isSGB << std::endl;
-    std::cout << "Cartridge Type: " << cartridge_types[cartridge_type] << std::endl;
+    std::cout << "Cartridge Type: " << cartridge_types[cartridgeType] << std::endl;
+    std::cout << "ROM Size: " << (32 << romSize) << " kb" << std::endl;
+    std::cout << "RAM Size: " << (32 << ramSize) << " kb" << std::endl;
     std::cout << std::endl;
 }
 
@@ -79,5 +81,11 @@ void GameInfo::Read(Memory* pMemory)
     isSGB = sgb_flag == 0x03;
 
     // Get cartridge type
-    cartridge_type = pMemory->Read(0x147);
+    cartridgeType = pMemory->Read(0x147);
+
+    // ROM size
+    romSize = pMemory->Read(0x148);
+
+    // RAM size
+    ramSize = pMemory->Read(0x149);
 }
