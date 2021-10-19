@@ -82,6 +82,7 @@
       <Filter>MemoryMapped</Filter>
     </ClInclude>
     <ClInclude Include="src\InputManager.h" />
+    <ClInclude Include="src\Sprite.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MemoryMapped">

@@ -31,6 +31,7 @@
     <ClInclude Include="src\ROM.h" />
     <ClInclude Include="src\SerialTransferController.h" />
     <ClInclude Include="src\SoundController.h" />
+    <ClInclude Include="src\Sprite.h" />
     <ClInclude Include="src\Tile.h" />
     <ClInclude Include="src\RAM.h" />
     <ClInclude Include="src\TimerController.h" />

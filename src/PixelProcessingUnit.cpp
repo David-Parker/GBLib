@@ -1,11 +1,13 @@
 #include "PixelProcessingUnit.h"
 #include <thread>
+#include <algorithm>
 
 PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController)
     :   pMemory(pMemory),
         pInterruptController(interruptController),
         backgroundMap(pMemory), 
         clockCycles(0),
+        spriteCount(0),
         mode(LCD_MODE::OBJ_SEARCH),
         lcdInitialized(false),
         gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 4),
@@ -206,64 +208,83 @@ void PixelProcessingUnit::BufferScanLine()
             throw std::exception("8x16 sprites not implemented.");
         }
 
-        Address oam = ADDR_OAM_RAM_START;
-
-        // Only 10 sprites can render per scan line
-        int spriteCount = 0;
-
-        for (int i = 0; i < 40; ++i)
+        for (int i = 0; i < this->spriteCount; ++i)
         {
-            if (spriteCount == 10)
+            Sprite* sprite = &this->sprites[i];
+
+            Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (sprite->tileIndex * 16);
+
+            for (int x = 0; x < 8; ++x)
             {
-                continue;
-            }
+                int xAdjusted = (sprite->xPos - 8) + x;
 
-            Byte yPos = pMemory->Read(oam++);
-            Byte xPos = pMemory->Read(oam++);
-            Byte tileIndex = pMemory->Read(oam++);
-            Byte attr = pMemory->Read(oam++);
-
-            // Sprite is in this scanline
-            if (LY >= (yPos - 16) && LY < (yPos - 16) + 8)
-            {
-                spriteCount++;
-
-                Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (tileIndex * 16);
-
-                for (int x = 0; x < 8; ++x)
+                // Sprite is visible horizontally
+                if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
                 {
-                    int xAdjusted = (xPos - 8) + x;
+                    int y = LY - (sprite->yPos - 16);
 
-                    // Sprite is visible horizontally
-                    if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
+                    u8 layer = LCD_LAYER_OBJ_TOP;
+                    Byte color = Tile::GetPixel(pMemory, tileAddress, sprite->attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x, sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y);
+                    Byte* palette = sprite->attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
+
+                    if (color == 0)
                     {
-                        int y = LY - (yPos - 16);
-
-                        u8 layer = LCD_LAYER_OBJ_TOP;
-                        Byte color = Tile::GetPixel(pMemory, tileAddress, attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x, attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y);
-                        Byte* palette = attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
-
-                        if (color == 0)
-                        {
-                            continue;
-                        }
-
-                        if (attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
-                        {
-                            Byte bgColor = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (xAdjusted + SCX) % 256, (LY + SCY) % 256);
-
-                            if (bgColor != 0)
-                            {
-                                layer = LCD_LAYER_OBJ_BOTTOM;
-                            }
-                        }
-
-                        gManager.AddPixel(xAdjusted, LY, color, palette, layer);
+                        continue;
                     }
+
+                    if (sprite->attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
+                    {
+                        Byte bgColor = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (xAdjusted + SCX) % 256, (LY + SCY) % 256);
+
+                        if (bgColor != 0)
+                        {
+                            layer = LCD_LAYER_OBJ_BOTTOM;
+                        }
+                    }
+
+                    gManager.AddPixel(xAdjusted, LY, color, palette, layer);
                 }
             }
         }
     }
+}
+
+bool spriteComparer(Sprite const& lhs, Sprite const& rhs) 
+{
+    return lhs.xPos > rhs.xPos;
+}
+
+void PixelProcessingUnit::SearchSprites()
+{
+    this->spriteCount = 0;
+
+    Address oam = ADDR_OAM_RAM_START;
+
+    for (int i = 0; i < 40; ++i)
+    {
+        if (this->spriteCount == 10)
+        {
+            continue;
+        }
+
+        Byte yPos = pMemory->Read(oam++);
+        Byte xPos = pMemory->Read(oam++);
+        Byte tileIndex = pMemory->Read(oam++);
+        Byte attr = pMemory->Read(oam++);
+
+        // Sprite is in this scanline
+        if (LY >= (yPos - 16) && LY < (yPos - 16) + 8)
+        {
+            this->sprites[this->spriteCount].yPos = yPos;
+            this->sprites[this->spriteCount].xPos = xPos;
+            this->sprites[this->spriteCount].tileIndex = tileIndex;
+            this->sprites[this->spriteCount].attr = attr;
+            this->spriteCount++;
+        }
+    }
+
+    // Sprites are drawn in the order of the lowest X coordinate first
+    std::sort(this->sprites, this->sprites + this->spriteCount, &spriteComparer);
 }
 
 void PixelProcessingUnit::Draw()
@@ -287,6 +308,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
     case LCD_MODE::OBJ_SEARCH:
         if (this->clockCycles >= CLOCKS_PER_OBJ_SEARCH)
         {
+            this->SearchSprites();
             this->mode = LCD_MODE::VIDEO_READ;
             this->STAT.SetBit(0);
             this->STAT.SetBit(1);

@@ -8,6 +8,7 @@
 #include "InputManager.h"
 #include "Tile.h"
 #include "RegisterU8.h"
+#include "Sprite.h"
 
 #define LCD_LAYER_OBJ_BOTTOM 0
 #define LCD_LAYER_BG 1
@@ -77,12 +78,14 @@ private:
     InterruptController* pInterruptController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
+    Sprite sprites[10];
     Byte bgPalette[4];
     Byte objPalette0[4];
     Byte objPalette1[4];
     InputManager iManager;
     GraphicsManager gManager;
     bool lcdInitialized;
+    int spriteCount;
 
 #ifdef _DEBUG
     GraphicsManager* tileDebugger;
@@ -103,6 +106,7 @@ private:
     void TurnOffLCD();
     void ResetLCD();
     void BufferScanLine();
+    void SearchSprites();
     void Draw();
     bool LCDIsOn();
     void TestLYCMatch();
