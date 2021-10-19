@@ -15,7 +15,17 @@ public:
     ~RAM();
 
     void Write(Address address, Byte value);
-    Byte Read(Address address);
+    __forceinline Byte Read(Address address);
     void EnableAccess();
     void DisableAccess();
 };
+
+ Byte RAM::Read(Address address)
+{
+    if (!this->canAccess)
+    {
+        return INVALID_READ;
+    }
+
+    return this->mem[address - this->start];
+}

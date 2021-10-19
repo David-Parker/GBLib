@@ -49,11 +49,6 @@ void Memory::Write(Address address, Byte value)
     }
 }
 
-Byte Memory::Read(Address address)
-{
-    return this->addressSpace[address]->Read(address);
-}
-
 void Memory::ClearMemory()
 {
     // TODO

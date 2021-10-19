@@ -37,8 +37,13 @@ public:
 
     void ClearMemory();
     void Write(Address address, Byte value);
-    Byte Read(Address address);
+    __forceinline Byte Read(Address address);
     void Dump(Address start, Address end);
     void MapMemory(Address low, Address high, IMemoryMappable* device);
     void UnMapMemory(Address low, Address high);
 };
+
+Byte Memory::Read(Address address)
+{
+    return this->addressSpace[address]->Read(address);
+}

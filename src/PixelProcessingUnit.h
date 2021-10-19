@@ -42,7 +42,7 @@ enum LCD_MODE
 {
     HBLANK,
     VBLANK,
-    OBJ_SEARCH,
+    OAM_SEARCH,
     VIDEO_READ
 };
 
@@ -111,6 +111,15 @@ private:
     bool LCDIsOn();
     void TestLYCMatch();
     void LoadColorPalette(Byte reg, Byte palette[4]);
+
+    void EnterOamSearch();
+    void ExitOamSearch();
+    void EnterVideoRead();
+    void ExitVideoRead();
+    void EnterHBlank();
+    void ExitHBlank();
+    void EnterVBlank();
+    void ExitVBlank();
 
 public:
     PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController);

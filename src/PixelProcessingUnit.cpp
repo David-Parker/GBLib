@@ -8,7 +8,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         backgroundMap(pMemory), 
         clockCycles(0),
         spriteCount(0),
-        mode(LCD_MODE::OBJ_SEARCH),
+        mode(LCD_MODE::OAM_SEARCH),
         lcdInitialized(false),
         gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 4),
         iManager(pMemory, interruptController, joypadController),
@@ -153,11 +153,9 @@ void PixelProcessingUnit::TurnOffLCD()
 void PixelProcessingUnit::ResetLCD()
 {
     this->clockCycles = 0;
-    this->mode = LCD_MODE::OBJ_SEARCH;
-    this->STAT.ResetBit(0);
-    this->STAT.SetBit(1);
-    LY = 0;
+    this->LY = 0;
     this->TestLYCMatch();
+    this->EnterOamSearch();
 }
 
 bool PixelProcessingUnit::LCDIsOn()
@@ -260,9 +258,9 @@ void PixelProcessingUnit::SearchSprites()
 
     Address oam = ADDR_OAM_RAM_START;
 
-    for (int i = 0; i < 40; ++i)
+    for (int i = 0; i < SPRITE_NUM_OBJS; ++i)
     {
-        if (this->spriteCount == 10)
+        if (this->spriteCount == SPRITE_OBJ_LIMIT)
         {
             continue;
         }
@@ -283,7 +281,7 @@ void PixelProcessingUnit::SearchSprites()
         }
     }
 
-    // Sprites are drawn in the order of the lowest X coordinate first
+    // Sprites are drawn in the order of the highest X coordinate first
     std::sort(this->sprites, this->sprites + this->spriteCount, &spriteComparer);
 }
 
@@ -305,54 +303,36 @@ void PixelProcessingUnit::Tick(u64 cycles)
 
     switch (this->mode)
     {
-    case LCD_MODE::OBJ_SEARCH:
-        if (this->clockCycles >= CLOCKS_PER_OBJ_SEARCH)
+    case LCD_MODE::OAM_SEARCH:
+        if (this->clockCycles >= CLOCKS_PER_OAM_SEARCH)
         {
-            this->SearchSprites();
-            this->mode = LCD_MODE::VIDEO_READ;
-            this->STAT.SetBit(0);
-            this->STAT.SetBit(1);
-            this->clockCycles -= CLOCKS_PER_OBJ_SEARCH;
+            this->ExitOamSearch();
+            this->EnterVideoRead();
+            
+            this->clockCycles -= CLOCKS_PER_OAM_SEARCH;
         }
         break;
     case LCD_MODE::VIDEO_READ:
         if (this->clockCycles >= CLOCKS_PER_VIDEO_READ)
         {
-            if (STAT.FlagIsSet(LCD_STAT_FLAGS::HBLANK_INT_SOURCE))
-            {
-                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
-            }
+            this->ExitVideoRead();
+            this->EnterHBlank();
 
-            this->mode = LCD_MODE::HBLANK;
-            this->STAT.ResetBit(0);
-            this->STAT.ResetBit(1);
             this->clockCycles -= CLOCKS_PER_VIDEO_READ;
         }
         break;
     case LCD_MODE::HBLANK:
         if (this->clockCycles >= CLOCKS_PER_HBLANK)
         {
-            this->TestLYCMatch();
-            this->BufferScanLine();
-            ++LY;
+            this->ExitHBlank();
 
             if (LY < SCREEN_HEIGHT)
             {
-                this->mode = LCD_MODE::OBJ_SEARCH;
-                this->STAT.ResetBit(0);
-                this->STAT.SetBit(1);
+                this->EnterOamSearch();
             }
             else
             {
-                if (STAT.FlagIsSet(LCD_STAT_FLAGS::VBLANK_INT_SOURCE))
-                {
-                    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
-                }
-
-                this->mode = LCD_MODE::VBLANK;
-                this->STAT.SetBit(0);
-                this->STAT.ResetBit(1);
-                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
+                this->EnterVBlank();
             }
 
             this->clockCycles -= CLOCKS_PER_HBLANK;
@@ -361,19 +341,11 @@ void PixelProcessingUnit::Tick(u64 cycles)
     case LCD_MODE::VBLANK:
         if (this->clockCycles >= CLOCKS_PER_VBLANK)
         {
-            this->TestLYCMatch();
-            ++LY;
+            this->ExitVBlank();
 
-            if (LY == 154)
+            if (LY == SCREEN_HEIGHT + 10)
             {
-                if (STAT.FlagIsSet(LCD_STAT_FLAGS::OAM_INT_SOURCE))
-                {
-                    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
-                }
-
-                this->mode = LCD_MODE::OBJ_SEARCH;
-                this->STAT.ResetBit(0);
-                this->STAT.SetBit(1);
+                this->EnterOamSearch();
                 this->iManager.HandleEvents();
                 this->Draw();
                 LY = 0;
@@ -389,6 +361,73 @@ void PixelProcessingUnit::Tick(u64 cycles)
     default:
         throw std::exception("Unknown LCD Mode.");
     }
+}
+
+void PixelProcessingUnit::EnterOamSearch()
+{
+    if (STAT.FlagIsSet(LCD_STAT_FLAGS::OAM_INT_SOURCE))
+    {
+        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+    }
+
+    this->mode = LCD_MODE::OAM_SEARCH;
+    this->STAT.ResetBit(0);
+    this->STAT.SetBit(1);
+}
+
+void PixelProcessingUnit::ExitOamSearch()
+{
+    this->SearchSprites();
+}
+
+void PixelProcessingUnit::EnterVideoRead()
+{
+    this->mode = LCD_MODE::VIDEO_READ;
+    this->STAT.SetBit(0);
+    this->STAT.SetBit(1);
+}
+
+void PixelProcessingUnit::ExitVideoRead()
+{
+
+}
+
+void PixelProcessingUnit::EnterHBlank()
+{
+    if (STAT.FlagIsSet(LCD_STAT_FLAGS::HBLANK_INT_SOURCE))
+    {
+        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+    }
+
+    this->mode = LCD_MODE::HBLANK;
+    this->STAT.ResetBit(0);
+    this->STAT.ResetBit(1);
+}
+
+void PixelProcessingUnit::ExitHBlank()
+{
+    this->TestLYCMatch();
+    this->BufferScanLine();
+    ++LY;
+}
+
+void PixelProcessingUnit::EnterVBlank()
+{
+    if (STAT.FlagIsSet(LCD_STAT_FLAGS::VBLANK_INT_SOURCE))
+    {
+        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_LCD_STAT);
+    }
+
+    this->mode = LCD_MODE::VBLANK;
+    this->STAT.SetBit(0);
+    this->STAT.ResetBit(1);
+    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
+}
+
+void PixelProcessingUnit::ExitVBlank()
+{
+    this->TestLYCMatch();
+    ++LY;
 }
 
 void PixelProcessingUnit::TestLYCMatch()

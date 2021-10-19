@@ -24,16 +24,6 @@ void RAM::Write(Address address, Byte value)
     this->mem[address - this->start] = value;
 }
 
-Byte RAM::Read(Address address)
-{
-    if (!this->canAccess)
-    {
-        return INVALID_READ;
-    }
-
-    return this->mem[address - this->start];
-}
-
 void RAM::EnableAccess()
 {
     this->canAccess = true;
