@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <stdexcept>
 #include "Memory.h"
-#include "GameInfo.h"
+#include "CartridgeHeader.h"
 #include "Cpu.h"
 #include "IODevices.h"
 #include "IGraphicsHandler.h"
@@ -23,6 +23,7 @@ private:
     IODevices devices;
     ROM* gameROM;
     ROM* bootROM;
+    CartridgeHeader cartridgeHeader;
 
     void MapIODevices();
     void LoadBootRom();
@@ -34,5 +35,4 @@ public:
     void GAMEBOY_API LoadRom(std::string path);
     void GAMEBOY_API Start();
     void GAMEBOY_API Stop();
-    GameInfo GAMEBOY_API GetGameInfo();
 };

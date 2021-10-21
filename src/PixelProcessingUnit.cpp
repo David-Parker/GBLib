@@ -28,7 +28,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         WX(&mem[ADDR_PPU_REG_OBJ_WINDOW_X_POS_MIN_7 - ADDR_PPU_START])
 {
 #ifdef _DEBUG
-    this->tileDebugger = new GraphicsManager(192 * 3, 128 * 3, 3, 1);
+    this->tileDebugger = new GraphicsManager(graphicsHandler, 192 * 3, 128 * 3, 3, 1);
     this->tileDebugger->Init();
 #endif
 }

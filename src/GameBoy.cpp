@@ -30,6 +30,12 @@ void GameBoy::LoadRom(std::string path)
 #ifndef _DEBUG
     LoadBootRom();
 #endif
+    // Loads the cartridge header information.
+    this->cartridgeHeader.Read(path);
+
+#ifdef _DEBUG
+    this->cartridgeHeader.PrintInfo();
+#endif
 
     this->gameROM = new ROM("game", 0, ROM_SIZE);
     this->gameROM->LoadFromFile(path);
@@ -39,6 +45,8 @@ void GameBoy::LoadRom(std::string path)
 #else
     this->memory.MapMemory(0, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
 #endif
+
+
 
     this->romLoaded = true;
 }
@@ -101,17 +109,4 @@ void GameBoy::SimulateTimeStep(int cycles)
 
         this->cyclesElapsed = 0;
     }
-}
-
-GameInfo GameBoy::GetGameInfo()
-{
-    if (!this->romLoaded)
-    {
-        throw std::exception("Can not get GameInfo. No ROM is loaded.");
-    }
-
-    GameInfo info;
-    info.Read(&memory);
-
-    return info;
 }

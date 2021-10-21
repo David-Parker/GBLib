@@ -32,7 +32,7 @@
 #define CART_HUC3 = 0xFE
 #define CART_HUC1_RAM_BATTERY = 0xFF
 
-class GameInfo
+class CartridgeHeader
 {
 public:
     std::string title;
@@ -44,8 +44,8 @@ public:
 
     char* cartridge_types[256];
 
-    GameInfo();
-    ~GameInfo();
-    void Read(Memory* pMemory);
+    CartridgeHeader();
+    ~CartridgeHeader();
+    void Read(std::string& path);
     void PrintInfo();
 };

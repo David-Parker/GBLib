@@ -1,7 +1,7 @@
-#include "GameInfo.h"
+#include "CartridgeHeader.h"
 #include <iostream>
 
-GameInfo::GameInfo()
+CartridgeHeader::CartridgeHeader()
 {
     for (int i = 0; i < 256; ++i)
     {
@@ -38,11 +38,11 @@ GameInfo::GameInfo()
     cartridge_types[0xFF] = "HuC1+RAM+BATTERY";
 }
 
-GameInfo::~GameInfo()
+CartridgeHeader::~CartridgeHeader()
 {
 }
 
-void GameInfo::PrintInfo()
+void CartridgeHeader::PrintInfo()
 {
     std::cout << "Title: " << title << std::endl;
     std::cout << "GameBoy Color: " << isCGB << std::endl;
@@ -53,39 +53,54 @@ void GameInfo::PrintInfo()
     std::cout << std::endl;
 }
 
-u16 CreateU16(Byte lsb, Byte msb)
+void CartridgeHeader::Read(std::string& path)
 {
-    return (msb << 8) + lsb;
-}
+    Byte buf[0x150];
 
-void GameInfo::Read(Memory* pMemory)
-{
+    FILE *filepoint;
+    errno_t err;
+
+    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
+    {
+        throw std::exception("Could not open ROM file.");
+    }
+    else
+    {
+        size_t bytesRead = fread(buf, sizeof(Byte), 0x150, filepoint);
+
+        if (bytesRead == 0)
+        {
+            throw std::exception("Failed to read ROM file.");
+        }
+
+        fclose(filepoint);
+    }
+
     // Get the title
     char sZtitle[16] = {};
     int loc = 0;
 
     for (int i = 0x134; i <= 0x142; ++i)
     {
-        Byte b = pMemory->Read(i);
-        sZtitle[loc++] = pMemory->Read(i);
+        sZtitle[loc++] = buf[i];
     }
 
     title = sZtitle;
 
     // Check if game is Game Boy Color
-    Byte cgb_flag = pMemory->Read(0x143);
+    Byte cgb_flag = buf[0x143];
     isCGB = cgb_flag & 0x80;
 
     // Check if game is Super Game Boy
-    Byte sgb_flag = pMemory->Read(0x146);
+    Byte sgb_flag = buf[0x146];
     isSGB = sgb_flag == 0x03;
 
     // Get cartridge type
-    cartridgeType = pMemory->Read(0x147);
+    cartridgeType = buf[0x147];
 
     // ROM size
-    romSize = pMemory->Read(0x148);
+    romSize = buf[0x148];
 
     // RAM size
-    ramSize = pMemory->Read(0x149);
+    ramSize = buf[0x149];
 }

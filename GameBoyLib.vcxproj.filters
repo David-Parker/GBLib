@@ -4,7 +4,6 @@
     <ClCompile Include="src\ALUHelpers.cpp" />
     <ClCompile Include="src\Cpu.cpp" />
     <ClCompile Include="src\GameBoy.cpp" />
-    <ClCompile Include="src\GameInfo.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
     <ClCompile Include="src\Memory.cpp" />
     <ClCompile Include="src\Tile.cpp" />
@@ -37,13 +36,13 @@
       <Filter>MemoryMapped</Filter>
     </ClCompile>
     <ClCompile Include="src\Address.cpp" />
+    <ClCompile Include="src\CartridgeHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
     <ClInclude Include="src\ALUHelpers.h" />
     <ClInclude Include="src\Cpu.h" />
     <ClInclude Include="src\GameBoy.h" />
-    <ClInclude Include="src\GameInfo.h" />
     <ClInclude Include="src\GlobalDefinitions.h" />
     <ClInclude Include="src\GraphicsManager.h" />
     <ClInclude Include="src\Memory.h" />
@@ -83,13 +82,14 @@
     <ClInclude Include="src\Sprite.h" />
     <ClInclude Include="src\IGraphicsHandler.h" />
     <ClInclude Include="src\IEventHandler.h" />
+    <ClInclude Include="src\CartridgeHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MemoryMapped">
       <UniqueIdentifier>{f4f98450-270f-4112-8c2d-4e775db33b8f}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="GameBoy.def" />
+    <Filter Include="MBCs">
+      <UniqueIdentifier>{d2d67b19-16a9-419b-b13b-b566e4bf1c7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

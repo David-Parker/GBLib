@@ -11,8 +11,8 @@ int main(int argc, char* argv[])
     GameBoy* boy = new GameBoy(new SDLGraphicsHandler(SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT), new SDLEventHandler());
 
     //boy->LoadRom("rom/Dr. Mario.gb");
-    //boy->LoadRom("rom/Tetris.gb");
-    boy->LoadRom("rom/Tennis.gb");
+    boy->LoadRom("rom/Tetris.gb");
+    //boy->LoadRom("rom/Tennis.gb");
     //boy->LoadRom("rom/Super Mario Land.gb");
     //boy->LoadRom("rom/F-1 Race.gb");
     //boy->LoadRom("rom/Pokemon.gb");
@@ -27,10 +27,6 @@ int main(int argc, char* argv[])
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/09-op r,r.gb"); // Passed
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/10-bit ops.gb"); // Passed
     //boy->LoadRom("rom/gb-test-roms/cpu_instrs/individual/11-op a,(hl).gb"); // Passed
-
-#ifdef _DEBUG
-    boy->GetGameInfo().PrintInfo();
-#endif
 
     boy->Start();
 
