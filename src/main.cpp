@@ -1,11 +1,15 @@
 #include <iostream>
 #include <string>
 #include "GameBoy.h"
+#include "SDLGraphicsHandler.h"
+#include "SDLEventHandler.h"
 #include "SDL.h"
 
 int main(int argc, char* argv[])
 {
-    GameBoy* boy = new GameBoy();
+    // Inject SDL based handlers for desktop builds.
+    GameBoy* boy = new GameBoy(new SDLGraphicsHandler(SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT), new SDLEventHandler());
+
     //boy->LoadRom("rom/Dr. Mario.gb");
     //boy->LoadRom("rom/Tetris.gb");
     boy->LoadRom("rom/Tennis.gb");

@@ -19,8 +19,9 @@
     <ClInclude Include="src\GameInfo.h" />
     <ClInclude Include="src\GlobalDefinitions.h" />
     <ClInclude Include="src\GraphicsManager.h" />
+    <ClInclude Include="src\IEventHandler.h" />
+    <ClInclude Include="src\IGraphicsHandler.h" />
     <ClInclude Include="src\IMemoryMappable.h" />
-    <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\InterruptController.h" />
     <ClInclude Include="src\IODevices.h" />
     <ClInclude Include="src\JoypadController.h" />
@@ -45,7 +46,6 @@
     <ClCompile Include="src\GameBoy.cpp" />
     <ClCompile Include="src\GameInfo.cpp" />
     <ClCompile Include="src\GraphicsManager.cpp" />
-    <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\InterruptController.cpp" />
     <ClCompile Include="src\JoypadController.cpp" />
     <ClCompile Include="src\Memory.cpp" />
@@ -58,6 +58,9 @@
     <ClCompile Include="src\TimerController.cpp" />
     <ClCompile Include="src\UnMappedMemory.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="GameBoy.def" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6B38DC4F-5A2C-46FA-AC3B-810CFC9BF943}</ProjectGuid>
     <RootNamespace>Project1</RootNamespace>
@@ -66,13 +69,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -91,8 +94,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>dep\SDL2-2.0.5\include;$(IncludePath)</IncludePath>
-    <LibraryPath>dep\SDL2-2.0.5\lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
     <SourcePath>$(VC_SourcePath);</SourcePath>
     <OutDir>bin\lib\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\lib\$(Platform)\$(Configuration)\</IntDir>
@@ -106,15 +109,17 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep/SDL2-2.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <PreprocessorDefinitions>GAMEBOY_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>dep/SDL2-2.0.5/lib/x64/SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
+      <ModuleDefinitionFile>GameBoy.def</ModuleDefinitionFile>
     </Link>
     <Lib>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
@@ -132,14 +137,16 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep/SDL2-2.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>GAMEBOY_EXPORTING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>dep/SDL2-2.0.5/lib/x64/SDL2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>GameBoy.def</ModuleDefinitionFile>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>

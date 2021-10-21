@@ -7,7 +7,8 @@
 #include "GameInfo.h"
 #include "Cpu.h"
 #include "IODevices.h"
-#include "InputManager.h"
+#include "IGraphicsHandler.h"
+#include "IEventHandler.h"
 #include "ROM.h"
 
 class GameBoy
@@ -28,10 +29,10 @@ private:
     void SimulateTimeStep(int cycles);
 
 public:
-    GameBoy();
-    ~GameBoy();
-    void LoadRom(std::string path);
-    void Start();
-    void Stop();
-    GameInfo GetGameInfo();
+    GAMEBOY_API GameBoy(IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
+    GAMEBOY_API ~GameBoy();
+    void GAMEBOY_API LoadRom(std::string path);
+    void GAMEBOY_API Start();
+    void GAMEBOY_API Stop();
+    GameInfo GAMEBOY_API GetGameInfo();
 };

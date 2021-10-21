@@ -12,11 +12,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\SDLEventHandler.cpp" />
+    <ClCompile Include="src\SDLGraphicsHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="GameBoyLib.vcxproj">
       <Project>{6b38dc4f-5a2c-46fa-ac3b-810cfc9bf943}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\SDLEventHandler.h" />
+    <ClInclude Include="src\SDLGraphicsHandler.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DB13E82A-CDBE-48EA-A5EB-5827508E3873}</ProjectGuid>
@@ -71,6 +77,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>
       </LanguageStandard>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -79,7 +86,8 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"</Command>
+xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -104,7 +112,8 @@ xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"</Command>
+xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,8 +1,7 @@
 #include "GraphicsManager.h"
-#include "SDL_events.h"
 
-GraphicsManager::GraphicsManager(int width, int height, int scale, int numLayers)
-    : width(width), height(height), scale(scale), numLayers(numLayers)
+GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int numLayers)
+    : graphicsHandler(graphicsHandler), width(width), height(height), scale(scale), numLayers(numLayers)
 {
     size_t bytes = width * height * sizeof(u32);
     this->transparentBuffer = (u32*)malloc(width * height * sizeof(u32));
@@ -17,28 +16,17 @@ GraphicsManager::GraphicsManager(int width, int height, int scale, int numLayers
 
 GraphicsManager::~GraphicsManager()
 {
-    if (renderer != nullptr)
-        SDL_DestroyRenderer(renderer);
-
-    if (window != nullptr)
-        SDL_DestroyWindow(window);
-
     free(this->transparentBuffer);
 
     for (int i = 0; i < this->numLayers; ++i)
     {
         free(this->layers[i].pixelBuffer);
-
-        if (this->layers[i].texture != nullptr)
-        {
-            SDL_DestroyTexture(this->layers[i].texture);
-        }
     }
 
     free(this->layers);
 }
 
-u32 GraphicsManager::EncodeColor(SDL_Color color)
+u32 GraphicsManager::EncodeColor(Color color)
 {
     u32 result = color.a;
     result <<= 8;
@@ -69,54 +57,30 @@ void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int la
 
 void GraphicsManager::Init()
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-    {
-        throw std::exception("Error: Failed to initialize SDL.");
-    }
-
-    if (SDL_CreateWindowAndRenderer(this->width, this->height, SDL_WINDOW_SHOWN, &window, &renderer) != 0)
-    {
-        throw std::exception("Error: Failed to new SDL window.");
-    }
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-
     for (int i = 0; i < this->numLayers; ++i)
     {
         this->layers[i].pixelBuffer = (u32*)malloc(width * height * sizeof(u32));
-        this->layers[i].texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, this->width, this->height);
-        SDL_SetTextureBlendMode(this->layers[i].texture, SDL_BLENDMODE_BLEND);
         memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, this->width * this->height * sizeof(u32));
     }
+
+    this->graphicsHandler->Init();
 }
 
 void GraphicsManager::Clear()
 {
-    SDL_RenderClear(renderer);
+    this->graphicsHandler->Clear();
 }
 
 void GraphicsManager::Draw()
 {
-    void* pixels;
-    int pitch;
-
     for (int i = 0; i < this->numLayers; ++i)
     {
         GraphicsLayer* layer = &this->layers[i];
 
-        SDL_LockTexture(layer->texture, NULL, &pixels, &pitch);
-
         size_t bytes = this->width * this->height * sizeof(u32);
-        memcpy(pixels, layer->pixelBuffer, bytes);
+        this->graphicsHandler->Draw(layer->pixelBuffer, this->width, this->height, i);
         memcpy(layer->pixelBuffer, this->transparentBuffer, bytes);
-
-        SDL_UnlockTexture(layer->texture);
-
-        SDL_RenderCopy(renderer, layer->texture, NULL, NULL);
     }
-}
 
-void GraphicsManager::Flush()
-{
-    SDL_RenderPresent(renderer);
+    this->graphicsHandler->Flush();
 }

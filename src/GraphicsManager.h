@@ -1,22 +1,30 @@
 #pragma once
-#include "SDL.h"
-#include "Tile.h"
+#include "IGraphicsHandler.h"
 #include <stdexcept>
 #include <vector>
 
-#define DMG_COLOR_BLACK SDL_Color(0, 0, 0, 255)
-#define DMG_COLOR_LIGHT_GRAY SDL_Color(155, 155, 155, 255)
-#define DMG_COLOR_DARK_GRAY SDL_Color(55, 55, 55, 255)
-#define DMG_COLOR_WHITE SDL_Color(255, 255, 255, 255)
-#define TRANSPARENT_BACKGROUND SDL_Color(0, 0, 0, 0)
+#define DMG_COLOR_BLACK Color(0, 0, 0, 255)
+#define DMG_COLOR_LIGHT_GRAY Color(155, 155, 155, 255)
+#define DMG_COLOR_DARK_GRAY Color(55, 55, 55, 255)
+#define DMG_COLOR_WHITE Color(255, 255, 255, 255)
+#define TRANSPARENT_BACKGROUND Color(0, 0, 0, 0)
+
+struct Color
+{
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+
+    Color(u8 _r, u8 _g, u8 _b, u8 _a) : r(_r), g(_g), b(_b), a(_a) {}
+};
 
 struct GraphicsLayer
 {
-    SDL_Texture* texture;
     u32* pixelBuffer;
 
     GraphicsLayer()
-        : texture(nullptr), pixelBuffer(nullptr)
+        : pixelBuffer(nullptr)
     {}
 };
 
@@ -24,13 +32,12 @@ class GraphicsManager
 {
 private:
     int width, height, scale, numLayers;
-    SDL_Window *window;
-    SDL_Renderer *renderer;
     GraphicsLayer* layers;
+    IGraphicsHandler* graphicsHandler;
     u32* transparentBuffer;
     u32 transparentEncoded;
 
-    SDL_Color ColorPalette[4] =
+    Color ColorPalette[4] =
     {
         DMG_COLOR_WHITE,
         DMG_COLOR_LIGHT_GRAY,
@@ -46,14 +53,13 @@ private:
         EncodeColor(ColorPalette[3])
     };
 
-    u32 EncodeColor(SDL_Color color);
+    u32 EncodeColor(Color color);
 public:
-    GraphicsManager(int width, int height, int scale, int layers);
+    GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int layers);
     ~GraphicsManager();
 
     void Init();
     void AddPixel(int x, int y, Byte color, Byte palette[4], int layer);
     void Clear();
     void Draw();
-    void Flush();
 };

@@ -15,7 +15,7 @@ public:
     ~RAM();
 
     void Write(Address address, Byte value);
-    __forceinline Byte Read(Address address);
+    __inline Byte Read(Address address);
     void EnableAccess();
     void DisableAccess();
 };

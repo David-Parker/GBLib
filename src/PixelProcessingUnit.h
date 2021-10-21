@@ -5,7 +5,7 @@
 #include "Memory.h"
 #include "GlobalDefinitions.h"
 #include "GraphicsManager.h"
-#include "InputManager.h"
+#include "IEventHandler.h"
 #include "Tile.h"
 #include "RegisterU8.h"
 #include "Sprite.h"
@@ -76,16 +76,18 @@ private:
 
     Memory* pMemory;
     InterruptController* pInterruptController;
+    JoypadController* pJoypadController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
     BGMap backgroundMap;
     Sprite sprites[10];
     Byte bgPalette[4];
     Byte objPalette0[4];
     Byte objPalette1[4];
-    InputManager iManager;
+    IEventHandler* eventHandler;
     GraphicsManager gManager;
     bool lcdInitialized;
     int spriteCount;
+    int skipFrame = false;
 
 #ifdef _DEBUG
     GraphicsManager* tileDebugger;
@@ -122,7 +124,7 @@ private:
     void ExitVBlank();
 
 public:
-    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController);
+    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
     ~PixelProcessingUnit();
 
     void Write(Address address, Byte value);

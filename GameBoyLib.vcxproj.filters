@@ -36,7 +36,6 @@
     <ClCompile Include="src\TimerController.cpp">
       <Filter>MemoryMapped</Filter>
     </ClCompile>
-    <ClCompile Include="src\InputManager.cpp" />
     <ClCompile Include="src\Address.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -81,12 +80,16 @@
     <ClInclude Include="src\TimerController.h">
       <Filter>MemoryMapped</Filter>
     </ClInclude>
-    <ClInclude Include="src\InputManager.h" />
     <ClInclude Include="src\Sprite.h" />
+    <ClInclude Include="src\IGraphicsHandler.h" />
+    <ClInclude Include="src\IEventHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MemoryMapped">
       <UniqueIdentifier>{f4f98450-270f-4112-8c2d-4e775db33b8f}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="GameBoy.def" />
   </ItemGroup>
 </Project>

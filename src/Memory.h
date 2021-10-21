@@ -37,7 +37,7 @@ public:
 
     void ClearMemory();
     void Write(Address address, Byte value);
-    __forceinline Byte Read(Address address);
+    __inline Byte Read(Address address);
     void Dump(Address start, Address end);
     void MapMemory(Address low, Address high, IMemoryMappable* device);
     void UnMapMemory(Address low, Address high);

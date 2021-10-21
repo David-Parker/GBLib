@@ -1,17 +1,19 @@
 #include "PixelProcessingUnit.h"
+#include "IGraphicsHandler.h"
 #include <thread>
 #include <algorithm>
 
-PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController)
+PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
     :   pMemory(pMemory),
         pInterruptController(interruptController),
+        pJoypadController(joypadController),
         backgroundMap(pMemory), 
         clockCycles(0),
         spriteCount(0),
         mode(LCD_MODE::OAM_SEARCH),
         lcdInitialized(false),
-        gManager(SDL_SCREEN_WIDTH, SDL_SCREEN_HEIGHT, SCALE, 4),
-        iManager(pMemory, interruptController, joypadController),
+        gManager(graphicsHandler, SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT, SCALE, 4),
+        eventHandler(eventHandler),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
         SCY(&mem[ADDR_PPU_REG_SCROLL_Y - ADDR_PPU_START]),
@@ -139,7 +141,7 @@ void PixelProcessingUnit::TurnOnLCD()
 {
     if (!this->lcdInitialized)
     {
-        gManager.Init();
+        this->gManager.Init();
         this->lcdInitialized = true;
         this->ResetLCD();
     }
@@ -147,7 +149,10 @@ void PixelProcessingUnit::TurnOnLCD()
 
 void PixelProcessingUnit::TurnOffLCD()
 {
-    //this->ResetLCD();
+    if (this->lcdInitialized)
+    {
+        this->gManager.Clear();
+    }
 }
 
 void PixelProcessingUnit::ResetLCD()
@@ -165,7 +170,7 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
-    if (!this->LCDIsOn())
+    if (!this->LCDIsOn() || this->skipFrame !=0)
     {
         return;
     }
@@ -287,14 +292,12 @@ void PixelProcessingUnit::SearchSprites()
 
 void PixelProcessingUnit::Draw()
 {
-    if (!this->LCDIsOn())
+    if (!this->LCDIsOn() || this->skipFrame != 0)
     {
         return;
     }
 
-    gManager.Clear();
     gManager.Draw();
-    gManager.Flush();
 }
 
 void PixelProcessingUnit::Tick(u64 cycles)
@@ -346,7 +349,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
             if (LY == SCREEN_HEIGHT + 10)
             {
                 this->EnterOamSearch();
-                this->iManager.HandleEvents();
+                this->eventHandler->HandleInput(this->pJoypadController);
                 this->Draw();
                 LY = 0;
 
@@ -422,6 +425,8 @@ void PixelProcessingUnit::EnterVBlank()
     this->STAT.SetBit(0);
     this->STAT.ResetBit(1);
     this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
+
+    this->skipFrame = (this->skipFrame + 1) % SPEED_MULTIPLIER;
 }
 
 void PixelProcessingUnit::ExitVBlank()
@@ -482,9 +487,7 @@ void PixelProcessingUnit::DrawTileDebug()
             }
         }
 
-        this->tileDebugger->Clear();
         this->tileDebugger->Draw();
-        this->tileDebugger->Flush();
     }
 }
 #endif

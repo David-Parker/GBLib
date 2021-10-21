@@ -3,8 +3,8 @@
 
 using namespace std::chrono;
 
-GameBoy::GameBoy() 
-    : memory(), devices(&memory), cpu(&memory, &devices.interruptController)
+GameBoy::GameBoy(IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -93,7 +93,7 @@ void GameBoy::SimulateTimeStep(int cycles)
 
     if (this->cyclesElapsed >= CLOCK_CYCLES_PER_FRAME)
     {
-        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME);
+        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / SPEED_MULTIPLIER);
 
         while (high_resolution_clock::now() < waitTo);
 

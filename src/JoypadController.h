@@ -45,10 +45,8 @@ public:
 
     void Write(Address address, Byte value);
     Byte Read(Address address);
-    void KeyDown(u8 key);
-    void KeyUp(u8 key);
-    void RequestButtonPress(u8 flags);
-    void ClearButtonPress(u8 flags);
+    void GAMEBOY_API KeyDown(u8 key);
+    void GAMEBOY_API KeyUp(u8 key);
     bool DirectionSwitch();
     bool ActionSwitch();
 };

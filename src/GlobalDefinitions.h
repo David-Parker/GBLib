@@ -2,6 +2,12 @@
 #include <stdint.h>
 #include <exception>
 
+#ifdef GAMEBOY_EXPORTING
+#define GAMEBOY_API __declspec(dllexport)
+#else
+#define GAMEBOY_API __declspec(dllimport)
+#endif
+
 typedef uint8_t u8;
 typedef int8_t s8;
 typedef uint16_t u16;
@@ -26,11 +32,12 @@ constexpr static int CLOCKS_PER_HBLANK = 204;
 constexpr static int CLOCKS_PER_VBLANK = 456;
 constexpr static int CLOCKS_PER_DIVIDER_INC = 64;
 constexpr static int SCALE = 4;
+constexpr static int SPEED_MULTIPLIER = 1;
 constexpr static int SCREEN_WIDTH = 160;
 constexpr static int SCREEN_HEIGHT = 144;
+constexpr static int SCALED_SCREEN_WIDTH = SCREEN_WIDTH * SCALE;
+constexpr static int SCALED_SCREEN_HEIGHT = SCREEN_HEIGHT * SCALE;
 constexpr static int SPRITE_NUM_OBJS = 40;
 constexpr static int SPRITE_OBJ_LIMIT = 10;
-constexpr static int SDL_SCREEN_WIDTH = SCREEN_WIDTH * SCALE;
-constexpr static int SDL_SCREEN_HEIGHT = SCREEN_HEIGHT * SCALE;
 constexpr static int INVALID_READ = 0xFF;
 constexpr static int ADDRESSSPACE = 65536;
