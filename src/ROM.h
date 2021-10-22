@@ -5,16 +5,15 @@
 class ROM : public IMemoryMappable
 {
 private:
-    std::string name;
     Byte* mem;
-    int offset;
-    int size;
+    Address start;
+    Address end;
 
 public:
-    ROM(std::string name, int offset, int size);
+    ROM(Address start, Address end);
     ~ROM();
 
-    void LoadFromFile(std::string path);
+    void LoadFromFile(std::string path, size_t start, size_t bytes);
     void Write(Address address, Byte value);
     Byte Read(Address address);
 };

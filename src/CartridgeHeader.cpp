@@ -48,8 +48,8 @@ void CartridgeHeader::PrintInfo()
     std::cout << "GameBoy Color: " << isCGB << std::endl;
     std::cout << "Super GameBoy: " << isSGB << std::endl;
     std::cout << "Cartridge Type: " << cartridge_types[cartridgeType] << std::endl;
-    std::cout << "ROM Size: " << (32 << romSize) << " kb" << std::endl;
-    std::cout << "RAM Size: " << (32 << ramSize) << " kb" << std::endl;
+    std::cout << "ROM Size: " << NumROMBanks() * 16 << " kb" << std::endl;
+    std::cout << "RAM Size: " << NumRAMBanks() * 8 << " kb" << std::endl;
     std::cout << std::endl;
 }
 
@@ -103,4 +103,73 @@ void CartridgeHeader::Read(std::string& path)
 
     // RAM size
     ramSize = buf[0x149];
+}
+
+int CartridgeHeader::NumROMBanks()
+{
+    switch (this->romSize)
+    {
+    case 0x0:
+        return 2;
+        break;
+    case 0x1:
+        return 4;
+        break;
+    case 0x2:
+        return 8;
+        break;
+    case 0x3:
+        return 16;
+        break;
+    case 0x4:
+        return 32;
+        break;
+    case 0x5:
+        return 64;
+        break;
+    case 0x6:
+        return 128;
+        break;
+    case 0x7:
+        return 256;
+        break;
+    case 0x8:
+        return 512;
+        break;
+    case 0x52:
+        return 72;
+        break;
+    case 0x53:
+        return 80;
+        break;
+    case 0x54:
+        return 96;
+        break;
+    default:
+        throw std::exception("Invalid ROM size.");
+    }
+}
+
+int CartridgeHeader::NumRAMBanks()
+{
+    switch (this->ramSize)
+    {
+    case 0x0:
+        return 0;
+        break;
+    case 0x2:
+        return 1;
+        break;
+    case 0x3:
+        return 4;
+        break;
+    case 0x4:
+        return 16;
+        break;
+    case 0x5:
+        return 8;
+        break;
+    default:
+        throw std::exception("Invalid RAM size.");
+    }
 }

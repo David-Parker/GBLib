@@ -219,9 +219,6 @@ public:
         L((u8*)&HL),
         IME(0x00)
     {
-#ifdef _DEBUG
-        PC = 0x100;
-#endif
         // Set all opcodes initially to an error state. This makes debugging missing opcodes easier.
         for (int i = 0; i < 256; ++i)
         {

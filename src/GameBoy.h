@@ -9,6 +9,7 @@
 #include "IODevices.h"
 #include "IGraphicsHandler.h"
 #include "IEventHandler.h"
+#include "MBC.h"
 #include "ROM.h"
 
 class GameBoy

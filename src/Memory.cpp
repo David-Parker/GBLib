@@ -40,7 +40,7 @@ void Memory::Write(Address address, Byte value)
         {
             // Unload boot ROM
             IMemoryMappable* gameROM = this->addressSpace[0x100];
-            this->MapMemory(0x0, ROM_SIZE - 1, gameROM);
+            this->MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, gameROM);
         }
     }
     else

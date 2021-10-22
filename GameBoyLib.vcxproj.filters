@@ -37,6 +37,9 @@
     </ClCompile>
     <ClCompile Include="src\Address.cpp" />
     <ClCompile Include="src\CartridgeHeader.cpp" />
+    <ClCompile Include="src\MBC.cpp">
+      <Filter>MemoryMapped</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Address.h" />
@@ -83,13 +86,13 @@
     <ClInclude Include="src\IGraphicsHandler.h" />
     <ClInclude Include="src\IEventHandler.h" />
     <ClInclude Include="src\CartridgeHeader.h" />
+    <ClInclude Include="src\MBC.h">
+      <Filter>MemoryMapped</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MemoryMapped">
       <UniqueIdentifier>{f4f98450-270f-4112-8c2d-4e775db33b8f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="MBCs">
-      <UniqueIdentifier>{d2d67b19-16a9-419b-b13b-b566e4bf1c7c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

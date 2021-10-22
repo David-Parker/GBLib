@@ -19,34 +19,39 @@ GameBoy::~GameBoy()
 // Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {
-    this->bootROM = new ROM("boot", 0, 256);
-    this->bootROM->LoadFromFile("rom/boot.bin");
+    this->bootROM = new ROM(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END);
+    this->bootROM->LoadFromFile("rom/boot.bin", 0, 256);
     this->memory.MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, this->bootROM);
 }
 
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
-#ifndef _DEBUG
-    LoadBootRom();
-#endif
     // Loads the cartridge header information.
     this->cartridgeHeader.Read(path);
-
-#ifdef _DEBUG
     this->cartridgeHeader.PrintInfo();
-#endif
 
-    this->gameROM = new ROM("game", 0, ROM_SIZE);
-    this->gameROM->LoadFromFile(path);
+    MBC* mbc;
 
-#ifndef _DEBUG
-    this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
-#else
-    this->memory.MapMemory(0, ROM_SIZE - 1, this->gameROM); // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
-#endif
+    // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
+    switch (this->cartridgeHeader.cartridgeType)
+    {
+    case CART_ROM_ONLY:
+        this->gameROM = new ROM(ADDR_GAME_ROM_START, ADDR_GAME_ROM_END);
+        this->gameROM->LoadFromFile(path, 0, this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
+        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->gameROM);
+        break;
+    case CART_MBC1:
+        mbc = new MBC1(this->cartridgeHeader);
+        mbc->LoadFromFile(path);
+        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, mbc);
+        this->memory.MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, mbc);
+        break;
+    default:
+        throw std::exception("Cartridge type not supported.");
+    }
 
-
+    LoadBootRom();
 
     this->romLoaded = true;
 }
@@ -64,24 +69,15 @@ void GameBoy::MapIODevices()
 
 void GameBoy::Start()
 {
-    try
-    {
-        this->cpu.StartCPU();
-        this->cyclesElapsed = 0;
+    this->cpu.StartCPU();
+    this->cyclesElapsed = 0;
 
-        while (this->cpu.IsRunning())
-        {
-            int cycles = this->cpu.Tick();
-
-            this->devices.ppu.Tick(cycles);
-            this->devices.timerController.Tick(cycles);
-            this->SimulateTimeStep(cycles);
-        }
-    }
-    catch (std::exception& ex)
+    while (this->cpu.IsRunning())
     {
-        std::cout << "Exception encountered: " << ex.what() << std::endl;
-        this->Stop();
+        int cycles = this->cpu.Tick();
+        this->devices.ppu.Tick(cycles);
+        this->devices.timerController.Tick(cycles);
+        this->SimulateTimeStep(cycles);
     }
 }
 

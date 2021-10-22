@@ -2,12 +2,11 @@
 #include "ROM.h"
 #include <cstdlib>
 
-ROM::ROM(std::string name, int offset, int size)
+ROM::ROM(Address start, Address end)
 {
-    this->name = name;
-    this->offset = offset;
-    this->size = size;
-    this->mem = (Byte*)malloc(size);
+    this->start = start;
+    this->end = end;
+    this->mem = (Byte*)malloc((end - start) + 1);
 }
 
 ROM::~ROM()
@@ -15,25 +14,27 @@ ROM::~ROM()
     free(this->mem);
 }
 
-void ROM::LoadFromFile(std::string path)
+void ROM::LoadFromFile(std::string path, size_t start, size_t bytes)
 {
-    FILE *filepoint;
+    FILE *file;
     errno_t err;
 
-    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
+    if ((err = fopen_s(&file, path.c_str(), "rb")) != 0)
     {
         throw std::exception("Could not open ROM file.");
     }
     else
     {
-        size_t bytesRead = fread(this->mem, sizeof(Byte), this->size, filepoint);
+        fseek(file, start, SEEK_SET);
 
-        if (bytesRead == 0)
+        size_t bytesRead = fread(this->mem, sizeof(Byte), bytes, file);
+
+        if (bytesRead != bytes)
         {
             throw std::exception("Failed to read ROM file.");
         }
 
-        fclose(filepoint);
+        fclose(file);
     }
 }
 
@@ -44,5 +45,5 @@ void ROM::Write(Address address, Byte value)
 
 Byte ROM::Read(Address address)
 {
-    return this->mem[address - offset];
+    return this->mem[address - this->start];
 }
