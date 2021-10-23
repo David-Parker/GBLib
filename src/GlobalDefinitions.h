@@ -43,7 +43,7 @@ constexpr static int ROM_BANK_BYTES = 16384;
 constexpr static int RAM_BANK_BYTES = 8192;
 
 #ifdef _DEBUG
-constexpr static int SPEED_MULTIPLIER = 16;
+constexpr static int SPEED_MULTIPLIER = 4;
 #else
 constexpr static int SPEED_MULTIPLIER = 1;
 #endif

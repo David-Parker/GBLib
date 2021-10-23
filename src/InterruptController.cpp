@@ -82,5 +82,5 @@ bool InterruptController::InterruptIsEnabled(u8 flags)
 
 bool InterruptController::AnyInterruptRequested()
 {
-    return (*IF & 0b00011111) > 0;
+    return (IF & IE & 0b00011111) != 0;
 }

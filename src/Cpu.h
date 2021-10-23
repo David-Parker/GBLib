@@ -46,7 +46,9 @@ private:
 
     typedef std::function<int()> instruction_t;
 
-    unsigned long long cyclesTotal = 0;
+    u64 cyclesTotal = 0;
+    u64 ticks = 0;
+    u64 ticksEnableIME = ULLONG_MAX;
 
     instruction_t opcodes[256];
     instruction_t opcodes_16[256];
@@ -56,6 +58,7 @@ private:
 
     bool running;
     bool halted;
+    bool checkHaltBug;
 
 #ifdef _DEBUG
     unsigned long long steps = 0;
@@ -205,6 +208,8 @@ public:
         pMemory(pMemory),
         pInterruptController(interruptController),
         halted(false),
+        checkHaltBug(false),
+        ticksEnableIME(ULLONG_MAX),
         BC(0x00),
         DE(0x00),
         HL(0x00),

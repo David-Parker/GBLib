@@ -104,8 +104,14 @@ Byte MBC1::Read(Address address)
     {
         return this->romBanks[this->currentROMBank]->Read(address);
     }
+    // RAM
     else if (AddressInRange(address, ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END))
     {
+        if (!this->ramEnabled)
+        {
+            return 0xFF;
+        }
+
         if (this->currentMode == 0)
         {
             return this->ramBanks[0]->Read(address);

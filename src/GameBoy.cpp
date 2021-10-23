@@ -42,6 +42,8 @@ void GameBoy::LoadRom(std::string path)
         this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->gameROM);
         break;
     case CART_MBC1:
+    case CART_MBC1_RAM:
+    case CART_MBC1_RAM_BATTERY:
         mbc = new MBC1(this->cartridgeHeader);
         mbc->LoadFromFile(path);
         this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, mbc);

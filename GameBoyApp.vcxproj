@@ -18,6 +18,8 @@
   <ItemGroup>
     <ProjectReference Include="GameBoyLib.vcxproj">
       <Project>{6b38dc4f-5a2c-46fa-ac3b-810cfc9bf943}</Project>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <Private>true</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -61,10 +63,16 @@
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>bin\app\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\app\$(Platform)\$(Configuration)\</IntDir>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\app\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>bin\app\$(Platform)\$(Configuration)\</IntDir>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>Build</CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -85,11 +93,20 @@
       <AdditionalLibraryDirectories>dep\SDL2-2.0.5\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)$(OutDir)"</Command>
-    </PostBuildEvent>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -112,11 +129,20 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <CustomBuildStep>
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
 xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)$(OutDir)"</Command>
-    </PostBuildEvent>
+      <TreatOutputAsContent>true</TreatOutputAsContent>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
