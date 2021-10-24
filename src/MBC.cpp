@@ -2,6 +2,13 @@
 
 void MBC1::LoadFromFile(std::string& path)
 {
+    if (this->header.ramSize > 0x03)
+    {
+        throw std::exception("MBC1 does not support more than 32kb RAM.");
+    }
+
+    this->ramSize = (MBC1_RAM_SIZES)this->header.ramSize;
+
     for (int i = 0; i < this->header.NumROMBanks(); ++i)
     {
         ROM* bank;
@@ -34,6 +41,11 @@ void MBC1::Write(Address address, Byte value)
 {
     if (AddressInRange(address, ADDR_MBC_RAM_ENABLE_START, ADDR_MBC_RAM_ENABLE_END))
     {
+        if (this->ramSize == MBC1_RAM_SIZES::NO_RAM)
+        {
+            return;
+        }
+
         u8 mask = 0b00001111;
         value = value & mask;
 
@@ -58,7 +70,7 @@ void MBC1::Write(Address address, Byte value)
             value = 1;
         }
 
-        this->currentROMBank = (this->currentROMBank & 0b01100000) + value;
+        this->romBankRegister = value;
 
     }
     else if (AddressInRange(address, ADDR_MBC_MODE_SELECT_START, ADDR_MBC_MODE_SELECT_END))
@@ -66,10 +78,10 @@ void MBC1::Write(Address address, Byte value)
         switch (value)
         {
         case 0x00:
-            this->currentMode = 0;
+            this->currentMode = MBC1_BANK_MODE::ROM_MODE;
             break;
         case 0x01:
-            this->currentMode = 1;
+            this->currentMode = MBC1_BANK_MODE::RAM_MODE;
             break;
         default:
             throw std::exception("Unknown MBC1 Mode.");
@@ -77,19 +89,9 @@ void MBC1::Write(Address address, Byte value)
     }
     else if (AddressInRange(address, ADDR_MBC_RAM_BANK_START, ADDR_MBC_RAM_BANK_END))
     {
-        // ROM mode
-        if (this->currentMode == 0)
-        {
-            value = value & 0b00000011;
+        value = value & 0b00000011;
 
-            value = value << 5;
-
-            this->currentROMBank = (this->currentROMBank & value) + (this->currentROMBank & 0b00011111);
-        }
-        else // RAM mode
-        {
-            this->currentRAMBank = value;
-        }
+        this->extraBankRegister = value;
     }
 }
 
@@ -102,7 +104,7 @@ Byte MBC1::Read(Address address)
     }
     else if (AddressInRange(address, ADDR_ROM_BANK_EXTENDABLE_START, ADDR_ROM_BANK_EXTENDABLE_END))
     {
-        return this->romBanks[this->currentROMBank]->Read(address);
+        return this->romBanks[GetCurrentROMBank()]->Read(address);
     }
     // RAM
     else if (AddressInRange(address, ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END))
@@ -112,18 +114,35 @@ Byte MBC1::Read(Address address)
             return 0xFF;
         }
 
-        if (this->currentMode == 0)
-        {
-            return this->ramBanks[0]->Read(address);
-        }
-        else
-        {
-            return this->ramBanks[this->currentRAMBank]->Read(address);
-        }
+        return this->ramBanks[GetCurrentRAMBank()]->Read(address);
     }
     else
     {
         throw std::exception("Invalid MBC memory read.");
+    }
+}
+
+u8 MBC1::GetCurrentROMBank()
+{
+    if (this->currentMode == MBC1_BANK_MODE::ROM_MODE)
+    {
+        return (this->romBankRegister) + (this->extraBankRegister << 5);
+    }
+    else
+    {
+        return this->romBankRegister;
+    }
+}
+
+u8 MBC1::GetCurrentRAMBank()
+{
+    if (this->currentMode == MBC1_BANK_MODE::ROM_MODE)
+    {
+        return 0;
+    }
+    else
+    {
+        return this->extraBankRegister;
     }
 }
 

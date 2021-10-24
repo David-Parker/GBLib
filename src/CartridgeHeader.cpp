@@ -157,6 +157,9 @@ int CartridgeHeader::NumRAMBanks()
     case 0x0:
         return 0;
         break;
+    case 0x1:
+        return 0;
+        break;
     case 0x2:
         return 1;
         break;
