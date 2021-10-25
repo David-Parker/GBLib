@@ -2,10 +2,6 @@
 #include "SDL.h"
 #include "SDL_events.h"
 
-SDLEventHandler::SDLEventHandler()
-{
-}
-
 SDLEventHandler::~SDLEventHandler()
 {
 }
@@ -17,8 +13,7 @@ void SDLEventHandler::HandleInput(JoypadController* joypadController)
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT)
         {
-            SDL_Quit();
-            exit(EXIT_SUCCESS);
+            this->shouldQuit = true;
         }
         else if (event.type == SDL_KEYDOWN)
         {
@@ -31,6 +26,9 @@ void SDLEventHandler::HandleInput(JoypadController* joypadController)
 
             switch (keyEvent.keysym.sym)
             {
+            case SDLK_LSHIFT:
+                this->speedMultiplier = 16;
+                break;
             case SDLK_RETURN:
                 joypadController->KeyDown(JOYPAD_BUTTONS::BUTTON_START);
                 break;
@@ -68,6 +66,9 @@ void SDLEventHandler::HandleInput(JoypadController* joypadController)
 
             switch (keyEvent.keysym.sym)
             {
+            case SDLK_LSHIFT:
+                this->speedMultiplier = 1;
+                break;
             case SDLK_RETURN:
                 joypadController->KeyUp(JOYPAD_BUTTONS::BUTTON_START);
                 break;
@@ -95,4 +96,14 @@ void SDLEventHandler::HandleInput(JoypadController* joypadController)
             }
         }
     }
+}
+
+bool SDLEventHandler::ShouldQuit()
+{
+    return this->shouldQuit;
+}
+
+int SDLEventHandler::SpeedMultiplier()
+{
+    return this->speedMultiplier;
 }

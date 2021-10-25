@@ -19,4 +19,5 @@ public:
     void Clear();
     void Draw(u32* pixelBuffer, int width, int height, int layer);
     void Flush();
+    void Quit();
 };

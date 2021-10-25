@@ -59,3 +59,8 @@ void SDLGraphicsHandler::Flush()
 {
     SDL_RenderPresent(renderer);
 }
+
+void SDLGraphicsHandler::Quit()
+{
+    SDL_Quit();
+}

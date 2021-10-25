@@ -3,8 +3,8 @@
 
 using namespace std::chrono;
 
-GameBoy::GameBoy(IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController)
+GameBoy::GameBoy(std::string savesFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), savesFolder(savesFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -31,8 +31,6 @@ void GameBoy::LoadRom(std::string path)
     this->cartridgeHeader.Read(path);
     this->cartridgeHeader.PrintInfo();
 
-    MBC* mbc;
-
     // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
     switch (this->cartridgeHeader.cartridgeType)
     {
@@ -44,13 +42,39 @@ void GameBoy::LoadRom(std::string path)
     case CART_MBC1:
     case CART_MBC1_RAM:
     case CART_MBC1_RAM_BATTERY:
-        mbc = new MBC1(this->cartridgeHeader);
-        mbc->LoadFromFile(path);
-        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, mbc);
-        this->memory.MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, mbc);
+        this->mbc = new MBC1(this->cartridgeHeader);
+        break;
+    case CART_MBC3:
+    case CART_MBC3_RAM:
+    case CART_MBC3_RAM_BATTERY:
+        this->mbc = new MBC3(this->cartridgeHeader);
         break;
     default:
         throw std::exception("Cartridge type not supported.");
+    }
+
+    if (this->mbc != nullptr)
+    {
+        this->mbc->LoadROMFromFile(path);
+
+        switch (this->cartridgeHeader.cartridgeType)
+        {
+        case CART_MBC1_RAM_BATTERY:
+        case CART_MBC2_BATTERY:
+        case CART_ROM_RAM_BATTERY:
+        case CART_MMM01_RAM_BATTERY:
+        case CART_MBC3_TIMER_BATTERY:
+        case CART_MBC3_TIMER_RAM_BATTERY:
+        case CART_MBC3_RAM_BATTERY:
+        case CART_MBC5_RAM_BATTERY:
+        case CART_MBC5_RUMBLE_RAM_BATTERY:
+        case CART_MBC7_SENSOR_RUMBLE_RAM_BATTERY:
+        case CART_HUC1_RAM_BATTERY:
+            this->mbc->LoadRAMFromSave(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+        }
+
+        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->mbc);
+        this->memory.MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, this->mbc);
     }
 
     LoadBootRom();
@@ -79,7 +103,18 @@ void GameBoy::Start()
         int cycles = this->cpu.Tick();
         this->devices.ppu.Tick(cycles);
         this->devices.timerController.Tick(cycles);
-        this->SimulateTimeStep(cycles);
+
+        if (this->eventHandler->ShouldQuit())
+        {
+            this->cpu.StopCPU();
+            this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+            this->graphicsHandler->Quit();
+            break;
+        }
+        else
+        {
+            this->SimulateTimeStep(cycles);
+        }
     }
 }
 
@@ -99,7 +134,7 @@ void GameBoy::SimulateTimeStep(int cycles)
 
     if (this->cyclesElapsed >= CLOCK_CYCLES_PER_FRAME)
     {
-        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / SPEED_MULTIPLIER);
+        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / this->eventHandler->SpeedMultiplier());
 
         while (high_resolution_clock::now() < waitTo);
 

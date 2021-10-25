@@ -18,6 +18,7 @@ private:
     bool romLoaded = false;
     std::chrono::steady_clock::time_point lastTimestamp;
     u64 cyclesElapsed;
+    std::string savesFolder;
 
     Cpu cpu;
     Memory memory;
@@ -25,13 +26,16 @@ private:
     ROM* gameROM;
     ROM* bootROM;
     CartridgeHeader cartridgeHeader;
+    IEventHandler* eventHandler;
+    IGraphicsHandler* graphicsHandler;
+    MBC* mbc;
 
     void MapIODevices();
     void LoadBootRom();
     void SimulateTimeStep(int cycles);
 
 public:
-    GAMEBOY_API GameBoy(IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
+    GAMEBOY_API GameBoy(std::string savesFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
     GAMEBOY_API ~GameBoy();
     void GAMEBOY_API LoadRom(std::string path);
     void GAMEBOY_API Start();

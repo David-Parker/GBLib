@@ -429,7 +429,7 @@ void PixelProcessingUnit::EnterVBlank()
     this->STAT.ResetBit(1);
     this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
 
-    this->skipFrame = (this->skipFrame + 1) % SPEED_MULTIPLIER;
+    this->skipFrame = (this->skipFrame + 1) % this->eventHandler->SpeedMultiplier();
 }
 
 void PixelProcessingUnit::ExitVBlank()

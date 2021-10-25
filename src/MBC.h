@@ -4,7 +4,7 @@
 #include "RAM.h"
 #include "ROM.h"
 
-enum MBC1_RAM_SIZES
+enum MBC_RAM_SIZES
 {
     NO_RAM,
     SMALL_RAM,
@@ -18,10 +18,18 @@ enum MBC1_BANK_MODE
     RAM_MODE
 };
 
+enum MBC3_REGISTER_MODE
+{
+    RTC_REG_MODE,
+    RAM_REG_MODE
+};
+
 class MBC : public IMemoryMappable
 {
 public:
-    virtual void LoadFromFile(std::string& path) = 0;
+    virtual void LoadROMFromFile(std::string path) = 0;
+    virtual void LoadRAMFromSave(std::string path) = 0;
+    virtual void SaveToFile(std::string path) = 0;
 };
 
 class MBC1 : public MBC
@@ -37,7 +45,7 @@ private:
     u8 extraBankRegister;
 
     bool ramEnabled;
-    MBC1_RAM_SIZES ramSize;
+    MBC_RAM_SIZES ramSize;
 
 public: 
     MBC1(CartridgeHeader& header)
@@ -47,20 +55,44 @@ public:
 
     ~MBC1() {}
 
-    void LoadFromFile(std::string& path);
+    void LoadROMFromFile(std::string path);
+    void LoadRAMFromSave(std::string path) {}
     void Write(Address address, Byte value);
     Byte Read(Address address);
     u8 GetCurrentROMBank();
     u8 GetCurrentRAMBank();
+    void SaveToFile(std::string path) {}
 };
 
 class MBC3 : public MBC
 {
+private:
+    CartridgeHeader& header;
+    std::vector<ROM*> romBanks;
+    std::vector<RAM*> ramBanks;
+    int currentMode;
+
+    u8 romBankRegister;
+    u8 ramBankRegister;
+    u8 rtcRegister;
+    u8 latchRegister;
+
+    bool ramEnabled;
+    MBC_RAM_SIZES ramSize;
+
 public:
-    MBC3(CartridgeHeader& header) {}
+    MBC3(CartridgeHeader& header)
+        : header(header), romBankRegister(0), ramBankRegister(0), rtcRegister(0), latchRegister(0xFF), currentMode(MBC3_REGISTER_MODE::RAM_REG_MODE), ramEnabled(false)
+    {
+    }
+
     ~MBC3() {}
 
-    void LoadFromFile(std::string& path);
+    void LoadROMFromFile(std::string path);
+    void LoadRAMFromSave(std::string path);
     void Write(Address address, Byte value);
     Byte Read(Address address);
+    u8 GetCurrentROMBank();
+    u8 GetCurrentRAMBank();
+    void SaveToFile(std::string path);
 };

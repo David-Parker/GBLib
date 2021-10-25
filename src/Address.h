@@ -71,5 +71,7 @@
 #define ADDR_MBC_MODE_SELECT_END 0x7FFF
 #define ADDR_MBC_RAM_BANK_START 0x4000
 #define ADDR_MBC_RAM_BANK_END 0x5FFF
+#define ADDR_MBC3_LATCH_CLOCK_START 0x6000
+#define ADDR_MBC3_LATCH_CLOCK_END 0x7FFF
 
 bool AddressInRange(Address addr, Address start, Address end);

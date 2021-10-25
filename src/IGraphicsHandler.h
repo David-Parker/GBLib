@@ -19,4 +19,7 @@ public:
 
     // Flush all buffered layers to final output. Called once all layers have requested to be drawn.
     virtual void Flush() = 0;
+
+    // Quit and release any resources for the graphics handler.
+    virtual void Quit() = 0;
 };
