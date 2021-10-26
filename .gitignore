@@ -248,3 +248,4 @@ ModelManifest.xml
 # Custom
 *.txt
 rom/save
+rom/*.gb
