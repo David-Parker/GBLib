@@ -9,6 +9,9 @@ All source and header files reside in the `src` folder. A Visual Studio solution
 ## License
 `GBLib` is released under the MIT license.
 
+## Testing
+To run unit tests, use the test project listed under the `test` folder. To run Blargg's GB Test Roms, load any of the roms under `rom\gb-test-roms` folder.
+
 ## Media
 
 ![image](images/pokemon-start.jpg)

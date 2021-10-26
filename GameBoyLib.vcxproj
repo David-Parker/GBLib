@@ -128,8 +128,7 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
+      <Command>xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"
@@ -157,8 +156,7 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
+      <Command>xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"

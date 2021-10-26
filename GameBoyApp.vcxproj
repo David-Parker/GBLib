@@ -79,7 +79,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dep\windows\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -90,21 +90,18 @@
     <Link>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>dep\SDL2-2.0.5\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>dep\windows\SDL2-2.0.5\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>xcopy /y /d  "$(ProjectDir)dep\windows\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)$(OutDir)"</Command>
+      <Command>
+      </Command>
       <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
   </ItemDefinitionGroup>
@@ -115,7 +112,7 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dep\windows\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>
@@ -125,22 +122,19 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>dep\SDL2-2.0.5\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>dep\windows\SDL2-2.0.5\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>Windows</SubSystem>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>xcopy /y /d  "$(ProjectDir)dep\windows\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>
       </Command>
     </PreBuildEvent>
     <CustomBuildStep>
-      <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)$(OutDir)rom"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)$(OutDir)"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)$(OutDir)"</Command>
+      <Command>
+      </Command>
       <TreatOutputAsContent>true</TreatOutputAsContent>
     </CustomBuildStep>
   </ItemDefinitionGroup>
