@@ -25,7 +25,7 @@ void ROM::LoadFromFile(std::string path, size_t start, size_t bytes)
     }
     else
     {
-        fseek(file, start, SEEK_SET);
+        fseek(file, (long)start, SEEK_SET);
 
         size_t bytesRead = fread(this->mem, sizeof(Byte), bytes, file);
 

@@ -11,11 +11,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\SDLEventHandler.cpp" />
-    <ClCompile Include="src\SDLGraphicsHandler.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="GameBoyLib.vcxproj">
       <Project>{6b38dc4f-5a2c-46fa-ac3b-810cfc9bf943}</Project>
       <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
@@ -23,8 +18,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\SDLEventHandler.h" />
-    <ClInclude Include="src\SDLGraphicsHandler.h" />
+    <ClCompile Include="src\app\windows\main.cpp" />
+    <ClCompile Include="src\app\windows\SDLEventHandler.cpp" />
+    <ClCompile Include="src\app\windows\SDLGraphicsHandler.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\app\windows\SDLEventHandler.h" />
+    <ClInclude Include="src\app\windows\SDLGraphicsHandler.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{DB13E82A-CDBE-48EA-A5EB-5827508E3873}</ProjectGuid>
@@ -79,7 +79,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -115,7 +115,7 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>dep\SDL2-2.0.5\include;src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>

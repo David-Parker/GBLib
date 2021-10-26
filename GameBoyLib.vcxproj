@@ -131,7 +131,9 @@
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"</Command>
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,7 +160,9 @@ xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(Projec
       <Command>xcopy /y /d  "$(ProjectDir)dep\SDL2-2.0.5\lib\x64\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
 xcopy /y /d /e /i "$(ProjectDir)rom" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)\rom"
 xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
-xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"</Command>
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)bin\app\$(Platform)\$(Configuration)"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.dll" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"
+xcopy /y /d  "$(ProjectDir)bin\lib\$(Platform)\$(Configuration)\*.pdb" "$(ProjectDir)test\bin\test\$(Platform)\$(Configuration)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
