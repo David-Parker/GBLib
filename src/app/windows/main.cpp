@@ -7,15 +7,20 @@
 
 int main(int argc, char* argv[])
 {
+    std::string romPath;
+
+    std::cout << "Enter the path to your ROM file, e.g. rom/Pokemon.gb" << std::endl;
+    std::cin >> romPath;
+
+    // Inject SDL based handlers for desktop builds.
     GameBoy* boy = new GameBoy(
         "rom/save",
         new SDLGraphicsHandler(SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT), 
         new SDLEventHandler());
 
-    // Inject SDL based handlers for desktop builds.
     try
     {
-        boy->LoadRom("rom/cpu_instrs.gb");
+        boy->LoadRom(romPath);
         boy->Start();
     }
     catch (std::exception& ex)
