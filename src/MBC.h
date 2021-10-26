@@ -26,73 +26,69 @@ enum MBC3_REGISTER_MODE
 
 class MBC : public IMemoryMappable
 {
+protected:
+    CartridgeHeader& header;
+    std::vector<ROM*> romBanks;
+    std::vector<RAM*> ramBanks;
+    int currentMode;
+    bool ramEnabled;
+    MBC_RAM_SIZES ramSize;
+
 public:
-    virtual void LoadROMFromFile(std::string path) = 0;
-    virtual void LoadRAMFromSave(std::string path) = 0;
-    virtual void SaveToFile(std::string path) = 0;
+    virtual void LoadROMFromFile(std::string path);
+    virtual void LoadRAMFromSave(std::string path);
+    virtual void SaveToFile(std::string path);
+
+    MBC(CartridgeHeader& header, int currentMode, bool ramEnabled)
+        : header(header), romBanks(), ramBanks(), currentMode(currentMode), ramEnabled(ramEnabled)
+    {
+    }
 };
 
 class MBC1 : public MBC
 {
 private:
-    CartridgeHeader& header;
-    std::vector<ROM*> romBanks;
-    std::vector<RAM*> ramBanks;
-    int currentMode;
-
     u8 romBankRegister;
     u8 ramBankRegister;
     u8 extraBankRegister;
 
-    bool ramEnabled;
     MBC_RAM_SIZES ramSize;
 
 public: 
     MBC1(CartridgeHeader& header)
-        : header(header), romBankRegister(1), ramBankRegister(0), currentMode(MBC1_BANK_MODE::ROM_MODE), ramEnabled(false)
+        :   MBC(header, MBC1_BANK_MODE::ROM_MODE, false), 
+            romBankRegister(1), ramBankRegister(0)
     {
     }
 
     ~MBC1() {}
 
-    void LoadROMFromFile(std::string path);
-    void LoadRAMFromSave(std::string path) {}
     void Write(Address address, Byte value);
     Byte Read(Address address);
     u8 GetCurrentROMBank();
     u8 GetCurrentRAMBank();
-    void SaveToFile(std::string path) {}
 };
 
 class MBC3 : public MBC
 {
 private:
-    CartridgeHeader& header;
-    std::vector<ROM*> romBanks;
-    std::vector<RAM*> ramBanks;
-    int currentMode;
-
     u8 romBankRegister;
     u8 ramBankRegister;
-    u8 rtcRegister;
+    u8 currentRtcRegister;
+    u8 rtcRegisters[5];
     u8 latchRegister;
-
-    bool ramEnabled;
-    MBC_RAM_SIZES ramSize;
 
 public:
     MBC3(CartridgeHeader& header)
-        : header(header), romBankRegister(0), ramBankRegister(0), rtcRegister(0), latchRegister(0xFF), currentMode(MBC3_REGISTER_MODE::RAM_REG_MODE), ramEnabled(false)
+        :   MBC(header, MBC3_REGISTER_MODE::RAM_REG_MODE, false),
+            romBankRegister(0), ramBankRegister(0), currentRtcRegister(0), latchRegister(0xFF)
     {
     }
 
     ~MBC3() {}
 
-    void LoadROMFromFile(std::string path);
-    void LoadRAMFromSave(std::string path);
     void Write(Address address, Byte value);
     Byte Read(Address address);
     u8 GetCurrentROMBank();
     u8 GetCurrentRAMBank();
-    void SaveToFile(std::string path);
 };

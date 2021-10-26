@@ -176,3 +176,24 @@ int CartridgeHeader::NumRAMBanks()
         throw std::exception("Invalid RAM size.");
     }
 }
+
+bool CartridgeHeader::HasBattery()
+{
+    switch (this->cartridgeType)
+    {
+        case CART_MBC1_RAM_BATTERY:
+        case CART_MBC2_BATTERY:
+        case CART_ROM_RAM_BATTERY:
+        case CART_MMM01_RAM_BATTERY:
+        case CART_MBC3_TIMER_BATTERY:
+        case CART_MBC3_TIMER_RAM_BATTERY:
+        case CART_MBC3_RAM_BATTERY:
+        case CART_MBC5_RAM_BATTERY:
+        case CART_MBC5_RUMBLE_RAM_BATTERY:
+        case CART_MBC7_SENSOR_RUMBLE_RAM_BATTERY:
+        case CART_HUC1_RAM_BATTERY:
+            return true;
+        default:
+            return false;
+    }
+}

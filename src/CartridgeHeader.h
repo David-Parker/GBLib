@@ -50,4 +50,5 @@ public:
     void PrintInfo();
     int NumROMBanks();
     int NumRAMBanks();
+    bool HasBattery();
 };

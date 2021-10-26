@@ -2,11 +2,11 @@
 #include<iostream>
 #include<fstream>
 
-void MBC1::LoadROMFromFile(std::string path)
+void MBC::LoadROMFromFile(std::string path)
 {
     if (this->header.ramSize > 0x03)
     {
-        throw std::exception("MBC1 does not support more than 32kb RAM.");
+        throw std::exception("MBC does not support more than 32kb RAM.");
     }
 
     this->ramSize = (MBC_RAM_SIZES)this->header.ramSize;
@@ -36,6 +36,62 @@ void MBC1::LoadROMFromFile(std::string path)
         bank = new RAM(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END);
 
         this->ramBanks.push_back(bank);
+    }
+}
+
+void MBC::SaveToFile(std::string path)
+{
+    if (this->ramSize == MBC_RAM_SIZES::NO_RAM || this->ramBanks.size() == 0)
+    {
+        return;
+    }
+
+    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+
+    if (!file)
+    {
+        throw std::exception("Could not open save file.");
+    }
+
+    // Write each bank
+    for (auto& ram : this->ramBanks)
+    {
+        Byte buf[RAM_BANK_BYTES];
+
+        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
+        {
+            buf[i - ADDR_EXTERNAL_RAM_START] = ram->Read(i);
+        }
+
+        file.write(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
+    }
+}
+
+void MBC::LoadRAMFromSave(std::string path)
+{
+    if (this->ramSize == MBC_RAM_SIZES::NO_RAM || this->ramBanks.size() == 0)
+    {
+        return;
+    }
+
+    std::ifstream file(path, std::ios::binary);
+
+    // No save file exists
+    if (!file)
+    {
+        return;
+    }
+
+    // Read each bank
+    for (auto& ram : this->ramBanks)
+    {
+        Byte buf[RAM_BANK_BYTES];
+        file.read(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
+
+        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
+        {
+            ram->Write(i, buf[i - ADDR_EXTERNAL_RAM_START]);
+        }
     }
 }
 
@@ -160,43 +216,6 @@ u8 MBC1::GetCurrentRAMBank()
     }
 }
 
-void MBC3::LoadROMFromFile(std::string path)
-{
-    if (this->header.ramSize > 0x03)
-    {
-        throw std::exception("MBC3 does not support more than 32kb RAM.");
-    }
-
-    this->ramSize = (MBC_RAM_SIZES)this->header.ramSize;
-
-    for (int i = 0; i < this->header.NumROMBanks(); ++i)
-    {
-        ROM* bank;
-
-        if (i == 0)
-        {
-            bank = new ROM(ADDR_ROM_BANK_0_START, ADDR_ROM_BANK_0_END);
-            bank->LoadFromFile(path, 0, ROM_BANK_BYTES);
-        }
-        else
-        {
-            bank = new ROM(ADDR_ROM_BANK_EXTENDABLE_START, ADDR_ROM_BANK_EXTENDABLE_END);
-            bank->LoadFromFile(path, ROM_BANK_BYTES * i, ROM_BANK_BYTES);
-        }
-
-        this->romBanks.push_back(bank);
-    }
-
-    for (int i = 0; i < this->header.NumRAMBanks(); ++i)
-    {
-        RAM* bank;
-
-        bank = new RAM(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END);
-
-        this->ramBanks.push_back(bank);
-    }
-}
-
 void MBC3::Write(Address address, Byte value)
 {
     // ROM
@@ -236,6 +255,7 @@ void MBC3::Write(Address address, Byte value)
         else if (value >= 0x08 && value <= 0x0C)
         {
             this->currentMode = MBC3_REGISTER_MODE::RTC_REG_MODE;
+            this->currentRtcRegister = value - 0x08;
         }
     }
     else if (AddressInRange(address, ADDR_MBC3_LATCH_CLOCK_START, ADDR_MBC3_LATCH_CLOCK_END))
@@ -264,7 +284,7 @@ void MBC3::Write(Address address, Byte value)
         }
         else
         {
-            this->rtcRegister = value;
+            this->rtcRegisters[this->currentRtcRegister] = value;
         }
     }
 }
@@ -294,7 +314,7 @@ Byte MBC3::Read(Address address)
         }
         else
         {
-            return this->rtcRegister;
+            return this->rtcRegisters[this->currentRtcRegister];
         }
     }
     else
@@ -311,60 +331,4 @@ u8 MBC3::GetCurrentROMBank()
 u8 MBC3::GetCurrentRAMBank()
 {
     return this->ramBankRegister;
-}
-
-void MBC3::SaveToFile(std::string path)
-{
-    if (this->ramSize == MBC_RAM_SIZES::NO_RAM || this->ramBanks.size() == 0)
-    {
-        return;
-    }
-
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
-
-    if (!file)
-    {
-        throw std::exception("Could not open save file.");
-    }
-
-    // Write each bank
-    for (auto& ram : this->ramBanks)
-    {
-        Byte buf[RAM_BANK_BYTES];
-
-        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
-        {
-            buf[i - ADDR_EXTERNAL_RAM_START] = ram->Read(i);
-        }
-
-        file.write(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
-    }
-}
-
-void MBC3::LoadRAMFromSave(std::string path)
-{
-    if (this->ramSize == MBC_RAM_SIZES::NO_RAM || this->ramBanks.size() == 0)
-    {
-        return;
-    }
-
-    std::ifstream file(path, std::ios::binary);
-
-    // No save file exists
-    if (!file)
-    {
-        return;
-    }
-
-    // Read each bank
-    for (auto& ram : this->ramBanks)
-    {
-        Byte buf[RAM_BANK_BYTES];
-        file.read(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
-
-        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
-        {
-            ram->Write(i, buf[i - ADDR_EXTERNAL_RAM_START]);
-        }
-    }
 }

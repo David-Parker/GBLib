@@ -27,7 +27,7 @@ void SDLEventHandler::HandleInput(JoypadController* joypadController)
             switch (keyEvent.keysym.sym)
             {
             case SDLK_LSHIFT:
-                this->speedMultiplier = 16;
+                this->speedMultiplier = 12;
                 break;
             case SDLK_RETURN:
                 joypadController->KeyDown(JOYPAD_BUTTONS::BUTTON_START);

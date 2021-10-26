@@ -57,19 +57,8 @@ void GameBoy::LoadRom(std::string path)
     {
         this->mbc->LoadROMFromFile(path);
 
-        switch (this->cartridgeHeader.cartridgeType)
+        if (this->cartridgeHeader.HasBattery())
         {
-        case CART_MBC1_RAM_BATTERY:
-        case CART_MBC2_BATTERY:
-        case CART_ROM_RAM_BATTERY:
-        case CART_MMM01_RAM_BATTERY:
-        case CART_MBC3_TIMER_BATTERY:
-        case CART_MBC3_TIMER_RAM_BATTERY:
-        case CART_MBC3_RAM_BATTERY:
-        case CART_MBC5_RAM_BATTERY:
-        case CART_MBC5_RUMBLE_RAM_BATTERY:
-        case CART_MBC7_SENSOR_RUMBLE_RAM_BATTERY:
-        case CART_HUC1_RAM_BATTERY:
             this->mbc->LoadRAMFromSave(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
         }
 
@@ -107,7 +96,12 @@ void GameBoy::Start()
         if (this->eventHandler->ShouldQuit())
         {
             this->cpu.StopCPU();
-            this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+
+            if (this->cartridgeHeader.HasBattery())
+            {
+                this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+            }
+            
             this->graphicsHandler->Quit();
             break;
         }
