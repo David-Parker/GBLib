@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
     // Inject SDL based handlers for desktop builds.
     try
     {
-        boy->LoadRom("rom/Pokemon.gb");
+        boy->LoadRom("rom/gb-test-roms/cpu_instrs/cpu_instrs.gb");
         boy->Start();
     }
     catch (std::exception& ex)
