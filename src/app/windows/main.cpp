@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     // Inject SDL based handlers for desktop builds.
     GameBoy* boy = new GameBoy(
-        "rom/save",
+        "rom/saves",
         new SDLGraphicsHandler(SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT), 
         new SDLEventHandler());
 

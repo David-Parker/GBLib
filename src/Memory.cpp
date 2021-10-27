@@ -59,7 +59,7 @@ void Memory::Dump(Address start, Address end)
     FILE *file;
     errno_t err;
 
-    if ((err = fopen_s(&file, "dump.txt", "wb")) != 0)
+    if ((err = fopen_s(&file, "dump.debug", "wb")) != 0)
     {
         throw std::exception("Could not create dump file.");
     }

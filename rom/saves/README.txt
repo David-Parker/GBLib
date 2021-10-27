@@ -1,0 +1,1 @@
+Use this folder for saving game states of ROMs that contain cartridges with battery storage.

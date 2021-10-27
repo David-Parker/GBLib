@@ -46,11 +46,11 @@ void MBC::SaveToFile(std::string path)
         return;
     }
 
-    std::ofstream file(path, std::ios::binary | std::ios::trunc);
+    std::ofstream file(path, std::fstream::out | std::ios::binary | std::ios::trunc);
 
     if (!file)
     {
-        throw std::exception("Could not open save file.");
+        throw std::exception("Could not open save file. Check if the passed directory exists.");
     }
 
     // Write each bank

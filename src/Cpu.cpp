@@ -113,7 +113,7 @@ int Cpu::Tick()
 void Cpu::StartCPU()
 {
 #ifdef _DEBUG
-    trace.open("trace.txt");
+    trace.open("trace.debug");
 #endif
 
     running = true;
