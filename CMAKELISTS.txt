@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.9)
 
 project(GBLib VERSION 0.0.1 DESCRIPTION "Nintendo GameBoy Emulator as a shared library.")
 
+configure_file(rom/boot.bin ${CMAKE_BINARY_DIR} COPYONLY)
+
 add_library(GBLib SHARED
 src/ALUHelpers.cpp
 src/Address.cpp
