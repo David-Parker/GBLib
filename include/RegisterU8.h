@@ -16,7 +16,7 @@ public:
         CARRY_FLAG = 0b00010000
     };
 
-    RegisterU8(u8* pValue) : pValue(pValue) {}
+    RegisterU8(u8* pValue) : pValue(pValue) { *pValue = 0; }
     RegisterU8(RegisterU8& rhs) : pValue(rhs.pValue) {}
     ~RegisterU8() {}
 
