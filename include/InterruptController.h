@@ -1,4 +1,5 @@
 #pragma once
+#include "GlobalDefinitions.h"
 #include "IMemoryMappable.h"
 #include "RegisterU8.h"
 

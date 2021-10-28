@@ -1,4 +1,5 @@
 #include "GraphicsManager.h"
+#include <cstring>
 
 GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int numLayers)
     : graphicsHandler(graphicsHandler), width(width), height(height), scale(scale), numLayers(numLayers)
@@ -60,7 +61,7 @@ void GraphicsManager::Init()
     for (int i = 0; i < this->numLayers; ++i)
     {
         this->layers[i].pixelBuffer = (u32*)malloc(width * height * sizeof(u32));
-        memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, this->width * this->height * sizeof(u32));
+        std::memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, this->width * this->height * sizeof(u32));
     }
 
     this->graphicsHandler->Init();
@@ -79,7 +80,7 @@ void GraphicsManager::Draw()
 
         size_t bytes = this->width * this->height * sizeof(u32);
         this->graphicsHandler->Draw(layer->pixelBuffer, this->width, this->height, i);
-        memcpy(layer->pixelBuffer, this->transparentBuffer, bytes);
+        std::memcpy(layer->pixelBuffer, this->transparentBuffer, bytes);
     }
 
     this->graphicsHandler->Flush();

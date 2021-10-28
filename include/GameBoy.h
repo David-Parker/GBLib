@@ -16,7 +16,7 @@ class GameBoy
 {
 private:
     bool romLoaded = false;
-    std::chrono::steady_clock::time_point lastTimestamp;
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
     u64 cyclesElapsed;
     std::string savesFolder;
 

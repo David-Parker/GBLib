@@ -104,7 +104,7 @@ int Cpu::Tick()
         // ERROR, unknown opcode.
         char msg[256];
         snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x02%X, PC: 0x04%X", opcode, *PC);
-        throw std::exception(msg);
+        throw std::runtime_error(msg);
     }
 
     return cycles;
@@ -164,7 +164,7 @@ bool Cpu::FlagMatchesCC(u8 cc)
         }
         break;
     default:
-        throw std::exception("Invalid conditional.");
+        throw std::runtime_error("Invalid conditional.");
     }
 
     return matches;
@@ -187,10 +187,10 @@ u16 Cpu::ReadTwoBytes()
 
 void Cpu::FormatFlagsString(char* buf, int size)
 {
-    char* c_Z = F.FlagIsSet(RegisterU8::ZERO_FLAG) ? "Z" : "-";
-    char* c_N = F.FlagIsSet(RegisterU8::SUB_FLAG) ? "N" : "-";
-    char* c_H = F.FlagIsSet(RegisterU8::HCARRY_FLAG) ? "H" : "-";
-    char* c_CY = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? "CY" : "-";
+    const char* c_Z = F.FlagIsSet(RegisterU8::ZERO_FLAG) ? "Z" : "-";
+    const char* c_N = F.FlagIsSet(RegisterU8::SUB_FLAG) ? "N" : "-";
+    const char* c_H = F.FlagIsSet(RegisterU8::HCARRY_FLAG) ? "H" : "-";
+    const char* c_CY = F.FlagIsSet(RegisterU8::CARRY_FLAG) ? "CY" : "-";
 
     snprintf(buf, size, "%s %s %s %s", c_Z, c_N, c_H, c_CY);
 }
@@ -1505,7 +1505,7 @@ int Cpu::Rst(u8 t)
         address = 0x38;
         break;
     default:
-        throw std::exception("Invalid memory location for operand t in Rst().");
+        throw std::runtime_error("Invalid memory location for operand t in Rst().");
     }
 
     PC.SetLowByte(address);

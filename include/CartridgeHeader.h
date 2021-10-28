@@ -42,7 +42,7 @@ public:
     u8 romSize;
     u8 ramSize;
 
-    char* cartridge_types[256];
+    const char* cartridge_types[256];
 
     CartridgeHeader();
     ~CartridgeHeader();

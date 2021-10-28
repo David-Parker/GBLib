@@ -20,7 +20,7 @@ void InterruptController::Write(Address address, Byte value)
     }
     else
     {
-        throw std::exception("Address is not valid.");
+        throw std::runtime_error("Address is not valid.");
     }
 }
 
@@ -36,7 +36,7 @@ Byte InterruptController::Read(Address address)
     }
     else
     {
-        throw std::exception("Address is not valid.");
+        throw std::runtime_error("Address is not valid.");
     }
 }
 

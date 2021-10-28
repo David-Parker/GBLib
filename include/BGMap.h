@@ -13,7 +13,7 @@ private:
     Memory* pMemory;
 
 public:
-    BGMap::BGMap(Memory* pMemory)
+    BGMap(Memory* pMemory)
         : pMemory(pMemory)
     {
     }

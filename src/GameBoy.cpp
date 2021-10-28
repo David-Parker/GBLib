@@ -50,7 +50,7 @@ void GameBoy::LoadRom(std::string path)
         this->mbc = new MBC3(this->cartridgeHeader);
         break;
     default:
-        throw std::exception("Cartridge type not supported.");
+        throw std::runtime_error("Cartridge type not supported.");
     }
 
     if (this->mbc != nullptr)

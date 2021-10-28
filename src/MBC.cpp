@@ -6,7 +6,7 @@ void MBC::LoadROMFromFile(std::string path)
 {
     if (this->header.ramSize > 0x03)
     {
-        throw std::exception("MBC does not support more than 32kb RAM.");
+        throw std::runtime_error("MBC does not support more than 32kb RAM.");
     }
 
     this->ramSize = (MBC_RAM_SIZES)this->header.ramSize;
@@ -50,7 +50,7 @@ void MBC::SaveToFile(std::string path)
 
     if (!file)
     {
-        throw std::exception("Could not open save file. Check if the passed directory exists.");
+        throw std::runtime_error("Could not open save file. Check if the passed directory exists.");
     }
 
     // Write each bank
@@ -149,7 +149,7 @@ void MBC1::Write(Address address, Byte value)
             this->currentMode = MBC1_BANK_MODE::RAM_MODE;
             break;
         default:
-            throw std::exception("Unknown MBC1 Mode.");
+            throw std::runtime_error("Unknown MBC1 Mode.");
         }
     }
 
@@ -188,7 +188,7 @@ Byte MBC1::Read(Address address)
     }
     else
     {
-        throw std::exception("Invalid MBC memory read.");
+        throw std::runtime_error("Invalid MBC memory read.");
     }
 }
 
@@ -319,7 +319,7 @@ Byte MBC3::Read(Address address)
     }
     else
     {
-        throw std::exception("Invalid MBC memory read.");
+        throw std::runtime_error("Invalid MBC memory read.");
     }
 }
 

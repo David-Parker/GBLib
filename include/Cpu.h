@@ -53,8 +53,8 @@ private:
     instruction_t opcodes[256];
     instruction_t opcodes_16[256];
 
-    char* opcode_strings[256];
-    char* opcode_strings_16[256];
+    const char* opcode_strings[256];
+    const char* opcode_strings_16[256];
 
     bool running;
     bool halted;

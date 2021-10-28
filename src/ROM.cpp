@@ -1,6 +1,7 @@
 #include "GlobalDefinitions.h"
 #include "ROM.h"
-#include <cstdlib>
+#include<iostream>
+#include<fstream>
 
 ROM::ROM(Address start, Address end)
 {
@@ -16,26 +17,17 @@ ROM::~ROM()
 
 void ROM::LoadFromFile(std::string path, size_t start, size_t bytes)
 {
-    FILE *file;
-    errno_t err;
+    std::ifstream file(path, std::ios::binary);
 
-    if ((err = fopen_s(&file, path.c_str(), "rb")) != 0)
+    // No save file exists
+    if (!file)
     {
-        throw std::exception("Could not open ROM file.");
+        throw std::runtime_error("Could not open ROM file.");
     }
-    else
-    {
-        fseek(file, (long)start, SEEK_SET);
 
-        size_t bytesRead = fread(this->mem, sizeof(Byte), bytes, file);
+    file.seekg(start);
 
-        if (bytesRead != bytes)
-        {
-            throw std::exception("Failed to read ROM file.");
-        }
-
-        fclose(file);
-    }
+    file.read(reinterpret_cast<char*>(this->mem), bytes);
 }
 
 void ROM::Write(Address address, Byte value)

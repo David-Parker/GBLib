@@ -5,5 +5,5 @@
 class Tile
 {
 public: 
-    static Byte Tile::GetPixel(Memory* pMemory, Address data, int x, int y);
+    static Byte GetPixel(Memory* pMemory, Address data, int x, int y);
 };

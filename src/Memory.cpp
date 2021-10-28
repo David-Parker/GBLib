@@ -56,28 +56,28 @@ void Memory::ClearMemory()
 
 void Memory::Dump(Address start, Address end)
 {
-    FILE *file;
-    errno_t err;
+    std::ofstream file("dumb.debug", std::fstream::out | std::ios::binary | std::ios::trunc);
 
-    if ((err = fopen_s(&file, "dump.debug", "wb")) != 0)
+    if (!file)
     {
-        throw std::exception("Could not create dump file.");
+        throw std::runtime_error("Could not create dump file.");
     }
     else
     {
+        char buf[64];
+
         for (Address i = start; i <= end; i++)
         {
             if (this->addressSpace[i] == &this->unMapped)
             {
-                fprintf(file, "[0x%04X]: 0x0000\n", (int)i);
+                snprintf(buf, 64, "[0x%04X]: 0x0000\n", (int)i);
+                //file.write(buf)
             }
             else
             {
-                fprintf(file, "[0x%04X]: 0x%04X\n", (int)i, Read(i));
+                snprintf(buf, 64, "[0x%04X]: 0x%04X\n", (int)i, Read(i));
             }
         }
-
-        fclose(file);
     }
 }
 

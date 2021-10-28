@@ -1,11 +1,21 @@
 #pragma once
 #include <stdint.h>
-#include <exception>
+#include <stdexcept>
+#include <stdio.h>
+#include <climits>
 
 #ifdef GAMEBOY_EXPORTING
+#ifdef _WIN32
 #define GAMEBOY_API __declspec(dllexport)
+#else 
+#define GAMEBOY_API
+#endif
 #else
+#ifdef _WIN32
 #define GAMEBOY_API __declspec(dllimport)
+#else
+#define GAMEBOY_API
+#endif
 #endif
 
 typedef uint8_t u8;

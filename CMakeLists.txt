@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 project(GBLib VERSION 0.0.1 DESCRIPTION "Nintendo GameBoy Emulator as a shared library.")
+
+add_definitions(-DGAMEBOY_EXPORTING) 
 
 add_library(GBLib SHARED
 src/ALUHelpers.cpp
@@ -59,5 +61,3 @@ include/IEventHandler
 
 target_include_directories(GBLib PRIVATE include)
 target_include_directories(GBLib PRIVATE src)
-
-add_compile_definitions(GAMEBOY_EXPORTING)

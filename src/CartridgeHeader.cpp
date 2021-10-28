@@ -57,23 +57,15 @@ void CartridgeHeader::Read(std::string& path)
 {
     Byte buf[0x150];
 
-    FILE *filepoint;
-    errno_t err;
+    std::ifstream file(path, std::ios::binary);
 
-    if ((err = fopen_s(&filepoint, path.c_str(), "rb")) != 0)
+    if (!file)
     {
-        throw std::exception("Could not open ROM file.");
+        throw std::runtime_error("Could not open ROM file.");
     }
     else
     {
-        size_t bytesRead = fread(buf, sizeof(Byte), 0x150, filepoint);
-
-        if (bytesRead == 0)
-        {
-            throw std::exception("Failed to read ROM file.");
-        }
-
-        fclose(filepoint);
+        file.read(reinterpret_cast<char*>(&buf[0]), 0x150);
     }
 
     // Get the title
@@ -146,7 +138,7 @@ int CartridgeHeader::NumROMBanks()
         return 96;
         break;
     default:
-        throw std::exception("Invalid ROM size.");
+        throw std::runtime_error("Invalid ROM size.");
     }
 }
 
@@ -173,7 +165,7 @@ int CartridgeHeader::NumRAMBanks()
         return 8;
         break;
     default:
-        throw std::exception("Invalid RAM size.");
+        throw std::runtime_error("Invalid RAM size.");
     }
 }
 

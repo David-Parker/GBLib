@@ -211,7 +211,7 @@ void PixelProcessingUnit::BufferScanLine()
     {
         if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
         {
-            throw std::exception("8x16 sprites not implemented.");
+            throw std::runtime_error("8x16 sprites not implemented.");
         }
 
         for (int i = 0; i < this->spriteCount; ++i)
@@ -365,7 +365,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
         }
         break;
     default:
-        throw std::exception("Unknown LCD Mode.");
+        throw std::runtime_error("Unknown LCD Mode.");
     }
 }
 

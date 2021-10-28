@@ -1,4 +1,5 @@
 #include "BGMap.h"
+#include <exception>
 
 Byte BGMap::GetPixel(Address tileData, Address tileMap, int x, int y)
 {
@@ -21,7 +22,7 @@ Byte BGMap::GetPixel(Address tileData, Address tileMap, int x, int y)
     }
     else
     {
-        throw std::exception("Cannot read tile data from address.");
+        throw std::runtime_error("Cannot read tile data from address.");
     }
 
     return Tile::GetPixel(pMemory, tileAddress, pixelX, pixelY);
