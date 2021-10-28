@@ -41,9 +41,3 @@ constexpr static int SPRITE_OBJ_LIMIT = 10;
 constexpr static int INVALID_READ = 0xFF;
 constexpr static int ROM_BANK_BYTES = 16384;
 constexpr static int RAM_BANK_BYTES = 8192;
-
-#ifdef _DEBUG
-constexpr static int SPEED_MULTIPLIER = 8;
-#else
-constexpr static int SPEED_MULTIPLIER = 1;
-#endif

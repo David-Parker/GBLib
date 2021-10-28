@@ -119,10 +119,6 @@ void GameBoy::Stop()
 
 void GameBoy::SimulateTimeStep(int cycles)
 {
-#ifdef _DEBUG
-    return;
-#endif
-    
     // After one frame has passed (16.7ms / 69905 clocks) wait till the end of the "real time" for that frame
     this->cyclesElapsed += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
 
