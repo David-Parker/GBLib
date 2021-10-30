@@ -34,6 +34,19 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         this->tileDebugger->Init();
     }
 #endif
+    // TODO: Validate if any registers need to be initialized to special values at startup.
+    LCDC = 0;
+    STAT = 0;
+    SCY = 0;
+    SCX = 0;
+    LY = 0;
+    LYC = 0;
+    DMA = 0;
+    BGP = 0;
+    OBP0 = 0;
+    OBP1 = 0;
+    WY = 0;
+    WX = 0;
 }
 
 PixelProcessingUnit::~PixelProcessingUnit()
