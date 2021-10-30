@@ -77,12 +77,12 @@ private:
     Memory* pMemory;
     InterruptController* pInterruptController;
     JoypadController* pJoypadController;
-    Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1];
+    Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1] = {0};
     BGMap backgroundMap;
-    Sprite sprites[10];
-    Byte bgPalette[4];
-    Byte objPalette0[4];
-    Byte objPalette1[4];
+    Sprite sprites[10] = {0};
+    Byte bgPalette[4] = {0};
+    Byte objPalette0[4] = {0};
+    Byte objPalette1[4] = {0};
     IEventHandler* eventHandler;
     GraphicsManager gManager;
     bool lcdInitialized;

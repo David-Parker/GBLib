@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy(std::string savesFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), savesFolder(savesFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), savesFolder(savesFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -36,7 +36,7 @@ void GameBoy::LoadRom(std::string path)
     {
     case CART_ROM_ONLY:
         this->gameROM = new ROM(ADDR_GAME_ROM_START, ADDR_GAME_ROM_END);
-        this->gameROM->LoadFromFile(path, 0, this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
+        this->gameROM->LoadFromFile(path, 0, (size_t)this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
         this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->gameROM);
         break;
     case CART_MBC1:
@@ -82,54 +82,57 @@ void GameBoy::MapIODevices()
     this->memory.MapMemory(ADDR_TIMER_START, ADDR_TIMER_END, &devices.timerController);
 }
 
+bool GameBoy::ShouldStop()
+{
+    return this->eventHandler->ShouldQuit();
+}
+
 void GameBoy::Start()
 {
     this->cpu.StartCPU();
     this->cyclesElapsed = 0;
-
-    while (this->cpu.IsRunning())
-    {
-        int cycles = this->cpu.Tick();
-        this->devices.ppu.Tick(cycles);
-        this->devices.timerController.Tick(cycles);
-
-        if (this->eventHandler->ShouldQuit())
-        {
-            this->cpu.StopCPU();
-
-            if (this->cartridgeHeader.HasBattery())
-            {
-                this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
-            }
-            
-            this->graphicsHandler->Quit();
-            break;
-        }
-        else
-        {
-            this->SimulateTimeStep(cycles);
-        }
-    }
 }
 
 void GameBoy::Stop()
 {
     this->cpu.StopCPU();
+    this->graphicsHandler->Quit();
 }
 
-void GameBoy::SimulateTimeStep(int cycles)
+int GameBoy::Step()
+{
+    if (!this->cpu.IsRunning())
+    {
+        throw std::runtime_error("Cannot step a stopped CPU.");
+    }
+
+    int cycles = this->cpu.Tick();
+    this->devices.ppu.Tick(cycles);
+    this->devices.timerController.Tick(cycles);
+    this->cyclesElapsed += (u64)cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+
+    return cycles;
+}
+
+void GameBoy::SaveGame()
+{
+    if (this->cartridgeHeader.HasBattery())
+    {
+        this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+    }
+}
+
+u64 GameBoy::FramesElapsed()
+{
+    return this->cyclesElapsed / CLOCK_CYCLES_PER_FRAME;
+}
+
+void GameBoy::SimulateFrameDelay()
 {
     // After one frame has passed (16.7ms / 69905 clocks) wait till the end of the "real time" for that frame
-    this->cyclesElapsed += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / this->eventHandler->SpeedMultiplier());
 
-    if (this->cyclesElapsed >= CLOCK_CYCLES_PER_FRAME)
-    {
-        auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / this->eventHandler->SpeedMultiplier());
+    while (high_resolution_clock::now() < waitTo);
 
-        while (high_resolution_clock::now() < waitTo);
-
-        this->lastTimestamp = high_resolution_clock::now();
-
-        this->cyclesElapsed = 0;
-    }
+    this->lastTimestamp = high_resolution_clock::now();
 }

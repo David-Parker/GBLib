@@ -40,8 +40,21 @@ public:
     virtual void SaveToFile(std::string path);
 
     MBC(CartridgeHeader& header, int currentMode, bool ramEnabled)
-        : header(header), romBanks(), ramBanks(), currentMode(currentMode), ramEnabled(ramEnabled)
+        : header(header), romBanks(), ramBanks(), currentMode(currentMode), ramEnabled(ramEnabled), ramSize(MBC_RAM_SIZES::NO_RAM)
     {
+    }
+
+    ~MBC()
+    {
+        for (ROM* obj : this->romBanks)
+        {
+            delete obj;
+        }
+
+        for (RAM* obj : this->ramBanks)
+        {
+            delete obj;
+        }
     }
 };
 
@@ -57,7 +70,7 @@ private:
 public: 
     MBC1(CartridgeHeader& header)
         :   MBC(header, MBC1_BANK_MODE::ROM_MODE, false), 
-            romBankRegister(1), ramBankRegister(0)
+            romBankRegister(1), ramBankRegister(0), extraBankRegister(0)
     {
     }
 
@@ -75,7 +88,7 @@ private:
     u8 romBankRegister;
     u8 ramBankRegister;
     u8 currentRtcRegister;
-    u8 rtcRegisters[5];
+    u8 rtcRegisters[5] = {0};
     u8 latchRegister;
 
 public:

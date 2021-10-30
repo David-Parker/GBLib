@@ -13,7 +13,7 @@ enum SERIAL_TRANSFER_CONTROL_FLAGS
 class SerialTransferController : public IMemoryMappable
 {
 private:
-    Byte mem[(ADDR_SERIAL_END - ADDR_SERIAL_START) + 1];
+    Byte mem[(ADDR_SERIAL_END - ADDR_SERIAL_START) + 1] = {0};
     InterruptController* pInterruptController;
     RegisterU8 SB;
     RegisterU8 SC;

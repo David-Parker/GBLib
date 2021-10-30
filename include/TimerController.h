@@ -12,7 +12,7 @@ enum TIMER_FLAGS
 class TimerController : public IMemoryMappable
 {
 private:
-    Byte mem[(ADDR_TIMER_END - ADDR_TIMER_START) + 1];
+    Byte mem[(ADDR_TIMER_END - ADDR_TIMER_START) + 1] = {0};
     InterruptController* pInterruptController;
     u64 clockCyclesDiv;
     u64 clockCyclesTimer;
@@ -35,7 +35,8 @@ public:
         TIMA(&mem[1]),
         TMA(&mem[2]),
         TAC(&mem[3])
-    {}
+    {
+    }
 
     ~TimerController() {}
 

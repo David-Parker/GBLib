@@ -7,7 +7,7 @@ ROM::ROM(Address start, Address end)
 {
     this->start = start;
     this->end = end;
-    this->mem = (Byte*)malloc((end - start) + 1);
+    this->mem = (Byte*)calloc(((size_t)end - start) + 1, sizeof(Byte));
 }
 
 ROM::~ROM()

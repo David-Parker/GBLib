@@ -39,6 +39,7 @@ public:
         : pInterruptController(interruptController), JOYP(&reg), BUTTONS(&buttons)
     {
         this->JOYP = 0b00111111;
+        this->BUTTONS = 0;
     }
 
     ~JoypadController() {}

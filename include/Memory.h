@@ -23,7 +23,7 @@ private:
     };
 
     UnMappedMemory unMapped;
-    IMemoryMappable* addressSpace[ADDRESSSPACE];
+    IMemoryMappable* addressSpace[ADDRESSSPACE] = {0};
     Byte cartrigeType;
 
 public:

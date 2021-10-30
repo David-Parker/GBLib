@@ -4,8 +4,8 @@
 GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int numLayers)
     : graphicsHandler(graphicsHandler), width(width), height(height), scale(scale), numLayers(numLayers)
 {
-    size_t bytes = width * height * sizeof(u32);
-    this->transparentBuffer = (u32*)malloc(width * height * sizeof(u32));
+    size_t bytes = (u64)width * height * sizeof(u32);
+    this->transparentBuffer = (u32*)malloc((u64)width * height * sizeof(u32));
     this->transparentEncoded = EncodeColor(TRANSPARENT_BACKGROUND);
     this->layers = (GraphicsLayer*)malloc(sizeof(GraphicsLayer) * numLayers);
 
@@ -60,8 +60,14 @@ void GraphicsManager::Init()
 {
     for (int i = 0; i < this->numLayers; ++i)
     {
-        this->layers[i].pixelBuffer = (u32*)malloc(width * height * sizeof(u32));
-        std::memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, this->width * this->height * sizeof(u32));
+        this->layers[i].pixelBuffer = (u32*)malloc((size_t)width * height * sizeof(u32));
+
+        if (this->layers[i].pixelBuffer == nullptr)
+        {
+            throw std::runtime_error("No memory available for the pixel buffer.");
+        }
+
+        std::memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, (size_t)this->width * this->height * sizeof(u32));
     }
 
     this->graphicsHandler->Init();
@@ -78,7 +84,7 @@ void GraphicsManager::Draw()
     {
         GraphicsLayer* layer = &this->layers[i];
 
-        size_t bytes = this->width * this->height * sizeof(u32);
+        size_t bytes = (size_t)this->width * this->height * sizeof(u32);
         this->graphicsHandler->Draw(layer->pixelBuffer, this->width, this->height, i);
         std::memcpy(layer->pixelBuffer, this->transparentBuffer, bytes);
     }

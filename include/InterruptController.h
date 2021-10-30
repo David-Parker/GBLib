@@ -15,7 +15,7 @@ enum INTERRUPT_FLAGS
 class InterruptController : public IMemoryMappable
 {
 private:
-    Byte mem[2];
+    Byte mem[2] = {0};
     RegisterU8 IE; // Interrupt Enable
     RegisterU8 IF; // Interrupt Flag
 
