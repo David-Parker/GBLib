@@ -3,8 +3,8 @@
 
 using namespace std::chrono;
 
-GameBoy::GameBoy(std::string savesFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), savesFolder(savesFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false)
+GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -20,15 +20,17 @@ GameBoy::~GameBoy()
 void GameBoy::LoadBootRom()
 {
     this->bootROM = new ROM(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END);
-    this->bootROM->LoadFromFile("rom/boot.bin", 0, 256);
+    this->bootROM->LoadFromFile(this->romFolder + "/boot.bin", 0, 256);
     this->memory.MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, this->bootROM);
 }
 
 // Loads the ROM file into memory
 void GameBoy::LoadRom(std::string path)
 {
+    std::string gamePath = this->romFolder + "/" + path;
+
     // Loads the cartridge header information.
-    this->cartridgeHeader.Read(path);
+    this->cartridgeHeader.Read(gamePath);
     this->cartridgeHeader.PrintInfo();
 
     // Game ROM 0x00 to 0xFF is mapped after boot sequence is completed.
@@ -36,7 +38,7 @@ void GameBoy::LoadRom(std::string path)
     {
     case CART_ROM_ONLY:
         this->gameROM = new ROM(ADDR_GAME_ROM_START, ADDR_GAME_ROM_END);
-        this->gameROM->LoadFromFile(path, 0, (size_t)this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
+        this->gameROM->LoadFromFile(gamePath, 0, (size_t)this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
         this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->gameROM);
         break;
     case CART_MBC1:
@@ -55,11 +57,11 @@ void GameBoy::LoadRom(std::string path)
 
     if (this->mbc != nullptr)
     {
-        this->mbc->LoadROMFromFile(path);
+        this->mbc->LoadROMFromFile(gamePath);
 
         if (this->cartridgeHeader.HasBattery())
         {
-            this->mbc->LoadRAMFromSave(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+            this->mbc->LoadRAMFromSave(this->romFolder+ "/saves/" + this->cartridgeHeader.title + ".save");
         }
 
         this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->mbc);
@@ -69,6 +71,16 @@ void GameBoy::LoadRom(std::string path)
     LoadBootRom();
 
     this->romLoaded = true;
+}
+
+CartridgeHeader GameBoy::GetCartridgeHeader()
+{
+    if (!this->romLoaded)
+    {
+        throw std::runtime_error("Cannot read cartridge header, ROM has not been loaded.");
+    }
+
+    return this->cartridgeHeader;
 }
 
 void GameBoy::MapIODevices()
@@ -118,7 +130,7 @@ void GameBoy::SaveGame()
 {
     if (this->cartridgeHeader.HasBattery())
     {
-        this->mbc->SaveToFile(this->savesFolder + "/" + this->cartridgeHeader.title + ".save");
+        this->mbc->SaveToFile(this->romFolder + "/saves/" + this->cartridgeHeader.title + ".save");
     }
 }
 

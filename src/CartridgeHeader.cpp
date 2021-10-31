@@ -53,7 +53,7 @@ void CartridgeHeader::PrintInfo()
     std::cout << std::endl;
 }
 
-void CartridgeHeader::Read(std::string& path)
+void CartridgeHeader::Read(std::string path)
 {
     Byte buf[0x150];
 

@@ -46,7 +46,7 @@ public:
 
     CartridgeHeader();
     ~CartridgeHeader();
-    void Read(std::string& path);
+    void Read(std::string path);
     void PrintInfo();
     int NumROMBanks();
     int NumRAMBanks();

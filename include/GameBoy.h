@@ -18,7 +18,7 @@ private:
     bool romLoaded;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
     u64 cyclesElapsed;
-    std::string savesFolder;
+    std::string romFolder;
 
     Cpu cpu;
     Memory memory;
@@ -34,11 +34,13 @@ private:
     void LoadBootRom();
 
 public:
-    GAMEBOY_API GameBoy(std::string savesFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
+    GAMEBOY_API GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
     GAMEBOY_API ~GameBoy();
 
     // Loads a new game rom into the GameBoy.
     void GAMEBOY_API LoadRom(std::string path);
+
+    CartridgeHeader GAMEBOY_API GetCartridgeHeader();
 
     // Returns whether the GameBoy has requested to stop.
     bool GAMEBOY_API ShouldStop();
@@ -46,7 +48,7 @@ public:
     // Starts the GameBoy.
     void GAMEBOY_API Start();
 
-    // Stops the Gameboy.
+    // Stops the GameBoy.
     void GAMEBOY_API Stop();
 
     // Step through another iteration of the GameBoy simulation. Returns the number of machine cycles simulated.
