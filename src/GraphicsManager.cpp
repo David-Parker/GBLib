@@ -1,8 +1,8 @@
 #include "GraphicsManager.h"
 #include <cstring>
 
-GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int numLayers)
-    : graphicsHandler(graphicsHandler), width(width), height(height), scale(scale), numLayers(numLayers)
+GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int numLayers)
+    : graphicsHandler(graphicsHandler), width(width), height(height), numLayers(numLayers)
 {
     size_t bytes = (u64)width * height * sizeof(u32);
     this->transparentBuffer = (u32*)malloc((u64)width * height * sizeof(u32));
@@ -42,18 +42,9 @@ u32 GraphicsManager::EncodeColor(Color color)
 
 void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int layer)
 {
-    int startx = x * this->scale;
-    int starty = y * this->scale;
+    int idx = (y * width) + x;
 
-    for (int i = 0; i < this->scale; i++)
-    {
-        for (int j = 0; j < this->scale; j++)
-        {
-            int idx = (starty+i) * width + (startx + j);
-
-            this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
-        }
-    }
+    this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
 }
 
 void GraphicsManager::Init()

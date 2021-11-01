@@ -31,7 +31,7 @@ struct GraphicsLayer
 class GraphicsManager
 {
 private:
-    int width, height, scale, numLayers;
+    int width, height, numLayers;
     GraphicsLayer* layers;
     IGraphicsHandler* graphicsHandler;
     u32* transparentBuffer;
@@ -55,7 +55,7 @@ private:
 
     u32 EncodeColor(Color color);
 public:
-    GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int scale, int layers);
+    GraphicsManager(IGraphicsHandler* graphicsHandler, int width, int height, int layers);
     ~GraphicsManager();
 
     void Init();

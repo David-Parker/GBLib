@@ -14,6 +14,7 @@
 #define LCD_LAYER_BG 1
 #define LCD_LAYER_WIN 2
 #define LCD_LAYER_OBJ_TOP 3
+#define LCD_NUM_LAYERS 4
 
 enum LCD_CTRL_FLAGS
 {

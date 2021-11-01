@@ -12,7 +12,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         spriteCount(0),
         mode(LCD_MODE::OAM_SEARCH),
         lcdInitialized(false),
-        gManager(graphicsHandler, SCALED_SCREEN_WIDTH, SCALED_SCREEN_HEIGHT, SCALE, 4),
+        gManager(graphicsHandler, SCREEN_WIDTH, SCREEN_HEIGHT, LCD_NUM_LAYERS),
         eventHandler(eventHandler),
         LCDC(&mem[ADDR_PPU_REG_CONTROL - ADDR_PPU_START]),
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
@@ -30,7 +30,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
 #ifdef _DEBUG
     if (this->drawDebugTile)
     {
-        this->tileDebugger = new GraphicsManager(graphicsHandler, 192 * 3, 128 * 3, 3, 1);
+        this->tileDebugger = new GraphicsManager(graphicsHandler, 192, 128, 1);
         this->tileDebugger->Init();
     }
 #endif
