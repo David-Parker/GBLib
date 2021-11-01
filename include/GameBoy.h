@@ -18,6 +18,7 @@ private:
     bool romLoaded;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
     u64 cyclesElapsed;
+    u64 framesElapsed;
     std::string romFolder;
 
     Cpu cpu;
@@ -40,8 +41,6 @@ public:
     // Loads a new game rom into the GameBoy.
     void GAMEBOY_API LoadRom(std::string path);
 
-    CartridgeHeader GAMEBOY_API GetCartridgeHeader();
-
     // Returns whether the GameBoy has requested to stop.
     bool GAMEBOY_API ShouldStop();
 
@@ -51,8 +50,11 @@ public:
     // Stops the GameBoy.
     void GAMEBOY_API Stop();
 
-    // Step through another iteration of the GameBoy simulation. Returns the number of machine cycles simulated.
+    // Step through another iteration of the GameBoy emulation. Returns the number of machine cycles emulated.
     int GAMEBOY_API Step();
+
+    // Runs the GameBoy emulation until ShouldStop() is called.
+    void GAMEBOY_API Run();
 
     // Saves the currently loaded game if it's memory bank controller supports battery backed external RAM.
     void GAMEBOY_API SaveGame();
@@ -62,4 +64,7 @@ public:
 
     // Busy waits until the end of the frame in wall clock time.
     void GAMEBOY_API SimulateFrameDelay();
+
+    // Returns a copy of the cartridge header information, i.e. title and gb color support.
+    CartridgeHeader GAMEBOY_API GetCartridgeHeader();
 };

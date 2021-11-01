@@ -103,6 +103,7 @@ void GameBoy::Start()
 {
     this->cpu.StartCPU();
     this->cyclesElapsed = 0;
+    this->framesElapsed = 0;
 }
 
 void GameBoy::Stop()
@@ -124,6 +125,21 @@ int GameBoy::Step()
     this->cyclesElapsed += (u64)cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
 
     return cycles;
+}
+
+void GameBoy::Run()
+{
+    while (!ShouldStop())
+    {
+        Step();
+
+        // Another frame has elapsed.
+        if (FramesElapsed() > framesElapsed)
+        {
+            framesElapsed = FramesElapsed();
+            SimulateFrameDelay();
+        }
+    }
 }
 
 void GameBoy::SaveGame()
