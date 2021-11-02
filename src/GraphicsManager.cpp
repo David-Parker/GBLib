@@ -5,19 +5,13 @@ GraphicsManager::GraphicsManager(IGraphicsHandler* graphicsHandler, int width, i
     : graphicsHandler(graphicsHandler), width(width), height(height), numLayers(numLayers)
 {
     size_t bytes = (u64)width * height * sizeof(u32);
-    this->transparentBuffer = (u32*)malloc((u64)width * height * sizeof(u32));
-    this->transparentEncoded = EncodeColor(TRANSPARENT_BACKGROUND);
+    this->flattenedLayers = (u32*)malloc((u64)width * height * sizeof(u32));
     this->layers = (GraphicsLayer*)malloc(sizeof(GraphicsLayer) * numLayers);
-
-    for (int i = 0; i < width * height; ++i)
-    {
-        this->transparentBuffer[i] = this->transparentEncoded;
-    }
 }
 
 GraphicsManager::~GraphicsManager()
 {
-    free(this->transparentBuffer);
+    free(this->flattenedLayers);
 
     for (int i = 0; i < this->numLayers; ++i)
     {
@@ -58,7 +52,7 @@ void GraphicsManager::Init()
             throw std::runtime_error("No memory available for the pixel buffer.");
         }
 
-        std::memcpy(this->layers[i].pixelBuffer, this->transparentBuffer, (size_t)this->width * this->height * sizeof(u32));
+        std::memset(this->layers[i].pixelBuffer, 0, (size_t)this->width * this->height * sizeof(u32));
     }
 
     this->graphicsHandler->Init();
@@ -71,14 +65,25 @@ void GraphicsManager::Clear()
 
 void GraphicsManager::Draw()
 {
+    // Flatten all layers into a single buffer.
     for (int i = 0; i < this->numLayers; ++i)
     {
         GraphicsLayer* layer = &this->layers[i];
 
-        size_t bytes = (size_t)this->width * this->height * sizeof(u32);
-        this->graphicsHandler->Draw(layer->pixelBuffer, this->width, this->height, i);
-        std::memcpy(layer->pixelBuffer, this->transparentBuffer, bytes);
+        for (int j = 0; j < this->width * this->height; ++j)
+        {
+            if (layer->pixelBuffer[j] == 0)
+            {
+                continue;
+            }
+
+            this->flattenedLayers[j] = layer->pixelBuffer[j];
+        }
+
+        std::memset(layer->pixelBuffer, 0, (size_t)this->width * this->height * sizeof(u32));
     }
+
+    this->graphicsHandler->Draw(this->flattenedLayers, this->width, this->height);
 
     this->graphicsHandler->Flush();
 }

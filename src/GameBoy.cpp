@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false), mbc(nullptr)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();

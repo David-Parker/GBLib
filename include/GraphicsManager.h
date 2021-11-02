@@ -7,7 +7,6 @@
 #define DMG_COLOR_LIGHT_GRAY Color(155, 155, 155, 255)
 #define DMG_COLOR_DARK_GRAY Color(55, 55, 55, 255)
 #define DMG_COLOR_WHITE Color(255, 255, 255, 255)
-#define TRANSPARENT_BACKGROUND Color(0, 0, 0, 0)
 
 struct Color
 {
@@ -34,8 +33,7 @@ private:
     int width, height, numLayers;
     GraphicsLayer* layers;
     IGraphicsHandler* graphicsHandler;
-    u32* transparentBuffer;
-    u32 transparentEncoded;
+    u32* flattenedLayers;
 
     Color ColorPalette[4] =
     {
