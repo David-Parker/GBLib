@@ -84,6 +84,4 @@ void GraphicsManager::Draw()
     }
 
     this->graphicsHandler->Draw(this->flattenedLayers, this->width, this->height);
-
-    this->graphicsHandler->Flush();
 }
