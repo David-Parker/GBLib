@@ -84,6 +84,7 @@ private:
     Byte bgPalette[4] = {0};
     Byte objPalette0[4] = {0};
     Byte objPalette1[4] = {0};
+    Byte bgWinColor[SCREEN_HEIGHT][SCREEN_WIDTH] = {0};
     IEventHandler* eventHandler;
     GraphicsManager gManager;
     bool lcdInitialized;

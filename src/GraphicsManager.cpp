@@ -65,6 +65,8 @@ void GraphicsManager::Clear()
 
 void GraphicsManager::Draw()
 {
+    std::memset(this->flattenedLayers, 255, (size_t)this->width * this->height * sizeof(u32));
+
     // Flatten all layers into a single buffer.
     for (int i = 0; i < this->numLayers; ++i)
     {

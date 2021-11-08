@@ -184,6 +184,7 @@ void PixelProcessingUnit::BufferScanLine()
         for (int i = 0; i < SCREEN_WIDTH; i++)
         {
             Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
+            this->bgWinColor[LY][i] = color;
             gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
         }
 
@@ -199,6 +200,7 @@ void PixelProcessingUnit::BufferScanLine()
                     if (i >= 0)
                     {
                         Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, LY - WY);
+                        this->bgWinColor[LY][i] = color;
                         gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
                     }
                 }
@@ -238,11 +240,12 @@ void PixelProcessingUnit::BufferScanLine()
                         continue;
                     }
 
+                    // BG and WIN colors 1-3 over sprite
                     if (sprite->attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
                     {
-                        Byte bgColor = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (xAdjusted + SCX) % 256, (LY + SCY) % 256);
+                        Byte color = this->bgWinColor[LY][xAdjusted];
 
-                        if (bgColor != 0)
+                        if (color != 0)
                         {
                             layer = LCD_LAYER_OBJ_BOTTOM;
                         }
@@ -395,7 +398,7 @@ void PixelProcessingUnit::EnterVideoRead()
 
 void PixelProcessingUnit::ExitVideoRead()
 {
-
+    this->BufferScanLine();
 }
 
 void PixelProcessingUnit::EnterHBlank()
@@ -413,7 +416,6 @@ void PixelProcessingUnit::EnterHBlank()
 void PixelProcessingUnit::ExitHBlank()
 {
     this->TestLYCMatch();
-    this->BufferScanLine();
     ++LY;
 }
 
@@ -436,6 +438,7 @@ void PixelProcessingUnit::ExitVBlank()
 {
     this->TestLYCMatch();
     ++LY;
+    memset(bgWinColor, 0, SCREEN_HEIGHT * SCREEN_WIDTH);
 }
 
 void PixelProcessingUnit::TestLYCMatch()

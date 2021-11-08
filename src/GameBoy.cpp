@@ -4,7 +4,7 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false), mbc(nullptr)
+    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false), mbc(nullptr), framesElapsed(0)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -133,10 +133,12 @@ void GameBoy::Run()
     {
         Step();
 
+        int framesDelta = FramesElapsed() - framesElapsed;
+
         // Another frame has elapsed.
-        if (FramesElapsed() > framesElapsed)
+        if (framesDelta >= this->eventHandler->SpeedMultiplier())
         {
-            framesElapsed = FramesElapsed();
+            framesElapsed += framesDelta;
             SimulateFrameDelay();
         }
     }
@@ -158,9 +160,19 @@ u64 GameBoy::FramesElapsed()
 void GameBoy::SimulateFrameDelay()
 {
     // After one frame has passed (16.7ms / 69905 clocks) wait till the end of the "real time" for that frame
-    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME / this->eventHandler->SpeedMultiplier());
+    auto delta = high_resolution_clock::now() - this->lastTimestamp;
+    auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME);
 
-    while (high_resolution_clock::now() < waitTo);
+    if (delta > std::chrono::milliseconds(10))
+    {
+        // Sleep
+        std::this_thread::sleep_until(waitTo);
+    }
+    else
+    {
+        // Spin wait
+        while (high_resolution_clock::now() < waitTo);
+    }
 
     this->lastTimestamp = high_resolution_clock::now();
 }
