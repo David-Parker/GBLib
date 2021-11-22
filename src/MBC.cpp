@@ -263,6 +263,7 @@ void MBC3::Write(Address address, Byte value)
         if (this->latchRegister == 0x00 && value == 0x01)
         {
             // Latch the current time into the rtc register
+            // TODO: This is not implemented yet
             this->latchRegister = 0xFF;
         }
         else

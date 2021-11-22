@@ -1,6 +1,7 @@
 #pragma once
 #include "InterruptController.h"
 #include "IGraphicsHandler.h"
+#include "ISerialHandler.h"
 #include "SoundController.h"
 #include "PixelProcessingUnit.h"
 #include "JoypadController.h"
@@ -18,13 +19,13 @@ public:
     SerialTransferController serialController;
     TimerController timerController;
 
-    IODevices(Memory* pMemory, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler) 
+    IODevices(Memory* pMemory, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler)
     : 
         interruptController(),
         soundController(&interruptController),
         joypadController(&interruptController),
         ppu(pMemory, &interruptController, &joypadController, graphicsHandler, eventHandler),
-        serialController(&interruptController),
+        serialController(&interruptController, serialHandler),
         timerController(&interruptController)
     {
     }

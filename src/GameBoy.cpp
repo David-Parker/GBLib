@@ -3,8 +3,8 @@
 
 using namespace std::chrono;
 
-GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false), mbc(nullptr), framesElapsed(0)
+GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler)
+    : memory(), devices(&memory, graphicsHandler, eventHandler, serialHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), romLoaded(false), mbc(nullptr), framesElapsed(0)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -122,6 +122,7 @@ int GameBoy::Step()
     int cycles = this->cpu.Tick();
     this->devices.ppu.Tick(cycles);
     this->devices.timerController.Tick(cycles);
+    this->devices.serialController.Tick(cycles);
     this->cyclesElapsed += (u64)cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
 
     return cycles;

@@ -41,6 +41,7 @@ constexpr static int CLOCKS_PER_VIDEO_READ = 172;
 constexpr static int CLOCKS_PER_HBLANK = 204;
 constexpr static int CLOCKS_PER_VBLANK = 456;
 constexpr static int CLOCKS_PER_DIVIDER_INC = 64;
+constexpr static int CLOCKS_PER_SERIAL_TICK = 512;
 constexpr static int SCREEN_WIDTH = 160;
 constexpr static int SCREEN_HEIGHT = 144;
 constexpr static int SPRITE_NUM_OBJS = 40;

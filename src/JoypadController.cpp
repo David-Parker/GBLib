@@ -41,12 +41,17 @@ bool JoypadController::ActionSwitch()
 
 void JoypadController::KeyDown(u8 key)
 {
-    BUTTONS.SetFlags(key);
-
-    if (DirectionSwitch() || ActionSwitch())
+    if (ActionSwitch() || DirectionSwitch())
     {
-        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_JOYPAD);
+        bool keyIsUp = !BUTTONS.FlagIsSet(key);
+
+        if (keyIsUp)
+        {
+            this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_JOYPAD);
+        }
     }
+
+    BUTTONS.SetFlags(key);
 }
 
 void JoypadController::KeyUp(u8 key)

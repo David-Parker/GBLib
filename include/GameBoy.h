@@ -9,6 +9,7 @@
 #include "IODevices.h"
 #include "IGraphicsHandler.h"
 #include "IEventHandler.h"
+#include "ISerialHandler.h"
 #include "MBC.h"
 #include "ROM.h"
 
@@ -35,7 +36,7 @@ private:
     void LoadBootRom();
 
 public:
-    GAMEBOY_API GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
+    GAMEBOY_API GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler);
     GAMEBOY_API ~GameBoy();
 
     // Loads a new game rom into the GameBoy.

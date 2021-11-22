@@ -51,12 +51,7 @@ add_library(GBLib SHARED
      include/UnMappedMemory.h
      interface/IEventHandler.h
      interface/IGraphicsHandler.h
-)
-
-set_target_properties(GBLib PROPERTIES PUBLIC_HEADER
-    include/GameBoy.h
-    interface/IGraphicsHandler.h
-    interface/IEventHandler
+     interface/ISerialHandler.h
 )
 
 target_include_directories(GBLib PRIVATE include)
