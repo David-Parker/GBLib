@@ -1,5 +1,6 @@
 #include "SerialTransferController.h"
 #include <iostream>
+#include <thread>
 
 void SerialTransferController::Write(Address address, Byte value)
 {
@@ -23,22 +24,13 @@ void SerialTransferController::Write(Address address, Byte value)
                 {
                     this->sentByte = SB;
                     this->serialHandler->SendByte(SB);
-                    this->recievedByte = this->serialHandler->RecieveByte();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
                 else
                 {
                     this->sentByte = SB;
                     this->recievedByte = 0xFF;
                 }
-
-                SB = this->recievedByte;
-
-                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-                SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
-
-                //this->shiftRegister.SetHighByte(this->sentByte);
-                //this->shiftRegister.SetLowByte(this->recievedByte);
-                //this->shiftsRemaining = 8;
             }
         }
     }
@@ -62,94 +54,56 @@ void SerialTransferController::Tick(u64 cycles)
 {
     this->clockCycles += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
 
-    if (this->shiftsRemaining > 0)
-    {
-        //this->shiftRegister = this->shiftRegister << 1;
-        //this->shiftsRemaining--;
-
-        //SB = this->shiftRegister.GetHighByte();
-
-        //if (this->shiftsRemaining == 0)
-        //{
-        //    this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-        //    SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
-        //}
-
-        //this->shiftsRemaining = 0;
-        //this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-        //SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
-    }
-    // Check if a master GameBoy sent us a byte.
     if (this->serialHandler->ByteRecieved())
     {
-        this->isMaster = false;
-
-        if (this->serialHandler->IsSerialConnected())
+        if (this->isMaster)
         {
-            this->recievedByte = this->serialHandler->RecieveByte();
-            this->sentByte = SB;
-            this->serialHandler->SendByte(SB);
+            if (this->serialHandler->IsSerialConnected())
+            {
+                this->recievedByte = this->serialHandler->RecieveByte();
+            }
+            else
+            {
+                this->recievedByte = 0xFF;
+            }
         }
         else
         {
-            this->sentByte = SB;
-            this->recievedByte = 0xFF;
+            if (this->serialHandler->IsSerialConnected())
+            {
+                this->recievedByte = this->serialHandler->RecieveByte();
+                this->sentByte = SB;
+                this->serialHandler->SendByte(SB);
+            }
+            else
+            {
+                this->sentByte = SB;
+                this->recievedByte = 0xFF;
+            }
         }
 
-        //this->shiftRegister.SetHighByte(this->sentByte);
-        //this->shiftRegister.SetLowByte(this->recievedByte);
-        //this->shiftsRemaining = 8;
-
-        SB = this->recievedByte;
-        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-        SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
+        this->shiftRegister.SetHighByte(this->sentByte);
+        this->shiftRegister.SetLowByte(this->recievedByte);
+        this->shiftsRemaining = 8;
     }
 
     if (this->clockCycles >= CLOCKS_PER_SERIAL_TICK)
     {
         this->clockCycles -= CLOCKS_PER_SERIAL_TICK;
 
-        // Check if current bit transfer simulation is in progress.
-        //if (this->shiftsRemaining > 0)
-        //{
-        //    this->shiftRegister = this->shiftRegister << 1;
-        //    this->shiftsRemaining--;
+        if (this->shiftsRemaining > 0)
+        {
+            this->shiftRegister = this->shiftRegister << 1;
+            this->shiftsRemaining--;
 
-        //    SB = this->shiftRegister.GetHighByte();
+            SB = this->shiftRegister.GetHighByte();
 
-        //    if (this->shiftsRemaining == 0)
-        //    {
-        //        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-        //        SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
-        //    }
-        //}
-        //else
-        //{
-        //    // Check if a master GameBoy sent us a byte.
-        //    if (this->serialHandler->ByteRecieved())
-        //    {
-        //        this->isMaster = false;
-
-        //        if (this->serialHandler->IsSerialConnected())
-        //        {
-        //            this->recievedByte = this->serialHandler->RecieveByte();
-        //            this->sentByte = SB;
-        //            this->serialHandler->SendByte(SB);
-        //        }
-        //        else
-        //        {
-        //            this->sentByte = SB;
-        //            this->recievedByte = 0xFF;
-        //        }
-
-        //        //this->shiftRegister.SetHighByte(this->sentByte);
-        //        //this->shiftRegister.SetLowByte(this->recievedByte);
-        //        //this->shiftsRemaining = 8;
-
-        //        SB = this->recievedByte;
-        //        this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
-        //        SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
-        //    }
-        //}
+            if (this->shiftsRemaining == 0)
+            {
+                this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_SERIAL);
+                SC.ClearFlags(SERIAL_TRANSFER_CONTROL_FLAGS::TRANSFER_START);
+                this->isMaster = false;
+            }
+        }
     }
 }
