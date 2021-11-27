@@ -52,7 +52,7 @@ bool SerialTransferController::TransferRequested()
 
 void SerialTransferController::Tick(u64 cycles)
 {
-    this->clockCycles += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+    this->clockCycles += cycles;
 
     if (this->serialHandler->ByteRecieved())
     {
