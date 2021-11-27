@@ -54,7 +54,7 @@ void SerialTransferController::Tick(u64 cycles)
 {
     this->clockCycles += cycles;
 
-    if (this->serialHandler->ByteRecieved())
+    if (this->serialHandler->ByteRecieved() && this->shiftsRemaining == 0)
     {
         if (this->isMaster)
         {

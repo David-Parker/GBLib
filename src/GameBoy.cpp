@@ -49,6 +49,8 @@ void GameBoy::LoadRom(std::string path)
     case CART_MBC3:
     case CART_MBC3_RAM:
     case CART_MBC3_RAM_BATTERY:
+    case CART_MBC3_TIMER_BATTERY:
+    case CART_MBC3_TIMER_RAM_BATTERY:
         this->mbc = new MBC3(this->cartridgeHeader);
         break;
     default:
