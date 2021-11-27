@@ -30,6 +30,7 @@ private:
     CartridgeHeader cartridgeHeader;
     IEventHandler* eventHandler;
     IGraphicsHandler* graphicsHandler;
+    ISerialHandler* serialHandler;
     MBC* mbc;
 
     void MapIODevices();

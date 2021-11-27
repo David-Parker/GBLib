@@ -19,7 +19,7 @@ Byte TimerController::Read(Address address)
 
 void TimerController::Tick(u64 cycles)
 {
-    this->clockCyclesDiv += cycles * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+    this->clockCyclesDiv += cycles;
 
     // Div clock always increments
     if (this->clockCyclesDiv >= CLOCKS_PER_DIVIDER_INC)
