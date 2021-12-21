@@ -29,6 +29,7 @@ add_library(GBLib SHARED
      include/BGMap.h
      include/CartridgeHeader.h
      include/Cpu.h
+     include/CpuRelax.h
      include/GameBoy.h
      include/GlobalDefinitions.h
      include/GraphicsManager.h

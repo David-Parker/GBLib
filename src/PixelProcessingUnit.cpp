@@ -34,6 +34,8 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         this->tileDebugger->Init();
     }
 #endif
+
+    this->lastFrameTime = std::chrono::high_resolution_clock::now();
 }
 
 PixelProcessingUnit::~PixelProcessingUnit()
@@ -173,7 +175,7 @@ bool PixelProcessingUnit::LCDIsOn()
 
 void PixelProcessingUnit::BufferScanLine()
 {
-    if (!this->LCDIsOn() || this->skipFrame !=0)
+    if (!this->LCDIsOn() || !this->canDraw)
     {
         return;
     }
@@ -298,7 +300,26 @@ void PixelProcessingUnit::SearchSprites()
 
 void PixelProcessingUnit::Draw()
 {
-    if (!this->LCDIsOn() || this->skipFrame != 0)
+    if (this->enableDrawOnNextFrame)
+    {
+        this->canDraw = true;
+        this->enableDrawOnNextFrame = false;
+    }
+    else
+    {
+        this->canDraw = false;
+    }
+
+    // Check if another 16.7ms has elapsed.
+    auto delta = std::chrono::high_resolution_clock::now() - this->lastFrameTime;
+
+    if (delta >= std::chrono::nanoseconds(CLOCK_NS_PER_FRAME))
+    {
+        this->enableDrawOnNextFrame = true;
+        this->lastFrameTime += delta;
+    }
+
+    if (!this->LCDIsOn() || !this->canDraw)
     {
         return;
     }
@@ -430,8 +451,6 @@ void PixelProcessingUnit::EnterVBlank()
     this->STAT.SetBit(0);
     this->STAT.ResetBit(1);
     this->pInterruptController->RequestInterrupt(INTERRUPT_FLAGS::INT_VBLANK);
-
-    this->skipFrame = (this->skipFrame + 1) % this->eventHandler->SpeedMultiplier();
 }
 
 void PixelProcessingUnit::ExitVBlank()

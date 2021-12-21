@@ -9,6 +9,7 @@
 #include "Tile.h"
 #include "RegisterU8.h"
 #include "Sprite.h"
+#include <chrono>
 
 #define LCD_LAYER_OBJ_BOTTOM 0
 #define LCD_LAYER_BG 1
@@ -59,6 +60,11 @@ enum OAM_ATTRIBUTES
     OAM_CGB_PALETTE_NUM_0 = 1
 };
 
+enum COLOR_PALETTE_ATTR
+{
+    CP_AUTO_INCREMENT = 128
+};
+
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
@@ -89,7 +95,9 @@ private:
     GraphicsManager gManager;
     bool lcdInitialized;
     int spriteCount;
-    int skipFrame = false;
+    bool enableDrawOnNextFrame = false;
+    bool canDraw = false;
+    std::chrono::steady_clock::time_point lastFrameTime;
 
 #ifdef _DEBUG
     GraphicsManager* tileDebugger;

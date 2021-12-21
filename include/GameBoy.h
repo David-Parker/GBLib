@@ -64,7 +64,7 @@ public:
     // Returns the number of frames the GameBoy simulation has completed. A frame is 69905 cycles (17,476 machine cycles).
     u64 GAMEBOY_API FramesElapsed();
 
-    // Busy waits until the end of the frame in wall clock time.
+    // Waits until the end of the frame in wall clock time.
     void GAMEBOY_API SimulateFrameDelay();
 
     // Returns a copy of the cartridge header information, i.e. title and gb color support.

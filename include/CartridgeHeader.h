@@ -36,6 +36,7 @@ class CartridgeHeader
 {
 public:
     std::string title;
+    bool isDMG; // GameBoy DMG
     bool isCGB; // GameBoy Color
     bool isSGB; // Super GameBoy
     u8 cartridgeType;

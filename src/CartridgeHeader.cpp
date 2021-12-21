@@ -2,6 +2,7 @@
 #include <iostream>
 
 CartridgeHeader::CartridgeHeader()
+    : isDMG(true), isCGB(false), isSGB(false)
 {
     for (int i = 0; i < 256; ++i)
     {
@@ -81,7 +82,19 @@ void CartridgeHeader::Read(std::string path)
 
     // Check if game is Game Boy Color
     Byte cgb_flag = buf[0x143];
-    isCGB = cgb_flag & 0x80;
+
+    if (cgb_flag == 0x80)
+    {
+        isCGB = true;
+    }
+    else if (cgb_flag == 0xC0)
+    {
+        isCGB = true;
+        isDMG = false;
+    }
+
+    // Used to force CGB emulation
+    // isCGB = true;
 
     // Check if game is Super Game Boy
     Byte sgb_flag = buf[0x146];

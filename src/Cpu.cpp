@@ -300,7 +300,7 @@ int Cpu::Halt()
 {
     if (this->ticksEnableIME != ULLONG_MAX)
     {
-        // Ei() pending, execute halt() again after handing interrupts
+        // Ei() pending, execute halt() again after handling interrupts
         PC--;
         return 0;
     }

@@ -1,4 +1,5 @@
 #include "GameBoy.h"
+#include "CpuRelax.h"
 #include <thread>
 
 using namespace std::chrono;
@@ -16,12 +17,24 @@ GameBoy::~GameBoy()
     delete this->gameROM;
 }
 
-// Loads the 256-byte boot ROM into addresses 0x00 to 0xFF
 void GameBoy::LoadBootRom()
 {
-    this->bootROM = new ROM(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END);
-    this->bootROM->LoadFromFile(this->romFolder + "/boot.bin", 0, 256);
-    this->memory.MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, this->bootROM);
+    // For CGB, loads the 2048-byte boot ROM into addresses 0x00 to 0x8FF
+    if (this->cartridgeHeader.isCGB)
+    {
+        this->bootROM = new ROM(ADDR_BOOT_ROM_CGB_START, ADDR_BOOT_ROM_CGB_END);
+        this->bootROM->LoadFromFile(this->romFolder + "/cgb_boot.bin", 0, 2048);
+
+        this->memory.MapMemory(ADDR_BOOT_ROM_DMG_START, ADDR_BOOT_ROM_DMG_END, this->bootROM);
+        this->memory.MapMemory(ADDR_BOOT_ROM_CGB_SECOND, ADDR_BOOT_ROM_CGB_END, this->bootROM);
+    }
+    // For DMG, loads the 256-byte boot ROM into addresses 0x00 to 0xFF
+    else
+    {
+        this->bootROM = new ROM(ADDR_BOOT_ROM_DMG_START, ADDR_BOOT_ROM_DMG_END);
+        this->bootROM->LoadFromFile(this->romFolder + "/dmg_boot.bin", 0, 256);
+        this->memory.MapMemory(ADDR_BOOT_ROM_DMG_START, ADDR_BOOT_ROM_DMG_END, this->bootROM);
+    }
 }
 
 // Loads the ROM file into memory
@@ -39,7 +52,7 @@ void GameBoy::LoadRom(std::string path)
     case CART_ROM_ONLY:
         this->gameROM = new ROM(ADDR_GAME_ROM_START, ADDR_GAME_ROM_END);
         this->gameROM->LoadFromFile(gamePath, 0, (size_t)this->cartridgeHeader.NumROMBanks() * ROM_BANK_BYTES);
-        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->gameROM);
+        this->memory.MapMemory(ADDR_BOOT_ROM_DMG_END + 1, ADDR_GAME_ROM_END, this->gameROM);
         break;
     case CART_MBC1:
     case CART_MBC1_RAM:
@@ -66,7 +79,7 @@ void GameBoy::LoadRom(std::string path)
             this->mbc->LoadRAMFromSave(this->romFolder+ "/saves/" + this->cartridgeHeader.title + ".save");
         }
 
-        this->memory.MapMemory(ADDR_BOOT_ROM_END + 1, ADDR_GAME_ROM_END, this->mbc);
+        this->memory.MapMemory(ADDR_BOOT_ROM_DMG_END + 1, ADDR_GAME_ROM_END, this->mbc);
         this->memory.MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, this->mbc);
     }
 
@@ -162,19 +175,21 @@ u64 GameBoy::FramesElapsed()
 
 void GameBoy::SimulateFrameDelay()
 {
-    // After one frame has passed (16.7ms / 69905 clocks) wait till the end of the "real time" for that frame
+    // Wait until the end of the next 1 / 60s (17ms) block.
     auto delta = high_resolution_clock::now() - this->lastTimestamp;
     auto waitTo = this->lastTimestamp + std::chrono::nanoseconds(CLOCK_NS_PER_FRAME);
 
-    if (delta > std::chrono::milliseconds(10))
+    // Sleep is not very precise, only use if we have 1.5ms or more of waiting
+    if (delta > std::chrono::microseconds(1500))
     {
         // Sleep
         std::this_thread::sleep_until(waitTo);
     }
     else
     {
-        // Spin wait
-        while (high_resolution_clock::now() < waitTo);
+        // Spin wait, power optimized using cpu_relax(), this will help reduce battery drain on mobile platforms
+        while (high_resolution_clock::now() < waitTo)
+            cpu_relax();
     }
 
     this->lastTimestamp = high_resolution_clock::now();

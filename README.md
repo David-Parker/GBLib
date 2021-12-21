@@ -1,7 +1,7 @@
 # GBLib
 `GBLib` is a cross-platform Nintendo GameBoy emulator written as a portable C++ library. Easily inject your platform specific dependencies to run anywhere.
 
-For an example on how to build an application on top of `GBLib` refer to [GBSdl](https://github.com/David-Parker/GBSdl).
+For an example on how to build an application on top of `GBLib` refer to [GBSdl](https://github.com/David-Parker/GBSdl) and [GBAndroid](https://github.com/David-Parker/GBAndroid).
 
 
 ## How do I use `GBLib` to make an application?

@@ -16,7 +16,7 @@
 
 // Official GameBoy Programming Manual v1.1 by Nintendo: https://www.manualslib.com/manual/1627081/Nintendo-Game-Boy.html?page=7#manual
 // Opcode table: https://meganesulli.com/generate-gb-opcodes/
-// Incomplete but useful docs: https://gekkio.fi/files/gb-docs/gbctr.pdf
+// Pandocs: https://gbdev.io/pandocs
 class Cpu
 {
 private:

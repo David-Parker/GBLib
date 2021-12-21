@@ -36,11 +36,17 @@ void Memory::Write(Address address, Byte value)
 {
     if (address == 0xFF50)
     {
-        if (value == 1)
+        if (value == 0x01 || value == 0xFF)
         {
-            // Unload boot ROM
+            // Unload DMG boot ROM
             IMemoryMappable* gameROM = this->addressSpace[0x100];
-            this->MapMemory(ADDR_BOOT_ROM_START, ADDR_BOOT_ROM_END, gameROM);
+            this->MapMemory(ADDR_BOOT_ROM_DMG_START, ADDR_BOOT_ROM_DMG_END, gameROM);
+        }
+        else if (value == 0x11)
+        {
+            // Unload CGB boot ROM
+            IMemoryMappable* gameROM = this->addressSpace[0x100];
+            this->MapMemory(ADDR_BOOT_ROM_CGB_START, ADDR_BOOT_ROM_CGB_END, gameROM);
         }
     }
     else
@@ -56,7 +62,7 @@ void Memory::ClearMemory()
 
 void Memory::Dump(Address start, Address end)
 {
-    std::ofstream file("dumb.debug", std::fstream::out | std::ios::binary | std::ios::trunc);
+    std::ofstream file("dump.debug", std::fstream::out | std::ios::binary | std::ios::trunc);
 
     if (!file)
     {
