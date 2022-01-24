@@ -18,6 +18,8 @@ public:
     __inline Byte Read(Address address);
     void EnableAccess();
     void DisableAccess();
+    Address GetStartAddress();
+    Address GetEndAddress();
 };
 
  Byte RAM::Read(Address address)

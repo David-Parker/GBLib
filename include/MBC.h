@@ -12,7 +12,7 @@ enum MBC_RAM_SIZES
     FOUR_BANK_RAM
 };
 
-enum MBC1_BANK_MODE
+enum MBC_BANK_MODE
 {
     ROM_MODE,
     RAM_MODE
@@ -69,7 +69,7 @@ private:
 
 public: 
     MBC1(CartridgeHeader& header)
-        :   MBC(header, MBC1_BANK_MODE::ROM_MODE, false), 
+        :   MBC(header, MBC_BANK_MODE::ROM_MODE, false), 
             romBankRegister(1), ramBankRegister(0), extraBankRegister(0)
     {
     }
@@ -80,6 +80,26 @@ public:
     Byte Read(Address address);
     u8 GetCurrentROMBank();
     u8 GetCurrentRAMBank();
+};
+
+class MBC2 : public MBC
+{
+private:
+    u8 romBankRegister;
+
+public:
+    MBC2(CartridgeHeader& header)
+        : MBC(header, MBC_BANK_MODE::ROM_MODE, false),
+        romBankRegister(1)
+    {
+        RAM* ram = new RAM(ADDR_MBC2_RAM_START, ADDR_MBC2_RAM_END);
+        this->ramBanks.push_back(ram);
+    }
+
+    ~MBC2() {}
+
+    void Write(Address address, Byte value);
+    Byte Read(Address address);
 };
 
 class MBC3 : public MBC

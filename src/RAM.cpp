@@ -33,3 +33,13 @@ void RAM::DisableAccess()
 {
     this->canAccess = false;
 }
+
+Address RAM::GetStartAddress()
+{
+    return this->start;
+}
+
+Address RAM::GetEndAddress()
+{
+    return this->end;
+}

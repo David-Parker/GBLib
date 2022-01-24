@@ -59,6 +59,10 @@ void GameBoy::LoadRom(std::string path)
     case CART_MBC1_RAM_BATTERY:
         this->mbc = new MBC1(this->cartridgeHeader);
         break;
+    case CART_MBC2:
+    case CART_MBC2_BATTERY:
+        this->mbc = new MBC2(this->cartridgeHeader);
+        break;
     case CART_MBC3:
     case CART_MBC3_RAM:
     case CART_MBC3_RAM_BATTERY:
@@ -187,7 +191,7 @@ void GameBoy::SimulateFrameDelay()
     }
     else
     {
-        // Spin wait, power optimized using cpu_relax(), this will help reduce battery drain on mobile platforms
+        // Spin wait, power optimized using cpu_relax()
         while (high_resolution_clock::now() < waitTo)
             cpu_relax();
     }

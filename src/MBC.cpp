@@ -56,11 +56,11 @@ void MBC::SaveToFile(std::string path)
     // Write each bank
     for (auto& ram : this->ramBanks)
     {
-        Byte buf[RAM_BANK_BYTES];
+        Byte buf[RAM_BANK_BYTES] = { 0 };
 
-        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
+        for (int i = ram->GetStartAddress(); i <= ram->GetEndAddress(); ++i)
         {
-            buf[i - ADDR_EXTERNAL_RAM_START] = ram->Read(i);
+            buf[i - ram->GetStartAddress()] = ram->Read(i);
         }
 
         file.write(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
@@ -69,7 +69,7 @@ void MBC::SaveToFile(std::string path)
 
 void MBC::LoadRAMFromSave(std::string path)
 {
-    if (this->ramSize == MBC_RAM_SIZES::NO_RAM || this->ramBanks.size() == 0)
+    if (this->ramBanks.size() == 0)
     {
         return;
     }
@@ -88,9 +88,9 @@ void MBC::LoadRAMFromSave(std::string path)
         Byte buf[RAM_BANK_BYTES];
         file.read(reinterpret_cast<char*>(&buf[0]), RAM_BANK_BYTES);
 
-        for (int i = ADDR_EXTERNAL_RAM_START; i <= ADDR_EXTERNAL_RAM_END; ++i)
+        for (int i = ram->GetStartAddress(); i <= ram->GetEndAddress(); ++i)
         {
-            ram->Write(i, buf[i - ADDR_EXTERNAL_RAM_START]);
+            ram->Write(i, buf[i - ram->GetStartAddress()]);
         }
     }
 }
@@ -143,10 +143,10 @@ void MBC1::Write(Address address, Byte value)
         switch (value)
         {
         case 0x00:
-            this->currentMode = MBC1_BANK_MODE::ROM_MODE;
+            this->currentMode = MBC_BANK_MODE::ROM_MODE;
             break;
         case 0x01:
-            this->currentMode = MBC1_BANK_MODE::RAM_MODE;
+            this->currentMode = MBC_BANK_MODE::RAM_MODE;
             break;
         default:
             throw std::runtime_error("Unknown MBC1 Mode.");
@@ -194,7 +194,7 @@ Byte MBC1::Read(Address address)
 
 u8 MBC1::GetCurrentROMBank()
 {
-    if (this->currentMode == MBC1_BANK_MODE::ROM_MODE)
+    if (this->currentMode == MBC_BANK_MODE::ROM_MODE)
     {
         return (this->romBankRegister) + (this->extraBankRegister << 5);
     }
@@ -206,7 +206,7 @@ u8 MBC1::GetCurrentROMBank()
 
 u8 MBC1::GetCurrentRAMBank()
 {
-    if (this->currentMode == MBC1_BANK_MODE::ROM_MODE)
+    if (this->currentMode == MBC_BANK_MODE::ROM_MODE)
     {
         return 0;
     }
@@ -214,6 +214,67 @@ u8 MBC1::GetCurrentRAMBank()
     {
         return this->extraBankRegister;
     }
+}
+
+void MBC2::Write(Address address, Byte value)
+{
+    // RAM enable / ROM bank number
+    if (AddressInRange(address, ADDR_MBC2_RAM_ENABLE_START, ADDR_MBC2_RAM_ENABLE_END))
+    {
+        if (address & 0x100)
+        {
+            // Write to ROM bank number, if 0 is written, bank 1 is used instead.
+            if (value == 0)
+            {
+                value = 1;
+            }
+
+            this->romBankRegister = value & 0xF;
+        }
+        else
+        {
+            // Write to RAM enable register
+            if (value == 0xA)
+            {
+                this->ramEnabled = true;
+            }
+            else
+            {
+                this->ramEnabled = false;
+            }
+        }
+    }
+}
+
+Byte MBC2::Read(Address address)
+{
+    // ROM
+    if (AddressInRange(address, ADDR_ROM_BANK_0_START, ADDR_ROM_BANK_0_END))
+    {
+        return this->romBanks[0]->Read(address);
+    }
+    else if (AddressInRange(address, ADDR_ROM_BANK_EXTENDABLE_START, ADDR_ROM_BANK_EXTENDABLE_END))
+    {
+        return this->romBanks[this->romBankRegister]->Read(address);
+    }
+
+    // Built in RAM
+    if (AddressInRange(address, ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END))
+    {
+        if (!this->ramEnabled)
+        {
+            return INVALID_READ;
+        }
+
+        // Only the bottom 9 bits of the address are used to index the address range 0xA000 to 0xA1FF
+        Address bits = address & 0x1FF;
+        Address finalAddress = ADDR_EXTERNAL_RAM_START + bits;
+
+        // Only lower 4 bits are returned
+        return this->ramBanks[0]->Read(finalAddress) & 0xF;
+    }
+
+    return INVALID_READ;
 }
 
 void MBC3::Write(Address address, Byte value)

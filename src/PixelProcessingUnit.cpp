@@ -18,7 +18,7 @@ PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* i
         STAT(&mem[ADDR_PPU_REG_STATUS - ADDR_PPU_START]),
         SCY(&mem[ADDR_PPU_REG_SCROLL_Y - ADDR_PPU_START]),
         SCX(&mem[ADDR_PPU_REG_SCROLL_X - ADDR_PPU_START]),
-        LY(&mem[ADDR_PPU_REG_Y_COORD - ADDR_PPU_START]),
+        LY(&mem[ADDR_PPU_REG_LY - ADDR_PPU_START]),
         LYC(&mem[ADDR_PPU_REG_LY_COMPARE - ADDR_PPU_START]),
         DMA(&mem[ADDR_PPU_REG_DMA_TRANSFER - ADDR_PPU_START]),
         BGP(&mem[ADDR_PPU_REG_BG_PALETTE_DATA - ADDR_PPU_START]),
@@ -102,9 +102,14 @@ void PixelProcessingUnit::Write(Address address, Byte value)
         
         STAT = upper + lower;
     }
-    else if (address == ADDR_PPU_REG_Y_COORD)
+    else if (address == ADDR_PPU_REG_LY)
     {
         return;
+    }
+    else if (address == ADDR_PPU_REG_LY_COMPARE)
+    {
+        LYC = value;
+        this->TestLYCMatch();
     }
     else if (address == ADDR_PPU_REG_DMA_TRANSFER)
     {
@@ -130,6 +135,10 @@ void PixelProcessingUnit::Write(Address address, Byte value)
     {
         OBP1 = value;
         LoadColorPalette(OBP1, this->objPalette1);
+    }
+    else if (address == ADDR_PPU_REG_SCROLL_X)
+    {
+        SCX = value;
     }
     else
     {
@@ -379,6 +388,7 @@ void PixelProcessingUnit::Tick(u64 cycles)
                 this->eventHandler->HandleInput(this->pJoypadController);
                 this->Draw();
                 LY = 0;
+                this->TestLYCMatch();
 
 #ifdef _DEBUG
                 DrawTileDebug();
@@ -436,8 +446,8 @@ void PixelProcessingUnit::EnterHBlank()
 
 void PixelProcessingUnit::ExitHBlank()
 {
-    this->TestLYCMatch();
     ++LY;
+    this->TestLYCMatch();
 }
 
 void PixelProcessingUnit::EnterVBlank()
@@ -455,8 +465,8 @@ void PixelProcessingUnit::EnterVBlank()
 
 void PixelProcessingUnit::ExitVBlank()
 {
-    this->TestLYCMatch();
     ++LY;
+    this->TestLYCMatch();
     memset(bgWinColor, 0, SCREEN_HEIGHT * SCREEN_WIDTH);
 }
 
