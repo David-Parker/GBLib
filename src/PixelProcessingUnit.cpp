@@ -3,10 +3,9 @@
 #include <thread>
 #include <algorithm>
 
-PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
+PixelProcessingUnit::PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler)
     :   pMemory(pMemory),
         pInterruptController(interruptController),
-        pJoypadController(joypadController),
         backgroundMap(pMemory), 
         clockCycles(0),
         spriteCount(0),
@@ -309,31 +308,15 @@ void PixelProcessingUnit::SearchSprites()
 
 void PixelProcessingUnit::Draw()
 {
-    if (this->enableDrawOnNextFrame)
-    {
-        this->canDraw = true;
-        this->enableDrawOnNextFrame = false;
-    }
-    else
-    {
-        this->canDraw = false;
-    }
-
-    // Check if another 16.7ms has elapsed.
-    auto delta = std::chrono::high_resolution_clock::now() - this->lastFrameTime;
-
-    if (delta >= std::chrono::nanoseconds(CLOCK_NS_PER_FRAME))
-    {
-        this->enableDrawOnNextFrame = true;
-        this->lastFrameTime += delta;
-    }
-
     if (!this->LCDIsOn() || !this->canDraw)
     {
         return;
     }
 
+    memset(bgWinColor, 0, SCREEN_HEIGHT * SCREEN_WIDTH);
     gManager.Draw();
+
+    this->canDraw = false;
 }
 
 void PixelProcessingUnit::Tick(u64 cycles)
@@ -380,16 +363,13 @@ void PixelProcessingUnit::Tick(u64 cycles)
     case LCD_MODE::VBLANK:
         if (this->clockCycles >= CLOCKS_PER_VBLANK)
         {
-            this->ExitVBlank();
+            ++LY;
+            this->TestLYCMatch();
 
             if (LY == SCREEN_HEIGHT + 10)
             {
+                this->ExitVBlank();
                 this->EnterOamSearch();
-                this->eventHandler->HandleInput(this->pJoypadController);
-                this->Draw();
-                LY = 0;
-                this->TestLYCMatch();
-
 #ifdef _DEBUG
                 DrawTileDebug();
 #endif
@@ -465,9 +445,18 @@ void PixelProcessingUnit::EnterVBlank()
 
 void PixelProcessingUnit::ExitVBlank()
 {
-    ++LY;
+    this->Draw();
+    LY = 0;
     this->TestLYCMatch();
-    memset(bgWinColor, 0, SCREEN_HEIGHT * SCREEN_WIDTH);
+
+    // Check if another 16.7ms of real time has elapsed. Enable drawing for the next frame.
+    auto delta = std::chrono::high_resolution_clock::now() - this->lastFrameTime;
+
+    if (delta >= std::chrono::nanoseconds(CLOCK_NS_PER_FRAME))
+    {
+        this->canDraw = true;
+        this->lastFrameTime += delta;
+    }
 }
 
 void PixelProcessingUnit::TestLYCMatch()

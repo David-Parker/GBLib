@@ -5,7 +5,19 @@
 using namespace std::chrono;
 
 GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler, EMUType emuType)
-    : memory(), devices(&memory, graphicsHandler, eventHandler, serialHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), serialHandler(serialHandler), romLoaded(false), mbc(nullptr), framesElapsed(0), emuType(emuType)
+    :   memory(),
+        devices(&memory, graphicsHandler, eventHandler, serialHandler), 
+        cpu(&memory, &devices.interruptController), 
+        romFolder(romFolder), 
+        graphicsHandler(graphicsHandler), 
+        eventHandler(eventHandler), 
+        serialHandler(serialHandler), 
+        romLoaded(false), 
+        mbc(nullptr), 
+        cyclesElapsed(0), 
+        cyclesSinceInputChecked(0), 
+        framesElapsed(0), 
+        emuType(emuType)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -138,6 +150,7 @@ bool GameBoy::ShouldStop()
 void GameBoy::Start()
 {
     this->cpu.StartCPU();
+    this->cyclesSinceInputChecked = 0;
     this->cyclesElapsed = 0;
     this->framesElapsed = 0;
 }
@@ -156,12 +169,20 @@ int GameBoy::Step()
     }
 
     u64 cycles = (u64)this->cpu.Tick() * CLOCK_CYCLES_PER_MACHINE_CYCLE;
-    this->devices.ppu.Tick(cycles);
     this->devices.timerController.Tick(cycles);
     this->devices.serialController.Tick(cycles);
+    this->devices.ppu.Tick(cycles);
     this->cyclesElapsed += cycles;
+    this->cyclesSinceInputChecked += cycles;
 
-    return cycles;
+    // Check for joypad input once simulated frame.
+    if (this->cyclesSinceInputChecked >= CLOCK_CYCLES_PER_FRAME)
+    {
+        this->eventHandler->HandleInput(&this->devices.joypadController);
+        this->cyclesSinceInputChecked -= CLOCK_CYCLES_PER_FRAME;
+    }
+
+    return (int)cycles;
 }
 
 void GameBoy::Run()
@@ -170,9 +191,9 @@ void GameBoy::Run()
     {
         Step();
 
-        int framesDelta = FramesElapsed() - framesElapsed;
+        u64 framesDelta = FramesElapsed() - framesElapsed;
 
-        // Another frame has elapsed.
+        // Another n frames have elapsed.
         if (framesDelta >= this->eventHandler->SpeedMultiplier())
         {
             framesElapsed += framesDelta;

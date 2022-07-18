@@ -83,7 +83,6 @@ private:
 
     Memory* pMemory;
     InterruptController* pInterruptController;
-    JoypadController* pJoypadController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1] = {0};
     BGMap backgroundMap;
     Sprite sprites[10] = {0};
@@ -95,8 +94,7 @@ private:
     GraphicsManager gManager;
     bool lcdInitialized;
     int spriteCount;
-    bool enableDrawOnNextFrame = false;
-    bool canDraw = false;
+    bool canDraw = true;
     std::chrono::steady_clock::time_point lastFrameTime;
 
 #ifdef _DEBUG
@@ -134,7 +132,7 @@ private:
     void ExitVBlank();
 
 public:
-    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, JoypadController* joypadController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
+    PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
     ~PixelProcessingUnit();
 
     void Write(Address address, Byte value);

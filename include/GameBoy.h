@@ -22,6 +22,7 @@ private:
     bool romLoaded;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
     u64 cyclesElapsed;
+    u64 cyclesSinceInputChecked;
     u64 framesElapsed;
     std::string romFolder;
 

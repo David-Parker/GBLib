@@ -24,7 +24,7 @@ public:
         interruptController(),
         soundController(&interruptController),
         joypadController(&interruptController),
-        ppu(pMemory, &interruptController, &joypadController, graphicsHandler, eventHandler),
+        ppu(pMemory, &interruptController, graphicsHandler, eventHandler),
         serialController(&interruptController, serialHandler),
         timerController(&interruptController)
     {
