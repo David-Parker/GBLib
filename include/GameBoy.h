@@ -15,6 +15,9 @@
 
 class GameBoy
 {
+public:
+    enum class EMUType { Cartridge = 1, DMG = 2, CGB = 3 };
+
 private:
     bool romLoaded;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
@@ -32,12 +35,15 @@ private:
     IGraphicsHandler* graphicsHandler;
     ISerialHandler* serialHandler;
     MBC* mbc;
+    EMUType emuType;
 
     void MapIODevices();
     void LoadBootRom();
+    bool IsDMG() { return this->emuType == EMUType::DMG; }
+    bool IsCGB() { return this->emuType == EMUType::CGB; }
 
 public:
-    GAMEBOY_API GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler);
+    GAMEBOY_API GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler, EMUType emuType = EMUType::Cartridge);
     GAMEBOY_API ~GameBoy();
 
     // Loads a new game rom into the GameBoy.

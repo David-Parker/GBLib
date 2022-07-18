@@ -4,8 +4,8 @@
 
 using namespace std::chrono;
 
-GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler)
-    : memory(), devices(&memory, graphicsHandler, eventHandler, serialHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), serialHandler(serialHandler), romLoaded(false), mbc(nullptr), framesElapsed(0)
+GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler, EMUType emuType)
+    : memory(), devices(&memory, graphicsHandler, eventHandler, serialHandler), cpu(&memory, &devices.interruptController), romFolder(romFolder), graphicsHandler(graphicsHandler), eventHandler(eventHandler), serialHandler(serialHandler), romLoaded(false), mbc(nullptr), framesElapsed(0), emuType(emuType)
 {
     this->MapIODevices();
     this->lastTimestamp = high_resolution_clock::now();
@@ -20,7 +20,7 @@ GameBoy::~GameBoy()
 void GameBoy::LoadBootRom()
 {
     // For CGB, loads the 2048-byte boot ROM into addresses 0x00 to 0x8FF
-    if (this->cartridgeHeader.isCGB)
+    if (IsCGB())
     {
         this->bootROM = new ROM(ADDR_BOOT_ROM_CGB_START, ADDR_BOOT_ROM_CGB_END);
         this->bootROM->LoadFromFile(this->romFolder + "/cgb_boot.bin", 0, 2048);
@@ -85,6 +85,23 @@ void GameBoy::LoadRom(std::string path)
 
         this->memory.MapMemory(ADDR_BOOT_ROM_DMG_END + 1, ADDR_GAME_ROM_END, this->mbc);
         this->memory.MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, this->mbc);
+    }
+
+    // The emulator has elected to run in DMG or CGB based on the cartridge type.
+    if (this->emuType == EMUType::Cartridge)
+    {
+        if (this->cartridgeHeader.isDMG)
+        {
+            this->emuType = EMUType::DMG;
+        }
+        else if (this->cartridgeHeader.isCGB)
+        {
+            this->emuType = EMUType::CGB;
+        }
+        else
+        {
+            throw std::runtime_error("Unsupported emulator type specified in the catridge header.");
+        }
     }
 
     LoadBootRom();
@@ -191,7 +208,8 @@ void GameBoy::SimulateFrameDelay()
     }
     else
     {
-        // Spin wait, power optimized using cpu_relax()
+        // Spin wait. This is much more precise than sleep, and allows us to emulate very large
+        // speed multipliers such as 100x or 1000x. Power optimized using cpu_relax().
         while (high_resolution_clock::now() < waitTo)
             cpu_relax();
     }
