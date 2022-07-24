@@ -133,6 +133,11 @@ bool Cpu::IsRunning()
     return running;
 }
 
+bool Cpu::IsDoubleSpeed()
+{
+    return false;
+}
+
 bool Cpu::FlagMatchesCC(u8 cc)
 {
     bool matches = false;

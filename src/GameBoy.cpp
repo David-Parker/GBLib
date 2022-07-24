@@ -102,18 +102,31 @@ void GameBoy::LoadRom(std::string path)
     // The emulator has elected to run in DMG or CGB based on the cartridge type.
     if (this->emuType == EMUType::Cartridge)
     {
-        if (this->cartridgeHeader.isDMG)
-        {
-            this->emuType = EMUType::DMG;
-        }
-        else if (this->cartridgeHeader.isCGB)
-        {
-            this->emuType = EMUType::CGB;
-        }
-        else
+        // Cartridge may specify DMG, CGB, or DMG and CGB compatibility.
+        if (this->cartridgeHeader.isSGB)
         {
             throw std::runtime_error("Unsupported emulator type specified in the catridge header.");
         }
+        else if (this->cartridgeHeader.isCGB)
+        {
+            // Cartridge may also support DMG but we will run with most features available, i.e. CGB.
+            this->emuType = EMUType::CGB;
+        }
+        else if (this->cartridgeHeader.isDMG)
+        {
+            this->emuType = EMUType::DMG;
+        }
+    }
+    else if (this->emuType == EMUType::CGB && this->cartridgeHeader.isCGB == false)
+    {
+        // Emulator has been set to force CGB emulation, but the cartridge does not support it.
+        // This will run the emulator in CGB monochrome DMG compatibility mode.
+        // TODO: For now, we will just run in DMG mode until implemented.
+    }
+    else if (this->emuType == EMUType::DMG && this->cartridgeHeader.isDMG == false)
+    {
+        // Emulator has been set to force DMG emulation, but the cartridge does not support it.
+        throw std::runtime_error("Cartridge does not support DMG emulation, please run in CGB mode.");
     }
 
     LoadBootRom();
@@ -167,11 +180,24 @@ int GameBoy::Step()
     {
         throw std::runtime_error("Cannot step a stopped CPU.");
     }
+    u64 cycles = 0;
 
-    u64 cycles = (u64)this->cpu.Tick() * CLOCK_CYCLES_PER_MACHINE_CYCLE;
-    this->devices.timerController.Tick(cycles);
-    this->devices.serialController.Tick(cycles);
-    this->devices.ppu.Tick(cycles);
+    if (this->cpu.IsDoubleSpeed())
+    {
+        cycles += (u64)this->cpu.Tick() * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+        cycles += (u64)this->cpu.Tick() * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+        this->devices.timerController.Tick(cycles);
+        this->devices.serialController.Tick(cycles);
+        this->devices.ppu.Tick(cycles / 2);
+    }
+    else
+    {
+        cycles += (u64)this->cpu.Tick() * CLOCK_CYCLES_PER_MACHINE_CYCLE;
+        this->devices.timerController.Tick(cycles);
+        this->devices.serialController.Tick(cycles);
+        this->devices.ppu.Tick(cycles);
+    }
+
     this->cyclesElapsed += cycles;
     this->cyclesSinceInputChecked += cycles;
 
@@ -212,7 +238,14 @@ void GameBoy::SaveGame()
 
 u64 GameBoy::FramesElapsed()
 {
-    return this->cyclesElapsed / CLOCK_CYCLES_PER_FRAME;
+    if (this->cpu.IsDoubleSpeed())
+    {
+        return this->cyclesElapsed / (CLOCK_CYCLES_PER_FRAME * 2);
+    }
+    else
+    {
+        return this->cyclesElapsed / CLOCK_CYCLES_PER_FRAME;
+    }
 }
 
 void GameBoy::SimulateFrameDelay()

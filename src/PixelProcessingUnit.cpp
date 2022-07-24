@@ -115,6 +115,7 @@ void PixelProcessingUnit::Write(Address address, Byte value)
         Address source = value * 0x100;
         Address dest = ADDR_OAM_RAM_START;
 
+        // DMA is instant. On the real GameBoy, this operation takes several clock cycles.
         for (int i = 0; i <= 0x9F; ++i)
         {
             pMemory->Write(dest+i, pMemory->Read(source+i));
@@ -221,11 +222,6 @@ void PixelProcessingUnit::BufferScanLine()
     // Sprites
     if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
-        if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
-        {
-            throw std::runtime_error("8x16 sprites not implemented.");
-        }
-
         for (int i = 0; i < this->spriteCount; ++i)
         {
             Sprite* sprite = &this->sprites[i];
@@ -242,7 +238,21 @@ void PixelProcessingUnit::BufferScanLine()
                     int y = LY - (sprite->yPos - 16);
 
                     u8 layer = LCD_LAYER_OBJ_TOP;
-                    Byte color = Tile::GetPixel(pMemory, tileAddress, sprite->attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x, sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y);
+                    int xFlip = sprite->attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x;
+                    int yFlip;
+
+                    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
+                    {
+                        // 8x16
+                        yFlip = sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 15 - y : y;
+                    }
+                    else
+                    {
+                        // 8x8
+                        yFlip = sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y;
+                    }
+
+                    Byte color = Tile::GetPixel(pMemory, tileAddress, xFlip, yFlip);
                     Byte* palette = sprite->attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
 
                     if (color == 0)
@@ -291,8 +301,13 @@ void PixelProcessingUnit::SearchSprites()
         Byte tileIndex = pMemory->Read(oam++);
         Byte attr = pMemory->Read(oam++);
 
+        // 8x8 and 8x16 sprites are "fully visible" at yPos 16.
+        // Adjust the yPos by 16, so the top line is at pos 0.
+        Byte yTop = yPos - 16;
+        Byte yBottom = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE) ? yTop + 16 : yTop + 8;
+
         // Sprite is in this scanline
-        if (LY >= (yPos - 16) && LY < (yPos - 16) + 8)
+        if (LY >= yTop && LY < yBottom)
         {
             this->sprites[this->spriteCount].yPos = yPos;
             this->sprites[this->spriteCount].xPos = xPos;

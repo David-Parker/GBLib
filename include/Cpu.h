@@ -1287,4 +1287,5 @@ public:
     void StopCPU();
     void StartCPU();
     bool IsRunning();
+    bool IsDoubleSpeed();
 };

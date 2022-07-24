@@ -93,9 +93,6 @@ void CartridgeHeader::Read(std::string path)
         isDMG = false;
     }
 
-    // Used to force CGB emulation
-    // isCGB = true;
-
     // Check if game is Super Game Boy
     Byte sgb_flag = buf[0x146];
     isSGB = sgb_flag == 0x03;
