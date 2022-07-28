@@ -41,6 +41,13 @@ void GraphicsManager::AddPixel(int x, int y, Byte color, Byte palette[4], int la
     this->layers[layer].pixelBuffer[idx] = EncodedPalette[palette[color]];
 }
 
+u32 GraphicsManager::GetPixel(int x, int y, int layer)
+{
+    int idx = (y * width) + x;
+
+    return this->layers[layer].pixelBuffer[idx];
+}
+
 void GraphicsManager::Init()
 {
     for (int i = 0; i < this->numLayers; ++i)

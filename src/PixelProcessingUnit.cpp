@@ -140,6 +140,10 @@ void PixelProcessingUnit::Write(Address address, Byte value)
     {
         SCX = value;
     }
+    else if (address == ADDR_CGB_OBJ_PRIORITY)
+    {
+        OPRI = value;
+    }
     else
     {
         mem[address - ADDR_PPU_START] = value;
@@ -148,6 +152,11 @@ void PixelProcessingUnit::Write(Address address, Byte value)
 
 Byte PixelProcessingUnit::Read(Address address)
 {
+    if (address == ADDR_CGB_OBJ_PRIORITY)
+    {
+        return OPRI;
+    }
+
     return mem[address - ADDR_PPU_START];
 }
 
@@ -173,6 +182,7 @@ void PixelProcessingUnit::ResetLCD()
 {
     this->clockCycles = 0;
     this->LY = 0;
+    this->WLY = 0;
     this->TestLYCMatch();
     this->EnterOamSearch();
 }
@@ -191,95 +201,111 @@ void PixelProcessingUnit::BufferScanLine()
 
     if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::BG_WIN_DISPLAY_ON))
     {
-        // BG
-        for (int i = 0; i < SCREEN_WIDTH; i++)
-        {
-            Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
-            this->bgWinColor[LY][i] = color;
-            gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
-        }
+        RenderBG();
 
-        // Window
         if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::WINDOWING_ON))
         {
-            if (LY >= WY)
-            {
-                int xAdjusted = WX - 7;
-
-                for (int i = xAdjusted; i < SCREEN_WIDTH; i++)
-                {
-                    if (i >= 0)
-                    {
-                        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, LY - WY);
-                        this->bgWinColor[LY][i] = color;
-                        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
-                    }
-                }
-            }
+            RenderWindow();
         }
     }
 
-    // Sprites
     if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_ON))
     {
-        for (int i = 0; i < this->spriteCount; ++i)
+        RenderSprites();
+    }
+}
+
+void PixelProcessingUnit::RenderBG()
+{
+    for (int i = 0; i < SCREEN_WIDTH; i++)
+    {
+        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetBGTileMap(), (i + SCX) % 256, (LY + SCY) % 256);
+        this->bgWinColor[LY][i] = color;
+        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_BG);
+    }
+}
+
+void PixelProcessingUnit::RenderWindow()
+{
+    if (WLY >= SCREEN_HEIGHT)
+        return;
+
+    int xAdjusted = WX - 7;
+
+    if (xAdjusted >= SCREEN_WIDTH)
+        return;
+
+    if (WY >= SCREEN_HEIGHT || WY > LY)
+        return;
+
+    for (int i = xAdjusted; i < SCREEN_WIDTH; i++)
+    {
+        if (i < 0)
+            continue;
+
+        Byte color = this->backgroundMap.GetPixel(GetTileData(), GetWindowTileMap(), i - xAdjusted, WLY);
+        this->bgWinColor[LY][i] = color;
+        gManager.AddPixel(i, LY, color, this->bgPalette, LCD_LAYER_WIN);
+    }
+
+    ++WLY;
+}
+
+void PixelProcessingUnit::RenderSprites()
+{
+    for (int i = 0; i < this->spriteCount; ++i)
+    {
+        Sprite* sprite = &this->sprites[i];
+
+        Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (sprite->tileIndex * 16);
+
+        for (int x = 0; x < 8; ++x)
         {
-            Sprite* sprite = &this->sprites[i];
+            int xAdjusted = (sprite->xPos - 8) + x;
 
-            Address tileAddress = ADDR_VIDEO_RAM_BLOCK_ZERO + (sprite->tileIndex * 16);
-
-            for (int x = 0; x < 8; ++x)
+            // Sprite is visible horizontally
+            if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
             {
-                int xAdjusted = (sprite->xPos - 8) + x;
+                int y = LY - (sprite->yPos - 16);
 
-                // Sprite is visible horizontally
-                if (xAdjusted >= 0 && xAdjusted <= SCREEN_WIDTH - 1)
+                u8 layer = LCD_LAYER_OBJ_TOP;
+                int xFlip = sprite->attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x;
+                int yFlip = sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? (sprite->height - 1) - y : y;
+
+                Byte color = Tile::GetPixel(pMemory, tileAddress, xFlip, yFlip);
+                Byte* palette = sprite->attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
+
+                if (color == 0)
                 {
-                    int y = LY - (sprite->yPos - 16);
-
-                    u8 layer = LCD_LAYER_OBJ_TOP;
-                    int xFlip = sprite->attr & OAM_ATTRIBUTES::OAM_X_FLIP ? 7 - x : x;
-                    int yFlip;
-
-                    if (LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE))
-                    {
-                        // 8x16
-                        yFlip = sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 15 - y : y;
-                    }
-                    else
-                    {
-                        // 8x8
-                        yFlip = sprite->attr & OAM_ATTRIBUTES::OAM_Y_FLIP ? 7 - y : y;
-                    }
-
-                    Byte color = Tile::GetPixel(pMemory, tileAddress, xFlip, yFlip);
-                    Byte* palette = sprite->attr & OAM_ATTRIBUTES::OAM_DMG_PALETTE_NUM ? this->objPalette1 : this->objPalette0;
-
-                    if (color == 0)
-                    {
-                        continue;
-                    }
-
-                    // BG and WIN colors 1-3 over sprite
-                    if (sprite->attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
-                    {
-                        Byte color = this->bgWinColor[LY][xAdjusted];
-
-                        if (color != 0)
-                        {
-                            layer = LCD_LAYER_OBJ_BOTTOM;
-                        }
-                    }
-
-                    gManager.AddPixel(xAdjusted, LY, color, palette, layer);
+                    continue;
                 }
+
+                // BG and WIN colors 1-3 over sprite
+                if (sprite->attr & OAM_ATTRIBUTES::OAM_BG_WIN_OVER_OBJ)
+                {
+                    Byte color = this->bgWinColor[LY][xAdjusted];
+
+                    if (color != 0)
+                        layer = LCD_LAYER_OBJ_BOTTOM;
+                }
+
+                gManager.AddPixel(xAdjusted, LY, color, palette, layer);
             }
         }
     }
 }
 
-bool spriteComparer(Sprite const& lhs, Sprite const& rhs) 
+bool SpriteCompareOAM(Sprite const& lhs, Sprite const& rhs)
 {
+    return lhs.index > rhs.index;
+}
+
+bool SpriteCompareXCoord(Sprite const& lhs, Sprite const& rhs) 
+{
+    // If sprites share the same X-coordinate, the first in OAM takes priority.
+    if (lhs.xPos == rhs.xPos)
+        return SpriteCompareOAM(lhs, rhs);
+
     return lhs.xPos > rhs.xPos;
 }
 
@@ -313,12 +339,27 @@ void PixelProcessingUnit::SearchSprites()
             this->sprites[this->spriteCount].xPos = xPos;
             this->sprites[this->spriteCount].tileIndex = tileIndex;
             this->sprites[this->spriteCount].attr = attr;
+            this->sprites[this->spriteCount].height = LCDC.FlagIsSet(LCD_CTRL_FLAGS::OBJ_SIZE) ? 16 : 8;
+            this->sprites[this->spriteCount].index = this->spriteCount;
+
+            // 8x16 sprite's tile index bit 0 is always set to 0
+            if (this->sprites[this->spriteCount].height == 16)
+                this->sprites[this->spriteCount].tileIndex &= 0b11111110;
+
             this->spriteCount++;
         }
     }
 
-    // Sprites are drawn in the order of the highest X coordinate first
-    std::sort(this->sprites, this->sprites + this->spriteCount, &spriteComparer);
+    // Sprites are drawn either in the order of the highest X coordinate first
+    // Or in the order they appear in OAM RAM (for CGB only)
+    if (this->emuType == EMUType::CGB && !OPRI.FlagIsSet(OBJ_PRIO_MODE))
+    {
+        std::sort(this->sprites, this->sprites + this->spriteCount, &SpriteCompareOAM);
+    }
+    else
+    {
+        std::sort(this->sprites, this->sprites + this->spriteCount, &SpriteCompareXCoord);
+    }
 }
 
 void PixelProcessingUnit::Draw()
@@ -462,6 +503,7 @@ void PixelProcessingUnit::ExitVBlank()
 {
     this->Draw();
     LY = 0;
+    WLY = 0;
     this->TestLYCMatch();
 
     // Check if another 16.7ms of real time has elapsed. Enable drawing for the next frame.
@@ -500,6 +542,11 @@ void PixelProcessingUnit::LoadColorPalette(Byte reg, Byte palette[4])
 
         palette[i] = code;
     }
+}
+
+void PixelProcessingUnit::SetEMUType(EMUType emuType)
+{
+    this->emuType = emuType;
 }
 
 #ifdef _DEBUG

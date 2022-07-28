@@ -3,22 +3,36 @@
 #include "Memory.h"
 
 Memory::Memory()
-    :   vRAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END),
-        eRAM(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END),
-        gRAM(ADDR_GENERAL_RAM_START, ADDR_GENERAL_RAM_END),
+    :   eRAM(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END),
         oRAM(ADDR_OAM_RAM_START, ADDR_OAM_RAM_END),
-        hRAM(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END)
+        hRAM(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END),
+        vRAMBanks(),
+        wRAMBanks()
 {
+    this->vRAMBanks.push_back(new RAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END));
+    this->wRAMBanks.push_back(new RAM(ADDR_WORK_RAM_START, ADDR_WORK_RAM_BANK_0_END));
+    this->wRAMBanks.push_back(new RAM(ADDR_WORK_RAM_BANK_1_START, ADDR_WORK_RAM_END));
+
     this->MapMemory(0x00, ADDRESSSPACE - 1, &this->unMapped);
-    this->MapMemory(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END, &this->vRAM);
     this->MapMemory(ADDR_EXTERNAL_RAM_START, ADDR_EXTERNAL_RAM_END, &this->eRAM);
-    this->MapMemory(ADDR_GENERAL_RAM_START, ADDR_GENERAL_RAM_END, &this->gRAM);
+    this->MapMemory(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END, this->vRAMBanks[0]);
+    this->MapMemory(ADDR_WORK_RAM_START, ADDR_WORK_RAM_BANK_0_END, this->wRAMBanks[0]);
+    this->MapMemory(ADDR_WORK_RAM_BANK_1_START, ADDR_WORK_RAM_END, this->wRAMBanks[1]);
     this->MapMemory(ADDR_OAM_RAM_START, ADDR_OAM_RAM_END, &this->oRAM);
     this->MapMemory(ADDR_HIGH_RAM_START, ADDR_HIGH_RAM_END, &this->hRAM);
 }
 
 Memory::~Memory()
 {
+    for (auto ram : this->vRAMBanks)
+    {
+        delete ram;
+    }
+
+    for (auto ram : this->wRAMBanks)
+    {
+        delete ram;
+    }
 }
 
 /* 0x0000 - 0x3FFF (ROM) */
@@ -34,7 +48,7 @@ Memory::~Memory()
 /* 0xFFFF - 0xFFFF (INTERRUPT REGISTER) */
 void Memory::Write(Address address, Byte value)
 {
-    if (address == 0xFF50)
+    if (address == ADDR_SPECIAL_REG_BOOT_UNLOAD)
     {
         if (value == 0x01 || value == 0xFF)
         {
@@ -77,12 +91,13 @@ void Memory::Dump(Address start, Address end)
             if (this->addressSpace[i] == &this->unMapped)
             {
                 snprintf(buf, 64, "[0x%04X]: 0x0000\n", (int)i);
-                //file.write(buf)
             }
             else
             {
                 snprintf(buf, 64, "[0x%04X]: 0x%04X\n", (int)i, Read(i));
             }
+
+            file.write(buf, 64);
         }
     }
 }

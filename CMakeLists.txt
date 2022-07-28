@@ -11,6 +11,7 @@ add_library(GBLib SHARED
      src/CartridgeHeader.cpp
      src/Cpu.cpp
      src/GameBoy.cpp
+     src/CGBRegisters.cpp
      src/GraphicsManager.cpp
      src/InterruptController.cpp
      src/JoypadController.cpp
@@ -30,7 +31,9 @@ add_library(GBLib SHARED
      include/CartridgeHeader.h
      include/Cpu.h
      include/CpuRelax.h
+     include/EMUType.h
      include/GameBoy.h
+     include/CGBRegisters.h
      include/GlobalDefinitions.h
      include/GraphicsManager.h
      include/IMemoryMappable.h

@@ -5,7 +5,9 @@
 #include <stdexcept>
 #include "Memory.h"
 #include "CartridgeHeader.h"
+#include "CGBRegisters.h"
 #include "Cpu.h"
+#include "EMUType.h"
 #include "IODevices.h"
 #include "IGraphicsHandler.h"
 #include "IEventHandler.h"
@@ -15,9 +17,6 @@
 
 class GameBoy
 {
-public:
-    enum class EMUType { Cartridge = 1, DMG = 2, CGB = 3 };
-
 private:
     bool romLoaded;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastTimestamp;
@@ -29,6 +28,7 @@ private:
     Cpu cpu;
     Memory memory;
     IODevices devices;
+    CGBRegisters cgbRegisters;
     ROM* gameROM;
     ROM* bootROM;
     CartridgeHeader cartridgeHeader;
@@ -39,6 +39,7 @@ private:
     EMUType emuType;
 
     void MapIODevices();
+    void MapCGBRegisters();
     void LoadBootRom();
     bool IsDMG() { return this->emuType == EMUType::DMG; }
     bool IsCGB() { return this->emuType == EMUType::CGB; }

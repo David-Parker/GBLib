@@ -9,6 +9,7 @@
 #include "Tile.h"
 #include "RegisterU8.h"
 #include "Sprite.h"
+#include "EMUType.h"
 #include <chrono>
 
 #define LCD_LAYER_OBJ_BOTTOM 0
@@ -65,6 +66,11 @@ enum COLOR_PALETTE_ATTR
     CP_AUTO_INCREMENT = 128
 };
 
+enum OBJ_PRIO
+{
+    OBJ_PRIO_MODE = 1
+};
+
 class PixelProcessingUnit : public IMemoryMappable
 {
 private:
@@ -80,7 +86,12 @@ private:
     RegisterU8 OBP1;
     RegisterU8 WY;
     RegisterU8 WX;
+    RegisterU8 WLY;
 
+    // CGB Registers
+    RegisterU8 OPRI;
+
+    EMUType emuType;
     Memory* pMemory;
     InterruptController* pInterruptController;
     Byte mem[(ADDR_PPU_END - ADDR_PPU_START) + 1] = {0};
@@ -131,6 +142,10 @@ private:
     void EnterVBlank();
     void ExitVBlank();
 
+    void RenderBG();
+    void RenderWindow();
+    void RenderSprites();
+
 public:
     PixelProcessingUnit(Memory* pMemory, InterruptController* interruptController, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler);
     ~PixelProcessingUnit();
@@ -138,4 +153,5 @@ public:
     void Write(Address address, Byte value);
     Byte Read(Address address);
     void Tick(u64 cycles);
+    void SetEMUType(EMUType emuType);
 };

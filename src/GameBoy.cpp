@@ -6,7 +6,8 @@ using namespace std::chrono;
 
 GameBoy::GameBoy(std::string romFolder, IGraphicsHandler* graphicsHandler, IEventHandler* eventHandler, ISerialHandler* serialHandler, EMUType emuType)
     :   memory(),
-        devices(&memory, graphicsHandler, eventHandler, serialHandler), 
+        devices(&memory, graphicsHandler, eventHandler, serialHandler),
+        cgbRegisters(&memory),
         cpu(&memory, &devices.interruptController), 
         romFolder(romFolder), 
         graphicsHandler(graphicsHandler), 
@@ -103,11 +104,7 @@ void GameBoy::LoadRom(std::string path)
     if (this->emuType == EMUType::Cartridge)
     {
         // Cartridge may specify DMG, CGB, or DMG and CGB compatibility.
-        if (this->cartridgeHeader.isSGB)
-        {
-            throw std::runtime_error("Unsupported emulator type specified in the catridge header.");
-        }
-        else if (this->cartridgeHeader.isCGB)
+        if (this->cartridgeHeader.isCGB)
         {
             // Cartridge may also support DMG but we will run with most features available, i.e. CGB.
             this->emuType = EMUType::CGB;
@@ -116,17 +113,29 @@ void GameBoy::LoadRom(std::string path)
         {
             this->emuType = EMUType::DMG;
         }
+        else if (this->cartridgeHeader.isSGB)
+        {
+            throw std::runtime_error("Unsupported emulator type specified in the catridge header.");
+        }
     }
     else if (this->emuType == EMUType::CGB && this->cartridgeHeader.isCGB == false)
     {
         // Emulator has been set to force CGB emulation, but the cartridge does not support it.
         // This will run the emulator in CGB monochrome DMG compatibility mode.
         // TODO: For now, we will just run in DMG mode until implemented.
+        this->emuType = EMUType::DMG;
     }
     else if (this->emuType == EMUType::DMG && this->cartridgeHeader.isDMG == false)
     {
         // Emulator has been set to force DMG emulation, but the cartridge does not support it.
         throw std::runtime_error("Cartridge does not support DMG emulation, please run in CGB mode.");
+    }
+
+    this->devices.ppu.SetEMUType(this->emuType);
+
+    if (this->emuType == EMUType::CGB)
+    {
+        this->MapCGBRegisters();
     }
 
     LoadBootRom();
@@ -153,6 +162,24 @@ void GameBoy::MapIODevices()
     this->memory.MapMemory(ADDR_JOYPAD_INPUT, ADDR_JOYPAD_INPUT, &devices.joypadController);
     this->memory.MapMemory(ADDR_SERIAL_START, ADDR_SERIAL_END, &devices.serialController);
     this->memory.MapMemory(ADDR_TIMER_START, ADDR_TIMER_END, &devices.timerController);
+}
+
+void GameBoy::MapCGBRegisters()
+{
+    // Create the additional RAM banks for CGBs
+    this->memory.vRAMBanks.push_back(new RAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END));
+
+    for (int i = 0; i < 7; ++i)
+    {
+        this->memory.wRAMBanks.push_back(new RAM(ADDR_WORK_RAM_BANK_1_START, ADDR_WORK_RAM_END));
+    }
+
+    this->memory.MapMemory(ADDR_CGB_VRAM_BANK, ADDR_CGB_VRAM_BANK, &this->cgbRegisters);
+    this->memory.MapMemory(ADDR_CGB_SPEED_SWITCH, ADDR_CGB_SPEED_SWITCH, &this->cgbRegisters);
+    this->memory.MapMemory(ADDR_CGB_HDMA1, ADDR_CGB_HDMA5, &this->cgbRegisters);
+    this->memory.MapMemory(ADDR_CGB_INFRARED_PORT, ADDR_CGB_INFRARED_PORT, &this->cgbRegisters);
+    this->memory.MapMemory(ADDR_CGB_OBJ_PRIORITY, ADDR_CGB_OBJ_PRIORITY, &this->devices.ppu);
+    this->memory.MapMemory(ADDR_CGB_WRAM_BANK, ADDR_CGB_WRAM_BANK, &this->cgbRegisters);
 }
 
 bool GameBoy::ShouldStop()

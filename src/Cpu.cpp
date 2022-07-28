@@ -37,7 +37,7 @@ int Cpu::Tick()
             trace << sZOpCode;
 
             char cyclesBuf[16];
-            snprintf(cyclesBuf, 16, "0x%X\n\n", this->cyclesTotal);
+            snprintf(cyclesBuf, 16, "0x%llX\n\n", this->cyclesTotal);
             trace << " -> Cycles: " << cyclesBuf;
 
             //pMemory->Dump(0x0000, 0xFFFF);

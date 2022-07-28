@@ -58,6 +58,7 @@ public:
 
     void Init();
     void AddPixel(int x, int y, Byte color, Byte palette[4], int layer);
+    u32 GetPixel(int x, int y, int layer);
     void Clear();
     void Draw();
 };

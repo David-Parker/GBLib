@@ -5,6 +5,7 @@
 class RegisterU8
 {
 private:
+    u8 value;
     u8* pValue;
 
 public:
@@ -16,8 +17,9 @@ public:
         CARRY_FLAG = 0b00010000
     };
 
-    RegisterU8(u8* pValue) : pValue(pValue) { }
-    RegisterU8(RegisterU8& rhs) : pValue(rhs.pValue) {}
+    RegisterU8() : value(0), pValue(&value) {}
+    RegisterU8(u8* pValue) : value(0), pValue(pValue) {}
+    RegisterU8(RegisterU8& rhs) : value(rhs.value), pValue(rhs.pValue) {}
     ~RegisterU8() {}
 
     operator u8() const

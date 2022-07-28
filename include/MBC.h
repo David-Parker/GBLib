@@ -70,7 +70,7 @@ private:
 public: 
     MBC1(CartridgeHeader& header)
         :   MBC(header, MBC_BANK_MODE::ROM_MODE, false), 
-            romBankRegister(1), ramBankRegister(0), extraBankRegister(0)
+            romBankRegister(1), ramBankRegister(0), extraBankRegister(0), ramSize(MBC_RAM_SIZES::NO_RAM)
     {
     }
 
