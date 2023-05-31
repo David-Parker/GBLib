@@ -117,3 +117,13 @@ void Memory::UnMapMemory(Address low, Address high)
         this->addressSpace[i] = &this->unMapped;
     }
 }
+
+void Memory::CreateCGBBanks()
+{
+    this->vRAMBanks.push_back(new RAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END));
+
+    for (int i = 0; i < 7; ++i)
+    {
+        this->wRAMBanks.push_back(new RAM(ADDR_WORK_RAM_BANK_1_START, ADDR_WORK_RAM_END));
+    }
+}

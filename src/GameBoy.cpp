@@ -167,12 +167,7 @@ void GameBoy::MapIODevices()
 void GameBoy::MapCGBRegisters()
 {
     // Create the additional RAM banks for CGBs
-    this->memory.vRAMBanks.push_back(new RAM(ADDR_VIDEO_RAM_START, ADDR_VIDEO_RAM_END));
-
-    for (int i = 0; i < 7; ++i)
-    {
-        this->memory.wRAMBanks.push_back(new RAM(ADDR_WORK_RAM_BANK_1_START, ADDR_WORK_RAM_END));
-    }
+    this->memory.CreateCGBBanks();
 
     this->memory.MapMemory(ADDR_CGB_VRAM_BANK, ADDR_CGB_VRAM_BANK, &this->cgbRegisters);
     this->memory.MapMemory(ADDR_CGB_SPEED_SWITCH, ADDR_CGB_SPEED_SWITCH, &this->cgbRegisters);
