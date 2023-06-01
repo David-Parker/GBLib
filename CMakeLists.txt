@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.9)
 
 project(GBLib VERSION 0.0.1 DESCRIPTION "Nintendo GameBoy Emulator as a portable library.")
 
-add_definitions(-DGAMEBOY_EXPORTING) 
+add_definitions(-DGAMEBOY_EXPORTING)
+
+set (CMAKE_C_STANDARD 99)
+set (CMAKE_CXX_STANDARD 11)
 
 add_library(GBLib SHARED
      src/ALUHelpers.cpp

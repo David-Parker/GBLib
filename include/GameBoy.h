@@ -25,10 +25,10 @@ private:
     u64 framesElapsed;
     std::string romFolder;
 
-    Cpu cpu;
     Memory memory;
     IODevices devices;
     CGBRegisters cgbRegisters;
+    Cpu cpu;
     ROM* gameROM;
     ROM* bootROM;
     CartridgeHeader cartridgeHeader;

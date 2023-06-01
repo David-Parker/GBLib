@@ -103,7 +103,7 @@ int Cpu::Tick()
     {
         // ERROR, unknown opcode.
         char msg[256];
-        snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x02%X, PC: 0x04%X", opcode, *PC);
+        snprintf(msg, 256, "Unknown opcode encountered. Opcode: 0x%X, PC: 0x%X", opcode, *PC);
         throw std::runtime_error(msg);
     }
 
